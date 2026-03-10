@@ -22,6 +22,11 @@ export const links: Route.LinksFunction = () => [
     crossOrigin: "anonymous",
   },
   {
+    rel: "preload",
+    href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Noto+Sans:wght@300..700&display=swap",
+    as: "style",
+  },
+  {
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Noto+Sans:wght@300..700&display=swap",
   },
@@ -78,16 +83,17 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  const is404 = isRouteErrorResponse(error) && error.status === 404;
+
   let message = "¡Ups!";
   let details = "Ocurrió un error inesperado.";
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "La página que buscas no existe."
-        : error.statusText || details;
+    message = is404 ? "404 — Cepa no encontrada" : "Error";
+    details = is404
+      ? "Parece que esta página se fue en humo..."
+      : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;
@@ -97,16 +103,30 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="text-center max-w-md">
         <span className="material-symbols-outlined text-6xl text-primary mb-4 block">
-          error
+          {is404 ? "potted_plant" : "error"}
         </span>
         <h1 className="font-display text-4xl font-bold text-white mb-2">{message}</h1>
         <p className="text-text-muted mb-6">{details}</p>
-        <a
-          href="/"
-          className="inline-flex items-center gap-2 bg-primary text-background-dark font-bold rounded-full px-6 py-3 hover:bg-primary/90 transition-colors"
-        >
-          Volver al inicio
-        </a>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          {is404 && (
+            <a
+              href="/strains"
+              className="inline-flex items-center gap-2 bg-primary text-background-dark font-bold rounded-full px-6 py-3 hover:bg-primary/90 transition-colors"
+            >
+              Explorar Cepas
+            </a>
+          )}
+          <a
+            href="/"
+            className={
+              is404
+                ? "inline-flex items-center gap-2 bg-white/10 text-white font-bold rounded-full px-6 py-3 hover:bg-white/20 transition-colors"
+                : "inline-flex items-center gap-2 bg-primary text-background-dark font-bold rounded-full px-6 py-3 hover:bg-primary/90 transition-colors"
+            }
+          >
+            Ir al inicio
+          </a>
+        </div>
         {stack && (
           <pre className="mt-6 w-full p-4 overflow-x-auto text-left text-xs bg-forest-deep rounded-xl text-text-muted">
             <code>{stack}</code>

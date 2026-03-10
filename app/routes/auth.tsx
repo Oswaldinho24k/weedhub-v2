@@ -9,11 +9,14 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 
+import { buildMeta, SITE_URL } from "~/lib/seo";
+
 export function meta() {
-  return [
-    { title: "Entrar — WeedHub" },
-    { name: "description", content: "Inicia sesión o crea tu cuenta en WeedHub" },
-  ];
+  return buildMeta({
+    title: "Entrar — WeedHub",
+    description: "Inicia sesión o crea tu cuenta en WeedHub para descubrir cepas, escribir reseñas y ganar insignias.",
+    url: `${SITE_URL}/auth`,
+  });
 }
 
 export async function loader({ request }: Route.LoaderArgs) {

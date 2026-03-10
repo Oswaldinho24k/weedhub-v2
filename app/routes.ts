@@ -18,4 +18,5 @@ export default [
   ]),
   route("api/reviews/:reviewId/vote", "routes/api/reviews.$reviewId.vote.tsx"),
   route("api/strains/:strainId/save", "routes/api/strains.$strainId.save.tsx"),
+  route("sitemap.xml", "routes/sitemap[.]xml.tsx"),
 ] satisfies RouteConfig;

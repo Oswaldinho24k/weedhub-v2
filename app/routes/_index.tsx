@@ -11,12 +11,14 @@ import { Card, CardContent } from "~/components/ui/card";
 import { RatingStars } from "~/components/composite/rating-stars";
 import { Avatar } from "~/components/ui/avatar";
 import { formatRelativeTime } from "~/lib/utils";
+import { buildMeta, SITE_URL } from "~/lib/seo";
 
 export function meta() {
-  return [
-    { title: "WeedHub — Tu guía de cannabis en español" },
-    { name: "description", content: "Descubre, reseña y comparte tu experiencia cannábica con la comunidad hispanohablante más grande." },
-  ];
+  return buildMeta({
+    title: "WeedHub — Tu guía de cannabis en español",
+    description: "Descubre, reseña y comparte tu experiencia cannábica con la comunidad hispanohablante más grande.",
+    url: SITE_URL,
+  });
 }
 
 export async function loader() {
@@ -89,8 +91,25 @@ const sectionReveal = {
 export default function LandingPage({ loaderData }: Route.ComponentProps) {
   const { topStrains, recentReviews, stats } = loaderData;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "WeedHub",
+    url: SITE_URL,
+    description: "Tu guía de cannabis en español. Descubre cepas, comparte reseñas y conecta con la comunidad.",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${SITE_URL}/strains?search={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="gradient-mesh absolute inset-0" />
@@ -108,11 +127,6 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
               <Button size="lg">
                 Explorar Cepas
                 <span className="material-symbols-outlined text-lg">arrow_forward</span>
-              </Button>
-            </Link>
-            <Link to="/auth">
-              <Button variant="secondary" size="lg">
-                Crear Cuenta Gratis
               </Button>
             </Link>
           </div>

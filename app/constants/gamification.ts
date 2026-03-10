@@ -75,3 +75,36 @@ export const POINTS = {
   COMPLETED_ONBOARDING: 15,
   BADGE_EARNED: 20,
 } as const;
+
+export interface Level {
+  name: string;
+  icon: string;
+  minPoints: number;
+}
+
+export const LEVELS: Level[] = [
+  { name: "Semilla", icon: "eco", minPoints: 0 },
+  { name: "Brote", icon: "grass", minPoints: 50 },
+  { name: "Planta", icon: "potted_plant", minPoints: 150 },
+  { name: "Árbol", icon: "park", minPoints: 400 },
+  { name: "Bosque", icon: "forest", minPoints: 1000 },
+];
+
+export function getCurrentLevel(points: number): Level {
+  let current = LEVELS[0];
+  for (const level of LEVELS) {
+    if (points >= level.minPoints) {
+      current = level;
+    }
+  }
+  return current;
+}
+
+export function getNextLevel(points: number): Level | null {
+  for (const level of LEVELS) {
+    if (points < level.minPoints) {
+      return level;
+    }
+  }
+  return null;
+}

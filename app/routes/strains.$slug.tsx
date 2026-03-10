@@ -15,7 +15,9 @@ import { CannabinoidBar } from "~/components/composite/cannabinoid-bar";
 import { RatingStars } from "~/components/composite/rating-stars";
 import { ReviewCard } from "~/components/composite/review-card";
 import { EffectsChipGroup } from "~/components/composite/effects-chip-group";
+import { StrainCard } from "~/components/composite/strain-card";
 import { useFetcher } from "react-router";
+import { buildMeta, SITE_URL } from "~/lib/seo";
 
 const TYPE_VARIANT: Record<string, "sativa" | "indica" | "hybrid"> = {
   sativa: "sativa",
@@ -29,11 +31,18 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export function meta({ data }: Route.MetaArgs) {
-  const name = data?.strain?.name || "Cepa";
-  return [
-    { title: `${name} — WeedHub` },
-    { name: "description", content: data?.strain?.description || "" },
-  ];
+  const strain = data?.strain;
+  const name = strain?.name || "Cepa";
+  const description = strain?.description
+    ? strain.description.slice(0, 160)
+    : `Información, reseñas y efectos de ${name} en WeedHub.`;
+  return buildMeta({
+    title: `${name} — WeedHub`,
+    description,
+    url: `${SITE_URL}/strains/${strain?.slug || ""}`,
+    image: strain?.imageUrl || undefined,
+    type: "product",
+  });
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {
@@ -53,6 +62,26 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     const saved = await SavedStrainModel.findOne({ userId: user._id, strainId: strain._id });
     isSaved = !!saved;
   }
+
+  // Similar strains: same type, shared effects, exclude current
+  const similarStrains = await StrainModel.aggregate([
+    {
+      $match: {
+        type: strain.type,
+        isArchived: false,
+        _id: { $ne: strain._id },
+      },
+    },
+    {
+      $addFields: {
+        sharedEffects: {
+          $size: { $setIntersection: ["$effects", strain.effects || []] },
+        },
+      },
+    },
+    { $sort: { sharedEffects: -1, "averageRatings.overall": -1 } },
+    { $limit: 3 },
+  ]);
 
   return {
     strain: {
@@ -80,11 +109,17 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         : undefined,
     })),
     isSaved,
+    similarStrains: similarStrains.map((s: any) => ({
+      ...s,
+      _id: String(s._id),
+      createdAt: s.createdAt?.toISOString?.() || new Date().toISOString(),
+      updatedAt: s.updatedAt?.toISOString?.() || new Date().toISOString(),
+    })),
   };
 }
 
 export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
-  const { strain, reviews, isSaved } = loaderData;
+  const { strain, reviews, isSaved, similarStrains } = loaderData;
   const context = useOutletContext<{ user?: any }>();
   const currentUser = context?.user;
   const saveFetcher = useFetcher();
@@ -92,8 +127,30 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
   const optimisticSaved =
     saveFetcher.state !== "idle" ? !isSaved : isSaved;
 
+  const jsonLd: any = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: strain.name,
+    description: strain.description,
+    url: `${SITE_URL}/strains/${strain.slug}`,
+    ...(strain.imageUrl ? { image: strain.imageUrl } : {}),
+  };
+  if (strain.reviewCount > 0) {
+    jsonLd.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: strain.averageRatings.overall.toFixed(1),
+      reviewCount: strain.reviewCount,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+
   return (
     <div className="mx-auto max-w-[1200px] px-6 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         {/* Image */}
@@ -102,8 +159,11 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
             {strain.imageUrl ? (
               <img
                 src={strain.imageUrl}
-                alt={strain.name}
+                alt={`Cepa ${strain.name}, tipo ${TYPE_LABEL[strain.type]}`}
                 className="w-full h-full object-cover"
+                fetchPriority="high"
+                width={400}
+                height={400}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -216,7 +276,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
           {strain.terpenes?.length > 0 && (
             <Card className="border-white/10">
               <CardHeader>
-                <h3 className="font-display font-bold text-white">Terpenos</h3>
+                <h2 className="font-display font-bold text-white">Terpenos</h2>
               </CardHeader>
               <CardContent className="space-y-3">
                 {strain.terpenes.map((t: any) => {
@@ -243,7 +303,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
           {strain.effects?.length > 0 && (
             <Card className="border-white/10">
               <CardHeader>
-                <h3 className="font-display font-bold text-white">Efectos</h3>
+                <h2 className="font-display font-bold text-white">Efectos</h2>
               </CardHeader>
               <CardContent>
                 <EffectsChipGroup effects={strain.effects} />
@@ -255,7 +315,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
           {strain.flavors?.length > 0 && (
             <Card className="border-white/10">
               <CardHeader>
-                <h3 className="font-display font-bold text-white">Sabores</h3>
+                <h2 className="font-display font-bold text-white">Sabores</h2>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
@@ -276,7 +336,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
           {strain.reviewCount > 0 && (
             <Card className="border-white/10">
               <CardHeader>
-                <h3 className="font-display font-bold text-white">Calificaciones</h3>
+                <h2 className="font-display font-bold text-white">Calificaciones</h2>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-8 items-start">
@@ -313,9 +373,9 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
           {/* Reviews */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display text-xl font-bold text-white">
+              <h2 className="font-display text-xl font-bold text-white">
                 Reseñas ({strain.reviewCount})
-              </h3>
+              </h2>
               <Link to={`/strains/${strain.slug}/review`}>
                 <Button size="sm">
                   <span className="material-symbols-outlined text-lg">edit</span>
@@ -348,6 +408,23 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
       </div>
+
+      {/* Similar Strains */}
+      {similarStrains.length > 0 && (
+        <>
+          <Separator className="my-8" />
+          <section>
+            <h2 className="font-display text-2xl font-bold text-white mb-6">
+              Cepas Similares
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {similarStrains.map((s: any) => (
+                <StrainCard key={s._id} strain={s} />
+              ))}
+            </div>
+          </section>
+        </>
+      )}
     </div>
   );
 }

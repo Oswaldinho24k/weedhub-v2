@@ -10,9 +10,16 @@ import { Avatar } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { formatDate } from "~/lib/utils";
+import { buildMeta, SITE_URL } from "~/lib/seo";
+import { LEVELS, getCurrentLevel, getNextLevel } from "~/constants/gamification";
+import { Progress } from "~/components/ui/progress";
 
 export function meta() {
-  return [{ title: "Mi Perfil — WeedHub" }];
+  return buildMeta({
+    title: "Mi Perfil — WeedHub",
+    description: "Tu perfil en WeedHub. Revisa tus reseñas, insignias y progreso en la comunidad cannábica.",
+    url: `${SITE_URL}/profile`,
+  });
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -85,7 +92,34 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
                 </Badge>
               )}
 
-              <div className="mt-6 flex justify-center gap-6 text-center">
+              {/* Level */}
+              {(() => {
+                const points = user.points || 0;
+                const currentLevel = getCurrentLevel(points);
+                const nextLevel = getNextLevel(points);
+                const progress = nextLevel
+                  ? ((points - currentLevel.minPoints) / (nextLevel.minPoints - currentLevel.minPoints)) * 100
+                  : 100;
+                return (
+                  <div className="mt-4 p-3 rounded-xl bg-white/5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="material-symbols-outlined text-primary text-xl">
+                        {currentLevel.icon}
+                      </span>
+                      <span className="font-bold text-white text-sm">{currentLevel.name}</span>
+                      <span className="text-xs text-text-muted ml-auto">{points} pts</span>
+                    </div>
+                    <Progress value={progress} max={100} />
+                    {nextLevel && (
+                      <p className="text-xs text-text-muted mt-1">
+                        {nextLevel.minPoints - points} pts para {nextLevel.name}
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
+
+              <div className="mt-4 flex justify-center gap-6 text-center">
                 <div>
                   <p className="text-2xl font-bold text-white">{user.stats?.reviewCount || 0}</p>
                   <p className="text-xs text-text-muted">Reseñas</p>
@@ -115,10 +149,10 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
           {user.onboardingCompleted && user.cannabisProfile && (
             <Card className="border-white/10">
               <CardHeader>
-                <h3 className="font-display font-bold text-white flex items-center gap-2">
+                <h2 className="font-display font-bold text-white flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary">potted_plant</span>
                   Perfil Cannábico
-                </h3>
+                </h2>
               </CardHeader>
               <CardContent className="space-y-3">
                 {user.cannabisProfile.preferredEffects?.length > 0 && (
@@ -141,40 +175,69 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Badges */}
-          {user.earnedBadges && user.earnedBadges.length > 0 && (
-            <Card className="border-white/10">
-              <CardHeader>
-                <h3 className="font-display font-bold text-white flex items-center gap-2">
-                  <span className="material-symbols-outlined text-accent-amber">emoji_events</span>
-                  Insignias
-                </h3>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {user.earnedBadges.map((eb: any) => {
-                    const badge = BADGES.find((b) => b.id === eb.badgeId);
-                    if (!badge) return null;
-                    return (
-                      <div key={eb.badgeId} className="text-center p-3 rounded-xl bg-white/5">
-                        <span className="material-symbols-outlined text-2xl text-accent-amber block mb-1">
-                          {badge.icon}
-                        </span>
-                        <p className="text-xs font-bold text-white">{badge.name}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <Card className="border-white/10">
+            <CardHeader>
+              <h2 className="font-display font-bold text-white flex items-center gap-2">
+                <span className="material-symbols-outlined text-accent-amber">emoji_events</span>
+                Insignias
+              </h2>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {BADGES.map((badge) => {
+                  const earned = user.earnedBadges?.find((eb: any) => eb.badgeId === badge.id);
+                  const isEarned = !!earned;
+
+                  // Progress for unearned badges
+                  let progressText = "";
+                  if (!isEarned) {
+                    const stats = user.stats || {};
+                    if (badge.type === "reviews") {
+                      progressText = `${stats.reviewCount || 0}/${badge.requirement} reseñas`;
+                    } else if (badge.type === "helpful") {
+                      progressText = `${stats.helpfulVotesReceived || 0}/${badge.requirement} útiles`;
+                    } else if (badge.type === "strains") {
+                      progressText = `${stats.strainsReviewed || 0}/${badge.requirement} cepas`;
+                    }
+                  }
+
+                  return (
+                    <div
+                      key={badge.id}
+                      className={`text-center p-3 rounded-xl ${isEarned ? "bg-white/5" : "bg-white/[0.02] opacity-50"}`}
+                      title={
+                        isEarned
+                          ? `${badge.description} — Ganada el ${earned.earnedAt ? formatDate(earned.earnedAt) : ""}`
+                          : badge.description
+                      }
+                    >
+                      <span
+                        className={`material-symbols-outlined text-2xl block mb-1 ${
+                          isEarned ? "text-accent-amber" : "text-text-muted"
+                        }`}
+                      >
+                        {badge.icon}
+                      </span>
+                      <p className={`text-xs font-bold ${isEarned ? "text-white" : "text-text-muted"}`}>
+                        {badge.name}
+                      </p>
+                      {!isEarned && progressText && (
+                        <p className="text-xs text-text-muted/60 mt-1">{progressText}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Recent Reviews */}
           <Card className="border-white/10">
             <CardHeader>
-              <h3 className="font-display font-bold text-white flex items-center gap-2">
+              <h2 className="font-display font-bold text-white flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">rate_review</span>
                 Reseñas Recientes
-              </h3>
+              </h2>
             </CardHeader>
             <CardContent>
               {recentReviews.length === 0 ? (

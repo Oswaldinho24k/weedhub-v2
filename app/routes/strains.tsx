@@ -7,14 +7,17 @@ import { StrainCard } from "~/components/composite/strain-card";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
+import { buildMeta, SITE_URL } from "~/lib/seo";
 
 const PER_PAGE = 20;
+const STRAINS_URL = `${SITE_URL}/strains`;
 
 export function meta() {
-  return [
-    { title: "Cepas — WeedHub" },
-    { name: "description", content: "Explora nuestra colección de cepas de cannabis" },
-  ];
+  return buildMeta({
+    title: "Explorar Cepas de Cannabis — WeedHub",
+    description: "Descubre y filtra cepas de cannabis por tipo, efectos, sabores y más. Encuentra la cepa ideal con reseñas de la comunidad.",
+    url: `${SITE_URL}/strains`,
+  });
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -88,8 +91,26 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
     setSearchParams(next);
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Cepas de Cannabis",
+    url: STRAINS_URL,
+    numberOfItems: total,
+    itemListElement: strains.map((s: any, i: number) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `${SITE_URL}/strains/${s.slug}`,
+      name: s.name,
+    })),
+  };
+
   return (
     <div className="mx-auto max-w-[1200px] px-6 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Header */}
       <div className="mb-8">
         <h1 className="font-display text-3xl font-bold text-white mb-2">
@@ -192,12 +213,19 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
       {strains.length === 0 ? (
         <div className="text-center py-16">
           <span className="material-symbols-outlined text-5xl text-text-muted/40 mb-4 block">
-            search_off
+            filter_alt_off
           </span>
           <h3 className="font-display text-xl font-bold text-white mb-2">
-            No se encontraron cepas
+            No encontramos cepas con esos filtros
           </h3>
-          <p className="text-text-muted">Intenta ajustar tus filtros de búsqueda</p>
+          <p className="text-text-muted mb-4">Prueba ajustando los filtros o explorando todas las cepas</p>
+          <Button
+            variant="secondary"
+            onClick={() => setSearchParams(new URLSearchParams())}
+          >
+            <span className="material-symbols-outlined text-lg">filter_alt_off</span>
+            Limpiar filtros
+          </Button>
         </div>
       ) : (
         <>

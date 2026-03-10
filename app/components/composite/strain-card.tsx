@@ -43,8 +43,11 @@ export function StrainCard({ strain }: StrainCardProps) {
             {strain.imageUrl ? (
               <img
                 src={strain.imageUrl}
-                alt={strain.name}
+                alt={`Cepa ${strain.name}, tipo ${TYPE_LABEL[strain.type] || strain.type}`}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+                width={400}
+                height={160}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">

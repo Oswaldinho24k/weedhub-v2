@@ -8,10 +8,17 @@ import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { Avatar } from "~/components/ui/avatar";
 import { formatDate } from "~/lib/utils";
+import { buildMeta, SITE_URL } from "~/lib/seo";
+import { LEVELS, getCurrentLevel } from "~/constants/gamification";
+import { Progress } from "~/components/ui/progress";
 
 export function meta({ data }: Route.MetaArgs) {
   const name = data?.user?.displayName || "Perfil";
-  return [{ title: `${name} — WeedHub` }];
+  return buildMeta({
+    title: `${name} — WeedHub`,
+    description: `Perfil de ${name} en WeedHub. Reseñas, insignias y actividad en la comunidad cannábica.`,
+    url: `${SITE_URL}/profile/${data?.user?._id || ""}`,
+  });
 }
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -77,7 +84,23 @@ export default function PublicProfilePage({ loaderData }: Route.ComponentProps) 
                   {EXPERIENCE_LABELS[user.cannabisProfile.experienceLevel]}
                 </Badge>
               )}
-              <div className="mt-6 flex justify-center gap-6 text-center">
+              {/* Level */}
+              {(() => {
+                const points = user.points || 0;
+                const currentLevel = getCurrentLevel(points);
+                return (
+                  <div className="mt-4 p-3 rounded-xl bg-white/5">
+                    <div className="flex items-center gap-2 justify-center">
+                      <span className="material-symbols-outlined text-primary text-xl">
+                        {currentLevel.icon}
+                      </span>
+                      <span className="font-bold text-white text-sm">{currentLevel.name}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div className="mt-4 flex justify-center gap-6 text-center">
                 <div>
                   <p className="text-2xl font-bold text-white">{user.stats?.reviewCount || 0}</p>
                   <p className="text-xs text-text-muted">Reseñas</p>
@@ -96,33 +119,41 @@ export default function PublicProfilePage({ loaderData }: Route.ComponentProps) 
         </div>
 
         <div className="lg:col-span-2 space-y-6">
-          {user.earnedBadges && user.earnedBadges.length > 0 && (
-            <Card className="border-white/10">
-              <CardHeader>
-                <h3 className="font-display font-bold text-white">Insignias</h3>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-3">
-                  {user.earnedBadges.map((eb: any) => {
-                    const badge = BADGES.find((b) => b.id === eb.badgeId);
-                    if (!badge) return null;
-                    return (
-                      <div key={eb.badgeId} className="text-center p-3 rounded-xl bg-white/5">
-                        <span className="material-symbols-outlined text-xl text-accent-amber block mb-1">
-                          {badge.icon}
-                        </span>
-                        <p className="text-xs font-bold text-white">{badge.name}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <Card className="border-white/10">
+            <CardHeader>
+              <h2 className="font-display font-bold text-white">Insignias</h2>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {BADGES.map((badge) => {
+                  const earned = user.earnedBadges?.find((eb: any) => eb.badgeId === badge.id);
+                  const isEarned = !!earned;
+                  return (
+                    <div
+                      key={badge.id}
+                      className={`text-center p-3 rounded-xl ${isEarned ? "bg-white/5" : "bg-white/[0.02] opacity-50"}`}
+                      title={badge.description}
+                    >
+                      <span
+                        className={`material-symbols-outlined text-xl block mb-1 ${
+                          isEarned ? "text-accent-amber" : "text-text-muted"
+                        }`}
+                      >
+                        {badge.icon}
+                      </span>
+                      <p className={`text-xs font-bold ${isEarned ? "text-white" : "text-text-muted"}`}>
+                        {badge.name}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
           <Card className="border-white/10">
             <CardHeader>
-              <h3 className="font-display font-bold text-white">Reseñas</h3>
+              <h2 className="font-display font-bold text-white">Reseñas</h2>
             </CardHeader>
             <CardContent>
               {recentReviews.length === 0 ? (
