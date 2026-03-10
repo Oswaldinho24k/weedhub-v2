@@ -5,9 +5,13 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { getUserFromSession } from "~/lib/auth.server";
+import { Navbar } from "~/components/layout/navbar";
+import { Footer } from "~/components/layout/footer";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -19,20 +23,38 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Noto+Sans:wght@300..700&display=swap",
+  },
+  {
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap",
   },
 ];
 
+export async function loader({ request }: Route.LoaderArgs) {
+  const user = await getUserFromSession(request);
+  return {
+    user: user
+      ? {
+          _id: String(user._id),
+          displayName: user.displayName,
+          avatar: user.avatar,
+          role: user.role,
+        }
+      : null,
+  };
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="es" className="dark">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="min-h-screen flex flex-col">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -42,19 +64,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const { user } = useLoaderData<typeof loader>();
+
+  return (
+    <>
+      <Navbar user={user} />
+      <main className="flex-1">
+        <Outlet context={{ user }} />
+      </main>
+      <Footer />
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
+  let message = "¡Ups!";
+  let details = "Ocurrió un error inesperado.";
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
     message = error.status === 404 ? "404" : "Error";
     details =
       error.status === 404
-        ? "The requested page could not be found."
+        ? "La página que buscas no existe."
         : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
@@ -62,14 +94,25 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
+    <main className="min-h-screen flex items-center justify-center p-6">
+      <div className="text-center max-w-md">
+        <span className="material-symbols-outlined text-6xl text-primary mb-4 block">
+          error
+        </span>
+        <h1 className="font-display text-4xl font-bold text-white mb-2">{message}</h1>
+        <p className="text-text-muted mb-6">{details}</p>
+        <a
+          href="/"
+          className="inline-flex items-center gap-2 bg-primary text-background-dark font-bold rounded-full px-6 py-3 hover:bg-primary/90 transition-colors"
+        >
+          Volver al inicio
+        </a>
+        {stack && (
+          <pre className="mt-6 w-full p-4 overflow-x-auto text-left text-xs bg-forest-deep rounded-xl text-text-muted">
+            <code>{stack}</code>
+          </pre>
+        )}
+      </div>
     </main>
   );
 }
