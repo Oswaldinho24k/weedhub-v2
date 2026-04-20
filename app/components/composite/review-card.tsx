@@ -1,7 +1,7 @@
 import { Link, useFetcher } from "react-router";
-import { Avatar } from "~/components/ui/avatar";
 import { RatingStars } from "./rating-stars";
 import { formatRelativeTime } from "~/lib/utils";
+import { Icon } from "~/components/ui/icon";
 
 interface ReviewCardProps {
   review: {
@@ -23,119 +23,101 @@ interface ReviewCardProps {
   currentUserId?: string;
 }
 
-const EXPERIENCE_ICONS: Record<string, string> = {
-  principiante: "eco",
-  intermedio: "potted_plant",
-  experimentado: "local_florist",
-  experto: "psychology",
+const BADGE_FROM_LEVEL: Record<string, string> = {
+  principiante: "NOVATO",
+  intermedio: "INTERMEDIO",
+  experimentado: "EXPERTO",
+  experto: "EXPERTO",
 };
 
 export function ReviewCard({ review, currentUserId }: ReviewCardProps) {
   const fetcher = useFetcher();
   const hasVoted = currentUserId && review.helpfulVotes?.includes(currentUserId);
-  const optimisticCount = fetcher.state !== "idle"
-    ? (hasVoted ? review.helpfulCount - 1 : review.helpfulCount + 1)
-    : review.helpfulCount;
+  const optimisticCount =
+    fetcher.state !== "idle"
+      ? hasVoted
+        ? review.helpfulCount - 1
+        : review.helpfulCount + 1
+      : review.helpfulCount;
+  const badge = review.user?.cannabisProfile?.experienceLevel
+    ? BADGE_FROM_LEVEL[review.user.cannabisProfile.experienceLevel]
+    : null;
 
   return (
-    <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3 hover:border-white/15 transition-colors duration-200">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <article className="card p-5 space-y-4">
+      <header className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           {review.user && (
-            <Link to={`/profile/${review.user._id}`} className="flex items-center gap-3 group">
-              <Avatar
-                src={review.user.avatar}
-                fallback={review.user.displayName.charAt(0).toUpperCase()}
-                size="sm"
-              />
+            <Link
+              to={`/profile/${review.user._id}`}
+              className="flex items-center gap-3 group"
+            >
+              <span
+                className="h-10 w-10 rounded-full bg-elev border border-line flex items-center justify-center font-medium"
+                style={{ color: "var(--accent)" }}
+                aria-hidden
+              >
+                {review.user.displayName.charAt(0).toUpperCase()}
+              </span>
               <div>
-                <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">
-                  {review.user.displayName}
-                </p>
-                {review.user.cannabisProfile?.experienceLevel && (
-                  <div className="flex items-center gap-1 text-xs text-text-muted">
-                    <span className="material-symbols-outlined text-xs text-primary">
-                      {EXPERIENCE_ICONS[review.user.cannabisProfile.experienceLevel] || "person"}
-                    </span>
-                    {review.user.cannabisProfile.experienceLevel}
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-fg group-hover:text-accent transition-colors">
+                    {review.user.displayName}
+                  </span>
+                  {badge && <span className="pill accent !py-0.5 !text-[10px] tracking-wider">{badge}</span>}
+                </div>
+                <span className="text-xs text-fg-dim">
+                  {formatRelativeTime(review.createdAt)}
+                </span>
               </div>
             </Link>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <RatingStars rating={review.ratings.overall} size="sm" />
-          <span className="text-xs text-text-muted/60">
-            {formatRelativeTime(review.createdAt)}
-          </span>
-        </div>
-      </div>
+        <RatingStars rating={review.ratings.overall} size="sm" />
+      </header>
 
-      {/* Comment */}
-      {review.comment && (
-        <p className="text-sm text-text-muted leading-relaxed">{review.comment}</p>
+      {review.context && (review.context.method || review.context.timeOfDay || review.context.setting) && (
+        <div className="flex flex-wrap gap-1.5">
+          {review.context.method && <span className="pill">{review.context.method}</span>}
+          {review.context.timeOfDay && <span className="pill">{review.context.timeOfDay}</span>}
+          {review.context.setting && <span className="pill">{review.context.setting}</span>}
+        </div>
       )}
 
-      {/* Effects */}
+      {review.comment && (
+        <p className="text-sm text-fg-muted leading-relaxed">{review.comment}</p>
+      )}
+
       {review.effectsExperienced?.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {review.effectsExperienced.map((effect) => (
-            <span
-              key={effect}
-              className="px-3 py-1 border border-primary/20 rounded-full bg-primary/10 text-xs text-primary"
-            >
+            <span key={effect} className="pill accent">
               {effect}
             </span>
           ))}
         </div>
       )}
 
-      {/* Context */}
-      {review.context && (review.context.method || review.context.setting) && (
-        <div className="flex gap-3 text-xs text-text-muted/60">
-          {review.context.method && (
-            <span className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-xs">local_fire_department</span>
-              {review.context.method}
-            </span>
-          )}
-          {review.context.setting && (
-            <span className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-xs">location_on</span>
-              {review.context.setting}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Helpful */}
-      <div className="flex items-center gap-4 pt-1">
+      <footer className="flex items-center gap-4 pt-2 border-t border-line">
         {currentUserId ? (
           <fetcher.Form method="post" action={`/api/reviews/${review._id}/vote`}>
             <button
               type="submit"
-              className={`flex items-center gap-1 text-xs transition-colors ${
-                hasVoted ? "text-primary" : "text-text-muted hover:text-primary"
+              className={`flex items-center gap-1.5 text-xs transition-colors ${
+                hasVoted ? "text-accent" : "text-fg-muted hover:text-accent"
               }`}
             >
-              <span
-                className="material-symbols-outlined text-sm"
-                style={hasVoted ? { fontVariationSettings: "'FILL' 1" } : undefined}
-              >
-                thumb_up
-              </span>
+              <Icon name="thumbUp" size={14} />
               Útil ({optimisticCount})
             </button>
           </fetcher.Form>
         ) : (
-          <span className="text-xs text-text-muted">
-            <span className="material-symbols-outlined text-sm align-middle mr-1">thumb_up</span>
+          <span className="flex items-center gap-1.5 text-xs text-fg-muted">
+            <Icon name="thumbUp" size={14} />
             Útil ({review.helpfulCount})
           </span>
         )}
-      </div>
-    </div>
+      </footer>
+    </article>
   );
 }

@@ -1,4 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
+import { Readable } from "node:stream";
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES } from "./upload-config";
 
 let configured = false;
 
@@ -10,6 +12,29 @@ function ensureConfig() {
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });
   configured = true;
+}
+
+const ALLOWED_TYPES = new Set<string>(ALLOWED_IMAGE_TYPES);
+
+export class UploadError extends Error {
+  constructor(
+    message: string,
+    public code: "too_large" | "bad_type" | "upload_failed" | "no_file"
+  ) {
+    super(message);
+  }
+}
+
+export function validateImage(file: File | null | undefined): file is File {
+  if (!file || typeof file === "string") return false;
+  if (file.size === 0) return false;
+  if (file.size > MAX_IMAGE_BYTES) {
+    throw new UploadError("La imagen supera 5 MB.", "too_large");
+  }
+  if (!ALLOWED_TYPES.has(file.type)) {
+    throw new UploadError("Formato no permitido. Usa JPG, PNG, WEBP o GIF.", "bad_type");
+  }
+  return true;
 }
 
 export async function uploadImage(
@@ -30,18 +55,14 @@ export async function uploadImage(
       },
       (error, result) => {
         if (error || !result) {
-          reject(error || new Error("Upload failed"));
+          reject(new UploadError(error?.message || "Upload failed", "upload_failed"));
         } else {
           resolve(result.secure_url);
         }
       }
     );
 
-    const { Readable } = require("stream");
-    const readableStream = new Readable();
-    readableStream.push(buffer);
-    readableStream.push(null);
-    readableStream.pipe(uploadStream);
+    Readable.from(buffer).pipe(uploadStream);
   });
 }
 

@@ -1,5 +1,4 @@
 import { type ReactNode, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "motion/react";
 import { cn } from "~/lib/utils";
 
 interface DialogProps {
@@ -13,55 +12,43 @@ function Dialog({ open, onClose, children, className }: DialogProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [open]);
 
   useEffect(() => {
+    if (!open) return;
     function handleEscape(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
-    if (open) {
-      window.addEventListener("keydown", handleEscape);
-      return () => window.removeEventListener("keydown", handleEscape);
-    }
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
   }, [open, onClose]);
 
+  if (!open) return null;
+
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          ref={overlayRef}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          onClick={(e) => {
-            if (e.target === overlayRef.current) onClose();
-          }}
-        >
-          <motion.div
-            className={cn(
-              "w-full max-w-md rounded-2xl bg-forest-deep border border-white/10 p-6 shadow-xl",
-              className
-            )}
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {children}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm fade-in"
+      onClick={(e) => {
+        if (e.target === overlayRef.current) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        className={cn(
+          "w-full max-w-md card-strong p-6 shadow-[var(--shadow-soft)] fade-up",
+          className
+        )}
+      >
+        {children}
+      </div>
+    </div>
   );
 }
 

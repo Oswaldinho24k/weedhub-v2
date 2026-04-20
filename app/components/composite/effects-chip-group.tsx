@@ -5,6 +5,7 @@ interface EffectsChipGroupProps {
   selected?: string[];
   onToggle?: (effect: string) => void;
   interactive?: boolean;
+  tone?: "accent" | "warm" | "neutral";
   className?: string;
 }
 
@@ -13,31 +14,31 @@ export function EffectsChipGroup({
   selected = [],
   onToggle,
   interactive = false,
+  tone = "neutral",
   className,
 }: EffectsChipGroupProps) {
+  const onClass =
+    tone === "accent" ? "on-accent" : tone === "warm" ? "on-warm" : "on";
+
   return (
     <div className={cn("flex flex-wrap gap-2", className)}>
       {effects.map((effect) => {
         const isSelected = selected.includes(effect);
-        return interactive ? (
-          <button
-            key={effect}
-            type="button"
-            className={cn(
-              "px-4 py-1.5 rounded-full text-sm font-medium transition-all",
-              isSelected
-                ? "bg-primary text-background-dark"
-                : "bg-white/5 text-white hover:bg-white/10"
-            )}
-            onClick={() => onToggle?.(effect)}
-          >
-            {effect}
-          </button>
-        ) : (
-          <span
-            key={effect}
-            className="px-4 py-1.5 rounded-full bg-white/5 text-sm font-medium text-text-muted"
-          >
+        if (interactive) {
+          return (
+            <button
+              key={effect}
+              type="button"
+              className={cn("chip", isSelected && onClass)}
+              onClick={() => onToggle?.(effect)}
+              aria-pressed={isSelected}
+            >
+              {effect}
+            </button>
+          );
+        }
+        return (
+          <span key={effect} className="chip">
             {effect}
           </span>
         );

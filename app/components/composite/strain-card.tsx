@@ -1,7 +1,6 @@
 import { Link } from "react-router";
-import { motion } from "motion/react";
-import { Card } from "~/components/ui/card";
-import { Badge } from "~/components/ui/badge";
+import { StrainThumb } from "./strain-thumb";
+import { Icon } from "~/components/ui/icon";
 
 interface StrainCardProps {
   strain: {
@@ -9,23 +8,23 @@ interface StrainCardProps {
     name: string;
     slug: string;
     type: string;
-    description: string;
+    typeBlend?: string;
+    description?: string;
+    descriptionEs?: string;
+    lineage?: string;
     cannabinoidProfile: {
       thc: { min: number; max: number };
       cbd: { min: number; max: number };
     };
     effects: string[];
+    dominantTerpene?: string;
     averageRatings: { overall: number };
     reviewCount: number;
     imageUrl?: string;
+    colorHint?: string;
   };
+  variant?: "card" | "row";
 }
-
-const TYPE_VARIANT: Record<string, "sativa" | "indica" | "hybrid"> = {
-  sativa: "sativa",
-  indica: "indica",
-  hybrid: "hybrid",
-};
 
 const TYPE_LABEL: Record<string, string> = {
   sativa: "Sativa",
@@ -33,92 +32,96 @@ const TYPE_LABEL: Record<string, string> = {
   hybrid: "Híbrida",
 };
 
-export function StrainCard({ strain }: StrainCardProps) {
-  return (
-    <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-      <Link to={`/strains/${strain.slug}`}>
-        <Card className="h-full hover:glow-primary transition-all group">
-          {/* Image */}
-          <div className="relative h-40 rounded-xl bg-forest-muted mb-3 overflow-hidden">
-            {strain.imageUrl ? (
-              <img
-                src={strain.imageUrl}
-                alt={`Cepa ${strain.name}, tipo ${TYPE_LABEL[strain.type] || strain.type}`}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                loading="lazy"
-                width={400}
-                height={160}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-4xl text-forest-accent">
-                  potted_plant
-                </span>
-              </div>
-            )}
+const TYPE_PILL: Record<string, string> = {
+  sativa: "accent",
+  indica: "warm",
+  hybrid: "lilac",
+};
 
-            {/* Rating badge */}
-            {strain.averageRatings.overall > 0 && (
-              <div className="absolute top-2 right-2 rounded-full bg-black/60 px-3 py-1 text-xs font-bold text-primary flex items-center gap-1">
-                <span
-                  className="material-symbols-outlined text-accent-amber text-xs"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  star
-                </span>
-                {strain.averageRatings.overall.toFixed(1)}
-              </div>
-            )}
+export function StrainCard({ strain, variant = "card" }: StrainCardProps) {
+  const typeLabel = strain.typeBlend || TYPE_LABEL[strain.type] || strain.type;
+  const pillVariant = TYPE_PILL[strain.type] || "";
+  const thcText = `${strain.cannabinoidProfile.thc.max}`;
 
-            {/* Type badge */}
-            <div className="absolute top-2 left-2">
-              <Badge variant={TYPE_VARIANT[strain.type] || "default"}>
-                {TYPE_LABEL[strain.type] || strain.type}
-              </Badge>
-            </div>
+  if (variant === "row") {
+    return (
+      <Link
+        to={`/strains/${strain.slug}`}
+        className="group grid grid-cols-[64px_1fr_auto_auto_auto_20px] items-center gap-5 py-4 border-b border-line hover:bg-elev transition-colors"
+      >
+        <StrainThumb
+          name={strain.name}
+          colorHint={strain.colorHint}
+          imageUrl={strain.imageUrl}
+          ratio="square"
+          className="w-16 h-16"
+        />
+        <div>
+          <div className="display text-xl text-fg">{strain.name}</div>
+          <div className="text-xs text-fg-muted">
+            {typeLabel}
+            {strain.lineage && <span> · {strain.lineage}</span>}
           </div>
-
-          {/* Content */}
-          <h3 className="font-display font-bold text-white text-lg group-hover:text-primary transition-colors">
-            {strain.name}
-          </h3>
-
-          <p className="text-sm text-text-muted mt-1 line-clamp-2">
-            {strain.description}
-          </p>
-
-          {/* THC/CBD */}
-          <div className="flex gap-4 mt-3 text-xs">
-            <span className="text-text-muted">
-              THC: <span className="text-white font-bold">{strain.cannabinoidProfile.thc.min}–{strain.cannabinoidProfile.thc.max}%</span>
-            </span>
-            {strain.cannabinoidProfile.cbd.max > 0 && (
-              <span className="text-text-muted">
-                CBD: <span className="text-white font-bold">{strain.cannabinoidProfile.cbd.min}–{strain.cannabinoidProfile.cbd.max}%</span>
-              </span>
-            )}
-          </div>
-
-          {/* Effects */}
-          {strain.effects.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {strain.effects.slice(0, 3).map((effect) => (
-                <span
-                  key={effect}
-                  className="px-3 py-1 rounded-full bg-white/5 text-xs text-text-muted hover:bg-white/10 transition-colors duration-200"
-                >
-                  {effect}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Review count */}
-          <div className="mt-3 text-xs text-text-muted/60">
-            {strain.reviewCount} {strain.reviewCount === 1 ? "reseña" : "reseñas"}
-          </div>
-        </Card>
+        </div>
+        <div className="mono text-xs text-fg-muted">{strain.dominantTerpene || "—"}</div>
+        <div className="mono text-sm tnum" style={{ color: "var(--accent)" }}>
+          {thcText}%
+        </div>
+        <div className="flex items-center gap-1 text-sm text-fg">
+          <Icon name="star" size={14} />
+          <span className="tnum">{strain.averageRatings.overall.toFixed(1)}</span>
+        </div>
+        <Icon name="chevronRight" size={16} className="text-fg-dim" />
       </Link>
-    </motion.div>
+    );
+  }
+
+  return (
+    <Link
+      to={`/strains/${strain.slug}`}
+      className="group card p-4 flex flex-col gap-3 hover:bg-elev hover:-translate-y-0.5 transition-[background,transform] duration-200"
+    >
+      <StrainThumb
+        name={strain.name}
+        colorHint={strain.colorHint}
+        imageUrl={strain.imageUrl}
+        ratio="wide"
+      />
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className={`pill ${pillVariant}`}>{typeLabel}</span>
+        {strain.dominantTerpene && (
+          <span className="pill">{strain.dominantTerpene}</span>
+        )}
+      </div>
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 className="display text-2xl text-fg leading-tight">{strain.name}</h3>
+        <span
+          className="mono text-lg tnum shrink-0"
+          style={{ color: "var(--accent)" }}
+        >
+          {thcText}%
+        </span>
+      </div>
+      {strain.lineage && (
+        <div className="text-xs text-fg-muted -mt-1">{strain.lineage}</div>
+      )}
+      {(strain.descriptionEs || strain.description) && (
+        <p className="text-sm text-fg-muted line-clamp-2">
+          {strain.descriptionEs || strain.description}
+        </p>
+      )}
+      <div className="flex items-center justify-between mt-auto pt-2 border-t border-line">
+        <div className="flex items-center gap-1 text-sm">
+          <Icon name="star" size={14} />
+          <span className="tnum">{strain.averageRatings.overall.toFixed(1)}</span>
+          <span className="text-fg-dim text-xs">
+            ({strain.reviewCount})
+          </span>
+        </div>
+        <span className="mono text-[10px] uppercase tracking-wider text-fg-dim">
+          Ver perfil
+        </span>
+      </div>
+    </Link>
   );
 }

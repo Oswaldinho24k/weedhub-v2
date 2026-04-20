@@ -1,65 +1,297 @@
 @import "tailwindcss";
 
-@theme {
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Noto Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Noto Sans", ui-sans-serif, system-ui, sans-serif;
+/* ============================================================
+   WeedHub — Verde Noche · Design Tokens
+   Canonical reference: design_handoff_weedhub/design/styles.css
+   All colors in oklch. Dark theme is default; .light toggles.
+   ============================================================ */
 
-  --color-primary: #6af425;
-  --color-primary-rgb: 106, 244, 37;
-  --color-background-dark: #0a1206;
-  --color-forest-deep: #162310;
-  --color-forest-muted: #223418;
-  --color-forest-medium: #2f4922;
-  --color-forest-accent: #436831;
-  --color-forest-hover: #3d5e2c;
-  --color-text-muted: #a4cb90;
-  --color-accent-amber: #ffbf00;
-  --color-accent-purple: #a855f7;
-  --color-background-light: #f6f8f5;
-}
+:root {
+  /* Surfaces */
+  --bg: oklch(16% 0.025 150);
+  --bg-raised: oklch(20% 0.028 150);
+  --bg-sunken: oklch(13% 0.022 150);
+  --bg-elev: oklch(24% 0.03 150);
 
-html {
+  /* Lines */
+  --line: oklch(32% 0.025 150);
+  --line-strong: oklch(42% 0.03 150);
+
+  /* Text */
+  --fg: oklch(94% 0.015 85);
+  --fg-muted: oklch(72% 0.02 85);
+  --fg-dim: oklch(56% 0.02 85);
+
+  /* Accent — signal green, used sparingly */
+  --accent: oklch(76% 0.17 145);
+  --accent-ink: oklch(22% 0.08 145);
+  --accent-soft: oklch(38% 0.08 145);
+
+  /* Warm — terracotta, indica / warmth / negatives */
+  --warm: oklch(72% 0.13 55);
+  --warm-soft: oklch(38% 0.07 55);
+
+  /* Lilac — trichomes, hybrid, editorial */
+  --lilac: oklch(74% 0.11 310);
+  --lilac-soft: oklch(38% 0.06 310);
+
+  /* Gold — ratings */
+  --gold: oklch(82% 0.14 85);
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 14px;
+  --radius-xl: 22px;
+  --radius-pill: 999px;
+
+  /* Fonts */
+  --font-display: "Fraunces", "Instrument Serif", Georgia, serif;
+  --font-body: "Instrument Sans", "Inter Tight", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* Shadow — one deliberate shadow */
+  --shadow-soft:
+    0 1px 0 oklch(40% 0.03 150 / 0.4) inset,
+    0 20px 40px -20px oklch(0% 0 0 / 0.6);
+
   color-scheme: dark;
 }
 
+.light {
+  --bg: oklch(96% 0.012 95);
+  --bg-raised: oklch(99% 0.008 95);
+  --bg-sunken: oklch(92% 0.015 95);
+  --bg-elev: oklch(100% 0 0);
+  --line: oklch(82% 0.02 95);
+  --line-strong: oklch(68% 0.03 95);
+
+  --fg: oklch(22% 0.03 150);
+  --fg-muted: oklch(42% 0.025 150);
+  --fg-dim: oklch(58% 0.02 150);
+
+  --accent: oklch(52% 0.16 145);
+  --accent-ink: oklch(98% 0.02 145);
+  --accent-soft: oklch(90% 0.06 145);
+
+  --warm: oklch(58% 0.14 55);
+  --warm-soft: oklch(92% 0.05 55);
+
+  --lilac: oklch(54% 0.13 310);
+  --lilac-soft: oklch(92% 0.04 310);
+
+  --gold: oklch(68% 0.14 85);
+
+  --shadow-soft:
+    0 1px 0 oklch(100% 0 0 / 0.6) inset,
+    0 10px 30px -20px oklch(0% 0 0 / 0.2);
+
+  color-scheme: light;
+}
+
+/* ============================================================
+   Tailwind v4 @theme — expose tokens as utilities
+   Use e.g. bg-raised, text-fg-muted, border-line, font-display
+   ============================================================ */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-raised: var(--bg-raised);
+  --color-sunken: var(--bg-sunken);
+  --color-elev: var(--bg-elev);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-dim: var(--fg-dim);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-warm: var(--warm);
+  --color-warm-soft: var(--warm-soft);
+  --color-lilac: var(--lilac);
+  --color-lilac-soft: var(--lilac-soft);
+  --color-gold: var(--gold);
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-xl: 22px;
+  --radius-pill: 999px;
+
+  --font-display: "Fraunces", "Instrument Serif", Georgia, serif;
+  --font-body: "Instrument Sans", "Inter Tight", system-ui, sans-serif;
+  --font-sans: "Instrument Sans", "Inter Tight", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
 html, body {
-  @apply bg-background-dark text-white;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-feature-settings: "ss01", "cv11";
+}
+body {
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a { color: inherit; text-decoration: none; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: var(--line-strong); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+/* ============================================================
+   Typography helpers
+   ============================================================ */
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  font-variation-settings: "SOFT" 30, "WONK" 0, "opsz" 144;
+}
+.display-wonk {
+  font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144;
+  font-style: italic;
+}
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum";
+}
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   Primitives
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  font-weight: 500;
+  font-size: 14px;
+  border: 1px solid transparent;
+  transition: background .15s, color .15s, transform .15s, border-color .15s;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover:not(:disabled) { background: oklch(from var(--accent) calc(l + 0.04) c h); }
+
+.btn-ghost { border-color: var(--line-strong); color: var(--fg); background: transparent; }
+.btn-ghost:hover:not(:disabled) { background: var(--bg-elev); }
+
+.btn-warm { background: var(--warm); color: oklch(20% 0.04 55); }
+.btn-warm:hover:not(:disabled) { background: oklch(from var(--warm) calc(l + 0.04) c h); }
+
+.btn-link { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; padding: 0; background: transparent; }
+
+/* Pills — small, passive labels */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--fg-muted);
+  background: var(--bg-raised);
   font-family: var(--font-body);
 }
+.pill.active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.pill.accent { background: var(--accent-soft); border-color: transparent; color: var(--fg); }
+.pill.warm { background: var(--warm-soft); border-color: transparent; color: var(--warm); }
+.pill.lilac { background: var(--lilac-soft); border-color: transparent; color: var(--lilac); }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
+/* Chips — interactive toggles */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--fg);
+  background: transparent;
+  transition: all .15s;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.chip:hover { border-color: var(--line-strong); }
+.chip.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chip.on-accent { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.chip.on-warm { background: var(--warm); color: oklch(20% 0.04 55); border-color: var(--warm); }
+
+/* Cards */
+.card { background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--radius-lg); }
+.card-strong { background: var(--bg-elev); border: 1px solid var(--line-strong); border-radius: var(--radius-lg); }
+
+.hrule { height: 1px; background: var(--line); border: 0; }
+
+/* Image placeholder */
+.ph {
+  background: repeating-linear-gradient(135deg, var(--bg-elev) 0 12px, var(--bg-sunken) 12px 24px);
+  color: var(--fg-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: var(--radius);
 }
 
-.glow-primary {
-  box-shadow: 0 0 20px rgba(106, 244, 37, 0.1);
+/* Grain overlay */
+.grain { position: relative; }
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+  opacity: .5;
+  border-radius: inherit;
 }
 
-.glow-primary-strong {
-  box-shadow: 0 0 30px rgba(106, 244, 37, 0.2);
+.leaf-mark { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; color: var(--accent); }
+
+/* Animations */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.fade-up { animation: fadeUp .4s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.fade-in { animation: fadeIn .3s both; }
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.toast-in { animation: toastIn .2s ease-out both; }
+
+/* Hide decorative coordinate chip on narrow viewports */
+@media (max-width: 1180px) {
+  .hero-coords { display: none; }
 }
 
-.gradient-mesh {
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(106, 244, 37, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(106, 244, 37, 0.04) 0%, transparent 50%);
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--color-background-dark);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-forest-medium);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-forest-accent);
-}
+/* Form controls (resets for pure-CSS inputs used in primitives) */
+button { font: inherit; color: inherit; }
+input, textarea, select { font: inherit; color: inherit; }

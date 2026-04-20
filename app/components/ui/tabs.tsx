@@ -39,7 +39,7 @@ function TabsList({ children, className }: { children: ReactNode; className?: st
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1 rounded-xl bg-forest-muted p-1",
+        "inline-flex items-center gap-6 border-b border-line",
         className
       )}
     >
@@ -61,16 +61,21 @@ function TabsTrigger({
   const isActive = activeTab === value;
   return (
     <button
+      type="button"
       className={cn(
-        "inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-        isActive
-          ? "bg-primary text-background-dark"
-          : "text-text-muted hover:text-white hover:bg-white/5",
+        "relative py-3 text-sm transition-colors",
+        isActive ? "text-fg" : "text-fg-muted hover:text-fg",
         className
       )}
       onClick={() => setActiveTab(value)}
     >
       {children}
+      {isActive && (
+        <span
+          aria-hidden
+          className="absolute left-0 right-0 -bottom-px h-0.5 bg-accent"
+        />
+      )}
     </button>
   );
 }

@@ -29,12 +29,29 @@ export interface ReviewDistribution {
   5: number;
 }
 
+export interface TimeCurvePoint {
+  t: string;
+  label: string;
+  energy: number;
+  calm: number;
+  cerebral: number;
+}
+
+export interface Momento {
+  manana: number;
+  tarde: number;
+  noche: number;
+}
+
 export interface Strain {
   _id: string;
   name: string;
   slug: string;
   type: StrainType;
+  typeBlend?: string;
   description: string;
+  descriptionEs?: string;
+  lineage?: string;
   genetics: {
     parent1?: string;
     parent2?: string;
@@ -42,8 +59,13 @@ export interface Strain {
   };
   cannabinoidProfile: CannabinoidProfile;
   terpenes: TerpeneEntry[];
+  dominantTerpene?: string;
   effects: string[];
   flavors: string[];
+  difficulty?: "Baja" | "Moderada" | "Alta";
+  timeCurve?: TimeCurvePoint[];
+  momento?: Momento;
+  colorHint?: string;
   imageUrl?: string;
   averageRatings: StrainRatings;
   reviewCount: number;

@@ -3,21 +3,17 @@ import type { Route } from "./+types/profile";
 import { requireUser } from "~/lib/auth.server";
 import { connectDB } from "~/lib/db.server";
 import { ReviewModel } from "~/models/review.server";
-import { BADGES } from "~/constants/gamification";
-import { Card, CardContent, CardHeader } from "~/components/ui/card";
-import { Badge } from "~/components/ui/badge";
-import { Avatar } from "~/components/ui/avatar";
-import { Button } from "~/components/ui/button";
-import { Separator } from "~/components/ui/separator";
+import { BADGES, getCurrentLevel, getNextLevel } from "~/constants/gamification";
+import { Icon } from "~/components/ui/icon";
+import { RatingStars } from "~/components/composite/rating-stars";
 import { formatDate } from "~/lib/utils";
 import { buildMeta, SITE_URL } from "~/lib/seo";
-import { LEVELS, getCurrentLevel, getNextLevel } from "~/constants/gamification";
-import { Progress } from "~/components/ui/progress";
 
 export function meta() {
   return buildMeta({
-    title: "Mi Perfil — WeedHub",
-    description: "Tu perfil en WeedHub. Revisa tus reseñas, insignias y progreso en la comunidad cannábica.",
+    title: "Mi perfil — WeedHub",
+    description:
+      "Tu perfil en WeedHub: reseñas, insignias y tu progreso en la comunidad cannábica.",
     url: `${SITE_URL}/profile`,
   });
 }
@@ -26,10 +22,13 @@ export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request);
   await connectDB();
 
-  const recentReviews = await ReviewModel.find({ userId: user._id, status: "published" })
+  const recentReviews = await ReviewModel.find({
+    userId: user._id,
+    status: "published",
+  })
     .sort({ createdAt: -1 })
     .limit(5)
-    .populate("strainId", "name slug type")
+    .populate("strainId", "name slug type colorHint")
     .lean();
 
   return {
@@ -52,7 +51,12 @@ export async function loader({ request }: Route.LoaderArgs) {
       comment: r.comment,
       createdAt: r.createdAt.toISOString(),
       strain: r.strainId
-        ? { name: (r.strainId as any).name, slug: (r.strainId as any).slug, type: (r.strainId as any).type }
+        ? {
+            name: (r.strainId as any).name,
+            slug: (r.strainId as any).slug,
+            type: (r.strainId as any).type,
+            colorHint: (r.strainId as any).colorHint,
+          }
         : null,
     })),
   };
@@ -60,6 +64,9 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 const EXPERIENCE_LABELS: Record<string, string> = {
   principiante: "Principiante",
+  novato: "Novato",
+  ocasional: "Ocasional",
+  regular: "Regular",
   intermedio: "Intermedio",
   experimentado: "Experimentado",
   experto: "Experto",
@@ -67,221 +74,206 @@ const EXPERIENCE_LABELS: Record<string, string> = {
 
 export default function ProfilePage({ loaderData }: Route.ComponentProps) {
   const { user, recentReviews } = loaderData;
+  const points = user.points || 0;
+  const currentLevel = getCurrentLevel(points);
+  const nextLevel = getNextLevel(points);
+  const progress = nextLevel
+    ? ((points - currentLevel.minPoints) /
+        (nextLevel.minPoints - currentLevel.minPoints)) *
+      100
+    : 100;
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Profile Card */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="text-center border-white/10">
-            <CardContent className="pt-6">
-              <Avatar
-                src={user.avatar}
-                fallback={user.displayName.charAt(0).toUpperCase()}
-                size="lg"
-                className="mx-auto mb-4"
+    <div className="mx-auto max-w-[1200px] px-6 py-10">
+      {/* Header */}
+      <section className="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-start gap-6 mb-10">
+        <div
+          className="h-20 w-20 rounded-full bg-elev border border-line grid place-items-center display text-2xl"
+          style={{ color: "var(--accent)" }}
+        >
+          {user.displayName.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <div className="kicker mb-1">Perfil</div>
+          <h1 className="display text-4xl md:text-5xl">{user.displayName}</h1>
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            <span className="text-sm text-fg-muted">{user.email}</span>
+            {user.cannabisProfile?.experienceLevel && (
+              <span className="pill accent">
+                {EXPERIENCE_LABELS[user.cannabisProfile.experienceLevel] ||
+                  user.cannabisProfile.experienceLevel}
+              </span>
+            )}
+          </div>
+        </div>
+        <Link to="/profile/edit" className="btn btn-ghost">
+          <Icon name="edit" size={14} />
+          Editar perfil
+        </Link>
+      </section>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8">
+        <aside className="space-y-6">
+          <div className="card p-5">
+            <div className="kicker mb-3">Nivel</div>
+            <div className="flex items-baseline justify-between">
+              <span className="display text-2xl">{currentLevel.name}</span>
+              <span className="mono text-sm text-fg-muted tnum">
+                {points} pts
+              </span>
+            </div>
+            <div className="h-1.5 bg-sunken rounded-full mt-3 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-[width] duration-500"
+                style={{ width: `${progress}%`, background: "var(--accent)" }}
               />
-              <h1 className="font-display text-xl font-bold text-white">
-                {user.displayName}
-              </h1>
-              <p className="text-sm text-text-muted">{user.email}</p>
+            </div>
+            {nextLevel && (
+              <p className="text-xs text-fg-dim mt-2">
+                {nextLevel.minPoints - points} pts para {nextLevel.name}
+              </p>
+            )}
+          </div>
 
-              {user.cannabisProfile?.experienceLevel && (
-                <Badge variant="hybrid" className="mt-3">
-                  {EXPERIENCE_LABELS[user.cannabisProfile.experienceLevel] || user.cannabisProfile.experienceLevel}
-                </Badge>
-              )}
+          <div className="card p-5 grid grid-cols-3 gap-3 text-center">
+            <StatPill
+              kicker="Reseñas"
+              value={user.stats?.reviewCount || 0}
+            />
+            <StatPill
+              kicker="Útiles"
+              value={user.stats?.helpfulVotesReceived || 0}
+            />
+            <StatPill kicker="Cepas" value={user.stats?.strainsReviewed || 0} />
+          </div>
 
-              {/* Level */}
-              {(() => {
-                const points = user.points || 0;
-                const currentLevel = getCurrentLevel(points);
-                const nextLevel = getNextLevel(points);
-                const progress = nextLevel
-                  ? ((points - currentLevel.minPoints) / (nextLevel.minPoints - currentLevel.minPoints)) * 100
-                  : 100;
+          <Link to="/profile/saved" className="card p-5 flex items-center justify-between hover:bg-elev transition-colors">
+            <div>
+              <div className="kicker mb-1">Biblioteca</div>
+              <div className="text-sm text-fg">Cepas guardadas</div>
+            </div>
+            <Icon name="arrowRight" size={16} className="text-fg-dim" />
+          </Link>
+
+          {user.cannabisProfile?.preferredEffects?.length ? (
+            <div className="card p-5">
+              <div className="kicker mb-3">Efectos preferidos</div>
+              <div className="flex flex-wrap gap-2">
+                {user.cannabisProfile.preferredEffects.map((e: string) => (
+                  <span key={e} className="pill accent">
+                    {e}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </aside>
+
+        <div className="space-y-10">
+          {/* Badges */}
+          <section>
+            <div className="flex items-baseline justify-between mb-5">
+              <h2 className="display text-2xl">Insignias</h2>
+              <span className="kicker">
+                {user.earnedBadges?.length || 0} / {BADGES.length}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {BADGES.map((badge) => {
+                const earned = user.earnedBadges?.find(
+                  (eb: any) => eb.badgeId === badge.id
+                );
+                const isEarned = !!earned;
                 return (
-                  <div className="mt-4 p-3 rounded-xl bg-white/5">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="material-symbols-outlined text-primary text-xl">
-                        {currentLevel.icon}
-                      </span>
-                      <span className="font-bold text-white text-sm">{currentLevel.name}</span>
-                      <span className="text-xs text-text-muted ml-auto">{points} pts</span>
+                  <div
+                    key={badge.id}
+                    className={`card p-4 text-center transition-opacity ${
+                      isEarned ? "" : "opacity-55"
+                    }`}
+                    title={badge.description}
+                  >
+                    <div
+                      className="h-9 w-9 mx-auto rounded-full grid place-items-center mb-2"
+                      style={{
+                        background: isEarned ? "var(--gold)" : "var(--bg-elev)",
+                        color: isEarned ? "oklch(22% 0.05 85)" : "var(--fg-dim)",
+                      }}
+                    >
+                      <Icon name="crown" size={16} />
                     </div>
-                    <Progress value={progress} max={100} />
-                    {nextLevel && (
-                      <p className="text-xs text-text-muted mt-1">
-                        {nextLevel.minPoints - points} pts para {nextLevel.name}
-                      </p>
-                    )}
+                    <div className="text-sm font-medium">{badge.name}</div>
+                    <div className="text-[10px] text-fg-dim mt-1 line-clamp-1">
+                      {badge.description}
+                    </div>
                   </div>
                 );
-              })()}
-
-              <div className="mt-4 flex justify-center gap-6 text-center">
-                <div>
-                  <p className="text-2xl font-bold text-white">{user.stats?.reviewCount || 0}</p>
-                  <p className="text-xs text-text-muted">Reseñas</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{user.stats?.helpfulVotesReceived || 0}</p>
-                  <p className="text-xs text-text-muted">Útiles</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-primary">{user.points || 0}</p>
-                  <p className="text-xs text-text-muted">Puntos</p>
-                </div>
-              </div>
-
-              <Separator className="my-4" />
-
-              <Link to="/profile/edit">
-                <Button variant="secondary" size="sm" className="w-full">
-                  <span className="material-symbols-outlined text-lg">edit</span>
-                  Editar Perfil
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Cannabis Profile */}
-          {user.onboardingCompleted && user.cannabisProfile && (
-            <Card className="border-white/10">
-              <CardHeader>
-                <h2 className="font-display font-bold text-white flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">potted_plant</span>
-                  Perfil Cannábico
-                </h2>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {user.cannabisProfile.preferredEffects?.length > 0 && (
-                  <div>
-                    <p className="text-xs text-text-muted mb-1">Efectos preferidos</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {user.cannabisProfile.preferredEffects.map((e: string) => (
-                        <span key={e} className="px-2 py-0.5 rounded-full bg-white/5 text-xs text-white">
-                          {e}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Badges */}
-          <Card className="border-white/10">
-            <CardHeader>
-              <h2 className="font-display font-bold text-white flex items-center gap-2">
-                <span className="material-symbols-outlined text-accent-amber">emoji_events</span>
-                Insignias
-              </h2>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {BADGES.map((badge) => {
-                  const earned = user.earnedBadges?.find((eb: any) => eb.badgeId === badge.id);
-                  const isEarned = !!earned;
-
-                  // Progress for unearned badges
-                  let progressText = "";
-                  if (!isEarned) {
-                    const stats = user.stats || {};
-                    if (badge.type === "reviews") {
-                      progressText = `${stats.reviewCount || 0}/${badge.requirement} reseñas`;
-                    } else if (badge.type === "helpful") {
-                      progressText = `${stats.helpfulVotesReceived || 0}/${badge.requirement} útiles`;
-                    } else if (badge.type === "strains") {
-                      progressText = `${stats.strainsReviewed || 0}/${badge.requirement} cepas`;
-                    }
-                  }
-
-                  return (
-                    <div
-                      key={badge.id}
-                      className={`text-center p-3 rounded-xl ${isEarned ? "bg-white/5" : "bg-white/[0.02] opacity-50"}`}
-                      title={
-                        isEarned
-                          ? `${badge.description} — Ganada el ${earned.earnedAt ? formatDate(earned.earnedAt) : ""}`
-                          : badge.description
-                      }
-                    >
-                      <span
-                        className={`material-symbols-outlined text-2xl block mb-1 ${
-                          isEarned ? "text-accent-amber" : "text-text-muted"
-                        }`}
-                      >
-                        {badge.icon}
-                      </span>
-                      <p className={`text-xs font-bold ${isEarned ? "text-white" : "text-text-muted"}`}>
-                        {badge.name}
-                      </p>
-                      {!isEarned && progressText && (
-                        <p className="text-xs text-text-muted/60 mt-1">{progressText}</p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+              })}
+            </div>
+          </section>
 
           {/* Recent Reviews */}
-          <Card className="border-white/10">
-            <CardHeader>
-              <h2 className="font-display font-bold text-white flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">rate_review</span>
-                Reseñas Recientes
-              </h2>
-            </CardHeader>
-            <CardContent>
-              {recentReviews.length === 0 ? (
-                <div className="text-center py-8">
-                  <span className="material-symbols-outlined text-4xl text-text-muted/40 mb-2 block">
-                    edit_note
-                  </span>
-                  <p className="text-text-muted">Aún no has escrito reseñas</p>
-                  <Link to="/strains" className="text-primary text-sm hover:underline mt-1 inline-block">
-                    Explora cepas para empezar
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {recentReviews.map((review: any) => (
-                    <div key={review._id} className="p-4 rounded-xl bg-white/5">
-                      <div className="flex items-center justify-between mb-2">
-                        {review.strain && (
-                          <Link
-                            to={`/strains/${review.strain.slug}`}
-                            className="font-bold text-white hover:text-primary transition-colors"
-                          >
+          <section>
+            <div className="flex items-baseline justify-between mb-5">
+              <h2 className="display text-2xl">Reseñas recientes</h2>
+              <Link to="/strains" className="text-sm text-fg-muted hover:text-fg">
+                Explorar cepas
+              </Link>
+            </div>
+            {recentReviews.length === 0 ? (
+              <div className="card p-10 text-center">
+                <p className="text-fg-muted mb-4">Aún no has publicado reseñas.</p>
+                <Link to="/strains" className="btn btn-primary inline-flex">
+                  Escribe tu primera
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentReviews.map((review: any) => (
+                  <article key={review._id} className="card p-5">
+                    <header className="flex items-center justify-between mb-3">
+                      {review.strain && (
+                        <Link
+                          to={`/strains/${review.strain.slug}`}
+                          className="flex items-center gap-3 hover:text-accent transition-colors"
+                        >
+                          <span
+                            className="h-8 w-8 rounded-md shrink-0"
+                            style={{
+                              background:
+                                review.strain.colorHint || "var(--bg-elev)",
+                            }}
+                          />
+                          <span className="font-medium">
                             {review.strain.name}
-                          </Link>
-                        )}
-                        <div className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-accent-amber text-sm">star</span>
-                          <span className="text-sm font-bold text-white">{review.ratings.overall}</span>
-                        </div>
-                      </div>
-                      {review.comment && (
-                        <p className="text-sm text-text-muted line-clamp-2">{review.comment}</p>
+                          </span>
+                        </Link>
                       )}
-                      <p className="text-xs text-text-muted/60 mt-2">
-                        {formatDate(review.createdAt)}
+                      <RatingStars rating={review.ratings.overall} size="sm" />
+                    </header>
+                    {review.comment && (
+                      <p className="text-sm text-fg-muted line-clamp-3">
+                        {review.comment}
                       </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    )}
+                    <footer className="mt-3 text-xs text-fg-dim">
+                      {formatDate(review.createdAt)}
+                    </footer>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </div>
+    </div>
+  );
+}
+
+function StatPill({ kicker, value }: { kicker: string; value: number }) {
+  return (
+    <div>
+      <div className="display text-2xl tnum">{value}</div>
+      <div className="kicker mt-1">{kicker}</div>
     </div>
   );
 }

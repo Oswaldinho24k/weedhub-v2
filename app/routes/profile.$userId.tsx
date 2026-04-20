@@ -3,20 +3,17 @@ import type { Route } from "./+types/profile.$userId";
 import { connectDB } from "~/lib/db.server";
 import { UserModel } from "~/models/user.server";
 import { ReviewModel } from "~/models/review.server";
-import { BADGES } from "~/constants/gamification";
-import { Card, CardContent, CardHeader } from "~/components/ui/card";
-import { Badge } from "~/components/ui/badge";
-import { Avatar } from "~/components/ui/avatar";
+import { BADGES, getCurrentLevel } from "~/constants/gamification";
+import { RatingStars } from "~/components/composite/rating-stars";
+import { Icon } from "~/components/ui/icon";
 import { formatDate } from "~/lib/utils";
 import { buildMeta, SITE_URL } from "~/lib/seo";
-import { LEVELS, getCurrentLevel } from "~/constants/gamification";
-import { Progress } from "~/components/ui/progress";
 
 export function meta({ data }: Route.MetaArgs) {
   const name = data?.user?.displayName || "Perfil";
   return buildMeta({
     title: `${name} — WeedHub`,
-    description: `Perfil de ${name} en WeedHub. Reseñas, insignias y actividad en la comunidad cannábica.`,
+    description: `Perfil público de ${name}. Reseñas con contexto, insignias y actividad en la comunidad.`,
     url: `${SITE_URL}/profile/${data?.user?._id || ""}`,
   });
 }
@@ -26,10 +23,13 @@ export async function loader({ params }: Route.LoaderArgs) {
   const user = await UserModel.findById(params.userId).select("-passwordHash -email").lean();
   if (!user) throw new Response("Usuario no encontrado", { status: 404 });
 
-  const recentReviews = await ReviewModel.find({ userId: user._id, status: "published" })
+  const recentReviews = await ReviewModel.find({
+    userId: user._id,
+    status: "published",
+  })
     .sort({ createdAt: -1 })
     .limit(10)
-    .populate("strainId", "name slug type")
+    .populate("strainId", "name slug type colorHint")
     .lean();
 
   return {
@@ -48,7 +48,11 @@ export async function loader({ params }: Route.LoaderArgs) {
       comment: r.comment,
       createdAt: r.createdAt.toISOString(),
       strain: r.strainId
-        ? { name: (r.strainId as any).name, slug: (r.strainId as any).slug }
+        ? {
+            name: (r.strainId as any).name,
+            slug: (r.strainId as any).slug,
+            colorHint: (r.strainId as any).colorHint,
+          }
         : null,
     })),
   };
@@ -56,6 +60,9 @@ export async function loader({ params }: Route.LoaderArgs) {
 
 const EXPERIENCE_LABELS: Record<string, string> = {
   principiante: "Principiante",
+  novato: "Novato",
+  ocasional: "Ocasional",
+  regular: "Regular",
   intermedio: "Intermedio",
   experimentado: "Experimentado",
   experto: "Experto",
@@ -63,131 +70,127 @@ const EXPERIENCE_LABELS: Record<string, string> = {
 
 export default function PublicProfilePage({ loaderData }: Route.ComponentProps) {
   const { user, recentReviews } = loaderData;
+  const currentLevel = getCurrentLevel(user.points || 0);
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">
-          <Card className="text-center border-white/10">
-            <CardContent className="pt-6">
-              <Avatar
-                src={user.avatar}
-                fallback={user.displayName.charAt(0).toUpperCase()}
-                size="lg"
-                className="mx-auto mb-4"
-              />
-              <h1 className="font-display text-xl font-bold text-white">
-                {user.displayName}
-              </h1>
-              {user.cannabisProfile?.experienceLevel && (
-                <Badge variant="hybrid" className="mt-2">
-                  {EXPERIENCE_LABELS[user.cannabisProfile.experienceLevel]}
-                </Badge>
-              )}
-              {/* Level */}
-              {(() => {
-                const points = user.points || 0;
-                const currentLevel = getCurrentLevel(points);
+    <div className="mx-auto max-w-[1200px] px-6 py-10">
+      <section className="grid grid-cols-1 md:grid-cols-[auto_1fr] items-start gap-6 mb-10">
+        <div
+          className="h-20 w-20 rounded-full bg-elev border border-line grid place-items-center display text-2xl"
+          style={{ color: "var(--accent)" }}
+        >
+          {user.displayName.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <div className="kicker mb-1">Perfil público</div>
+          <h1 className="display text-4xl md:text-5xl">{user.displayName}</h1>
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            {user.cannabisProfile?.experienceLevel && (
+              <span className="pill accent">
+                {EXPERIENCE_LABELS[user.cannabisProfile.experienceLevel]}
+              </span>
+            )}
+            <span className="pill">{currentLevel.name}</span>
+            <span className="text-sm text-fg-muted">{user.points || 0} pts</span>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8">
+        <aside className="space-y-6">
+          <div className="card p-5 grid grid-cols-3 gap-3 text-center">
+            <StatPill kicker="Reseñas" value={user.stats?.reviewCount || 0} />
+            <StatPill kicker="Útiles" value={user.stats?.helpfulVotesReceived || 0} />
+            <StatPill kicker="Cepas" value={user.stats?.strainsReviewed || 0} />
+          </div>
+        </aside>
+
+        <div className="space-y-10">
+          <section>
+            <h2 className="display text-2xl mb-5">Insignias</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {BADGES.map((badge) => {
+                const isEarned = !!user.earnedBadges?.find(
+                  (eb: any) => eb.badgeId === badge.id
+                );
                 return (
-                  <div className="mt-4 p-3 rounded-xl bg-white/5">
-                    <div className="flex items-center gap-2 justify-center">
-                      <span className="material-symbols-outlined text-primary text-xl">
-                        {currentLevel.icon}
-                      </span>
-                      <span className="font-bold text-white text-sm">{currentLevel.name}</span>
+                  <div
+                    key={badge.id}
+                    className={`card p-4 text-center transition-opacity ${
+                      isEarned ? "" : "opacity-55"
+                    }`}
+                    title={badge.description}
+                  >
+                    <div
+                      className="h-9 w-9 mx-auto rounded-full grid place-items-center mb-2"
+                      style={{
+                        background: isEarned ? "var(--gold)" : "var(--bg-elev)",
+                        color: isEarned ? "oklch(22% 0.05 85)" : "var(--fg-dim)",
+                      }}
+                    >
+                      <Icon name="crown" size={16} />
                     </div>
+                    <div className="text-sm font-medium">{badge.name}</div>
                   </div>
                 );
-              })()}
+              })}
+            </div>
+          </section>
 
-              <div className="mt-4 flex justify-center gap-6 text-center">
-                <div>
-                  <p className="text-2xl font-bold text-white">{user.stats?.reviewCount || 0}</p>
-                  <p className="text-xs text-text-muted">Reseñas</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{user.stats?.helpfulVotesReceived || 0}</p>
-                  <p className="text-xs text-text-muted">Útiles</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-primary">{user.points || 0}</p>
-                  <p className="text-xs text-text-muted">Puntos</p>
-                </div>
+          <section>
+            <h2 className="display text-2xl mb-5">Reseñas</h2>
+            {recentReviews.length === 0 ? (
+              <div className="card p-10 text-center text-fg-muted">
+                Sin reseñas publicadas.
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="border-white/10">
-            <CardHeader>
-              <h2 className="font-display font-bold text-white">Insignias</h2>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {BADGES.map((badge) => {
-                  const earned = user.earnedBadges?.find((eb: any) => eb.badgeId === badge.id);
-                  const isEarned = !!earned;
-                  return (
-                    <div
-                      key={badge.id}
-                      className={`text-center p-3 rounded-xl ${isEarned ? "bg-white/5" : "bg-white/[0.02] opacity-50"}`}
-                      title={badge.description}
-                    >
-                      <span
-                        className={`material-symbols-outlined text-xl block mb-1 ${
-                          isEarned ? "text-accent-amber" : "text-text-muted"
-                        }`}
-                      >
-                        {badge.icon}
-                      </span>
-                      <p className={`text-xs font-bold ${isEarned ? "text-white" : "text-text-muted"}`}>
-                        {badge.name}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-white/10">
-            <CardHeader>
-              <h2 className="font-display font-bold text-white">Reseñas</h2>
-            </CardHeader>
-            <CardContent>
-              {recentReviews.length === 0 ? (
-                <p className="text-center text-text-muted py-8">Sin reseñas aún</p>
-              ) : (
-                <div className="space-y-4">
-                  {recentReviews.map((review: any) => (
-                    <div key={review._id} className="p-4 rounded-xl bg-white/5">
-                      <div className="flex items-center justify-between mb-2">
-                        {review.strain && (
-                          <Link
-                            to={`/strains/${review.strain.slug}`}
-                            className="font-bold text-white hover:text-primary transition-colors"
-                          >
+            ) : (
+              <div className="space-y-4">
+                {recentReviews.map((review: any) => (
+                  <article key={review._id} className="card p-5">
+                    <header className="flex items-center justify-between mb-3">
+                      {review.strain && (
+                        <Link
+                          to={`/strains/${review.strain.slug}`}
+                          className="flex items-center gap-3 hover:text-accent transition-colors"
+                        >
+                          <span
+                            className="h-8 w-8 rounded-md shrink-0"
+                            style={{
+                              background:
+                                review.strain.colorHint || "var(--bg-elev)",
+                            }}
+                          />
+                          <span className="font-medium">
                             {review.strain.name}
-                          </Link>
-                        )}
-                        <div className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-accent-amber text-sm">star</span>
-                          <span className="text-sm font-bold text-white">{review.ratings.overall}</span>
-                        </div>
-                      </div>
-                      {review.comment && (
-                        <p className="text-sm text-text-muted line-clamp-2">{review.comment}</p>
+                          </span>
+                        </Link>
                       )}
-                      <p className="text-xs text-text-muted/60 mt-2">{formatDate(review.createdAt)}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                      <RatingStars rating={review.ratings.overall} size="sm" />
+                    </header>
+                    {review.comment && (
+                      <p className="text-sm text-fg-muted line-clamp-3">
+                        {review.comment}
+                      </p>
+                    )}
+                    <footer className="mt-3 text-xs text-fg-dim">
+                      {formatDate(review.createdAt)}
+                    </footer>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </div>
+    </div>
+  );
+}
+
+function StatPill({ kicker, value }: { kicker: string; value: number }) {
+  return (
+    <div>
+      <div className="display text-2xl tnum">{value}</div>
+      <div className="kicker mt-1">{kicker}</div>
     </div>
   );
 }

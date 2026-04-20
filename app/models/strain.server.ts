@@ -1,10 +1,27 @@
 import mongoose, { Schema, type Document } from "mongoose";
 
+export interface TimeCurvePoint {
+  t: string;
+  label: string;
+  energy: number;
+  calm: number;
+  cerebral: number;
+}
+
+export interface Momento {
+  manana: number;
+  tarde: number;
+  noche: number;
+}
+
 export interface IStrain extends Document {
   name: string;
   slug: string;
   type: "sativa" | "indica" | "hybrid";
+  typeBlend?: string;
   description: string;
+  descriptionEs?: string;
+  lineage?: string;
   genetics: {
     parent1?: string;
     parent2?: string;
@@ -17,8 +34,13 @@ export interface IStrain extends Document {
     cbn?: number;
   };
   terpenes: Array<{ name: string; percentage: number }>;
+  dominantTerpene?: string;
   effects: string[];
   flavors: string[];
+  difficulty?: "Baja" | "Moderada" | "Alta";
+  timeCurve?: TimeCurvePoint[];
+  momento?: Momento;
+  colorHint?: string;
   imageUrl?: string;
   averageRatings: {
     overall: number;
@@ -50,7 +72,10 @@ const strainSchema = new Schema<IStrain>(
       enum: ["sativa", "indica", "hybrid"],
       required: true,
     },
+    typeBlend: String,
     description: { type: String, required: true },
+    descriptionEs: String,
+    lineage: String,
     genetics: {
       parent1: String,
       parent2: String,
@@ -74,8 +99,25 @@ const strainSchema = new Schema<IStrain>(
         percentage: { type: Number, required: true },
       },
     ],
+    dominantTerpene: String,
     effects: [String],
     flavors: [String],
+    difficulty: { type: String, enum: ["Baja", "Moderada", "Alta"] },
+    timeCurve: [
+      {
+        t: String,
+        label: String,
+        energy: Number,
+        calm: Number,
+        cerebral: Number,
+      },
+    ],
+    momento: {
+      manana: Number,
+      tarde: Number,
+      noche: Number,
+    },
+    colorHint: String,
     imageUrl: String,
     averageRatings: {
       overall: { type: Number, default: 0 },

@@ -1,22 +1,20 @@
 import { Link } from "react-router";
-import { motion } from "motion/react";
 import type { Route } from "./+types/_index";
 import { connectDB } from "~/lib/db.server";
 import { StrainModel } from "~/models/strain.server";
 import { ReviewModel } from "~/models/review.server";
 import { UserModel } from "~/models/user.server";
 import { StrainCard } from "~/components/composite/strain-card";
-import { Button } from "~/components/ui/button";
-import { Card, CardContent } from "~/components/ui/card";
-import { RatingStars } from "~/components/composite/rating-stars";
-import { Avatar } from "~/components/ui/avatar";
-import { formatRelativeTime } from "~/lib/utils";
+import { StrainThumb } from "~/components/composite/strain-thumb";
+import { Icon } from "~/components/ui/icon";
+import { COMMUNITY_VOICES, FEATURED_ARTICLES } from "~/content/articles";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
 export function meta() {
   return buildMeta({
-    title: "WeedHub — Tu guía de cannabis en español",
-    description: "Descubre, reseña y comparte tu experiencia cannábica con la comunidad hispanohablante más grande.",
+    title: "WeedHub — La enciclopedia viva del cannabis hispano",
+    description:
+      "Informa, conecta, cultiva. Comunidad hispanohablante de reseñas cannábicas con contexto real — método, momento, experiencia.",
     url: SITE_URL,
   });
 }
@@ -24,21 +22,17 @@ export function meta() {
 export async function loader() {
   await connectDB();
 
-  const [topStrains, recentReviews, totalStrains, totalUsers, totalReviews] = await Promise.all([
-    StrainModel.find({ isArchived: false })
-      .sort({ "averageRatings.overall": -1, reviewCount: -1 })
-      .limit(6)
-      .lean(),
-    ReviewModel.find({ status: "published" })
-      .sort({ createdAt: -1 })
-      .limit(3)
-      .populate("userId", "displayName avatar")
-      .populate("strainId", "name slug type")
-      .lean(),
-    StrainModel.countDocuments({ isArchived: false }),
-    UserModel.countDocuments(),
-    ReviewModel.countDocuments({ status: "published" }),
-  ]);
+  const [topStrains, featuredStrain, totalStrains, totalUsers, totalReviews] =
+    await Promise.all([
+      StrainModel.find({ isArchived: false })
+        .sort({ "averageRatings.overall": -1, reviewCount: -1 })
+        .limit(6)
+        .lean(),
+      StrainModel.findOne({ slug: "acapulco-gold" }).lean(),
+      StrainModel.countDocuments({ isArchived: false }),
+      UserModel.countDocuments(),
+      ReviewModel.countDocuments({ status: "published" }),
+    ]);
 
   return {
     topStrains: topStrains.map((s) => ({
@@ -47,56 +41,28 @@ export async function loader() {
       createdAt: s.createdAt.toISOString(),
       updatedAt: s.updatedAt.toISOString(),
     })),
-    recentReviews: recentReviews.map((r) => ({
-      _id: String(r._id),
-      ratings: r.ratings,
-      comment: r.comment,
-      createdAt: r.createdAt.toISOString(),
-      user: r.userId
-        ? { displayName: (r.userId as any).displayName, avatar: (r.userId as any).avatar }
-        : null,
-      strain: r.strainId
-        ? { name: (r.strainId as any).name, slug: (r.strainId as any).slug, type: (r.strainId as any).type }
-        : null,
-    })),
+    featured: featuredStrain
+      ? {
+          ...featuredStrain,
+          _id: String(featuredStrain._id),
+          createdAt: featuredStrain.createdAt.toISOString(),
+          updatedAt: featuredStrain.updatedAt.toISOString(),
+        }
+      : null,
     stats: { totalStrains, totalUsers, totalReviews },
   };
 }
 
-const HOW_IT_WORKS = [
-  {
-    icon: "search",
-    title: "Explora",
-    desc: "Busca entre cientos de cepas con filtros por tipo, efectos y más.",
-  },
-  {
-    icon: "rate_review",
-    title: "Reseña",
-    desc: "Comparte tu experiencia y ayuda a la comunidad con reseñas detalladas.",
-  },
-  {
-    icon: "emoji_events",
-    title: "Gana",
-    desc: "Acumula puntos e insignias mientras contribuyes a la comunidad.",
-  },
-];
-
-const sectionReveal = {
-  initial: { opacity: 0, y: 30 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true } as const,
-  transition: { duration: 0.6 },
-};
-
 export default function LandingPage({ loaderData }: Route.ComponentProps) {
-  const { topStrains, recentReviews, stats } = loaderData;
-
+  const { topStrains, featured, stats } = loaderData;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "WeedHub",
+    inLanguage: "es",
     url: SITE_URL,
-    description: "Tu guía de cannabis en español. Descubre cepas, comparte reseñas y conecta con la comunidad.",
+    description:
+      "Enciclopedia hispana de cannabis con reseñas contextuales, datos reales y perspectiva latinoamericana.",
     potentialAction: {
       "@type": "SearchAction",
       target: `${SITE_URL}/strains?search={search_term_string}`,
@@ -110,167 +76,256 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="gradient-mesh absolute inset-0" />
-        <div className="relative mx-auto max-w-[1200px] px-6 py-20 lg:py-32 text-center">
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-            Tu guía de cannabis{" "}
-            <span className="text-primary">en español</span>
-          </h1>
-          <p className="text-lg text-text-muted max-w-2xl mx-auto mb-10">
-            Descubre cepas, comparte reseñas y conecta con la comunidad cannábica
-            hispanohablante más grande. Información verificada por usuarios reales.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/strains">
-              <Button size="lg">
-                Explorar Cepas
-                <span className="material-symbols-outlined text-lg">arrow_forward</span>
-              </Button>
-            </Link>
-          </div>
 
-          {/* Stats */}
-          <div className="mt-16 flex justify-center gap-12">
-            <div className="text-center">
-              <p className="font-display text-3xl font-bold text-white">{stats.totalStrains}+</p>
-              <p className="text-sm text-text-muted">Cepas</p>
-            </div>
-            <div className="text-center">
-              <p className="font-display text-3xl font-bold text-white">{stats.totalUsers}</p>
-              <p className="text-sm text-text-muted">Usuarios</p>
-            </div>
-            <div className="text-center">
-              <p className="font-display text-3xl font-bold text-white">{stats.totalReviews}</p>
-              <p className="text-sm text-text-muted">Reseñas</p>
-            </div>
-          </div>
+      {/* Hero */}
+      <section className="relative mx-auto max-w-[1200px] px-6 pt-16 pb-20 md:pt-24 md:pb-28">
+        <div className="hero-coords absolute top-16 right-6 mono text-[10px] text-fg-dim text-right leading-5 tnum">
+          <div>LAT 19.4326</div>
+          <div>LON −99.1332</div>
+          <div>TZ −06 · CDMX</div>
+        </div>
+        <div className="flex items-center gap-2 mb-6">
+          <Icon name="sparkle" size={14} className="text-accent" />
+          <span className="kicker">Informa · Conecta · Cultiva</span>
+        </div>
+        <div className="kicker mb-6">N° 001 / Primavera ’26 · México</div>
+        <h1
+          className="display max-w-[18ch]"
+          style={{ fontSize: "clamp(52px, 8.2vw, 128px)", lineHeight: 0.98 }}
+        >
+          La enciclopedia{" "}
+          <span className="display-wonk" style={{ color: "var(--accent)" }}>
+            viva
+          </span>{" "}
+          del cannabis hispano.
+        </h1>
+        <p className="mt-8 text-lg md:text-xl text-fg-muted max-w-[52ch] leading-relaxed">
+          No somos un catálogo de dispensarios. Somos la comunidad que cuenta el
+          contexto detrás de cada cepa — método, momento, experiencia.
+        </p>
+        <div className="mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <Link to="/strains" className="btn btn-primary">
+            Explorar cepas
+            <Icon name="arrowRight" size={16} />
+          </Link>
+          <Link to="/onboarding" className="btn btn-ghost">
+            Personalizar mi perfil
+          </Link>
+        </div>
+
+        <div className="mt-20 grid grid-cols-3 gap-8 max-w-[640px]">
+          <Stat value={stats.totalStrains} label="cepas documentadas" />
+          <Stat value={stats.totalReviews} label="reseñas con contexto" />
+          <Stat value={stats.totalUsers} label="voces en la comunidad" />
         </div>
       </section>
 
-      {/* How it works */}
-      <motion.section
-        className="mx-auto max-w-[1200px] px-6 py-20"
-        {...sectionReveal}
-      >
-        <h2 className="font-display text-3xl font-bold text-white text-center mb-12">
-          Cómo funciona
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {HOW_IT_WORKS.map((item, i) => (
-            <Card key={i} className="text-center border-white/10 p-8">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <span className="material-symbols-outlined text-3xl text-primary">
-                  {item.icon}
-                </span>
-              </div>
-              <h3 className="font-display text-xl font-bold text-white mb-2">
-                {item.title}
-              </h3>
-              <p className="text-text-muted">{item.desc}</p>
-            </Card>
-          ))}
-        </div>
-      </motion.section>
+      <hr className="hrule mx-6 max-w-[1200px] md:mx-auto" />
 
-      {/* Featured Strains */}
-      {topStrains.length > 0 && (
-        <motion.section
-          className="mx-auto max-w-[1200px] px-6 py-20"
-          {...sectionReveal}
-        >
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="font-display text-3xl font-bold text-white">
-              Cepas Destacadas
-            </h2>
-            <Link to="/strains">
-              <Button variant="ghost">
-                Ver todas
-                <span className="material-symbols-outlined text-lg">arrow_forward</span>
-              </Button>
+      {/* Featured strain */}
+      {featured && (
+        <section className="mx-auto max-w-[1200px] px-6 py-24">
+          <div className="flex items-center justify-between mb-10">
+            <div>
+              <div className="kicker mb-2">Cepa del mes</div>
+              <h2 className="display text-4xl md:text-5xl">{featured.name}</h2>
+            </div>
+            <Link
+              to={`/strains/${featured.slug}`}
+              className="hidden sm:inline-flex items-center gap-2 text-sm text-fg-muted hover:text-fg"
+            >
+              Lee el perfil completo
+              <Icon name="arrowRight" size={14} />
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="card p-8 grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-10">
+            <StrainThumb
+              name={featured.name}
+              colorHint={featured.colorHint}
+              imageUrl={featured.imageUrl}
+              ratio="wide"
+              className="w-full"
+            />
+            <div className="flex flex-col gap-5 justify-center">
+              <div className="flex flex-wrap gap-2">
+                <span className="pill lilac">{featured.typeBlend || featured.type}</span>
+                {featured.lineage && <span className="pill">{featured.lineage}</span>}
+              </div>
+              <p className="text-fg-muted leading-relaxed">
+                {featured.descriptionEs || featured.description}
+              </p>
+              <div className="grid grid-cols-4 gap-4 pt-3 border-t border-line">
+                <MicroStat
+                  kicker="THC"
+                  value={`${featured.cannabinoidProfile.thc.max}%`}
+                  tone="accent"
+                />
+                <MicroStat
+                  kicker="CBD"
+                  value={`${featured.cannabinoidProfile.cbd.max || 0}%`}
+                />
+                <MicroStat kicker="Tipo" value={featured.type} />
+                <MicroStat
+                  kicker="Terpeno"
+                  value={featured.dominantTerpene || "—"}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <hr className="hrule mx-6 max-w-[1200px] md:mx-auto" />
+
+      {/* Strain grid */}
+      {topStrains.length > 0 && (
+        <section className="mx-auto max-w-[1200px] px-6 py-24">
+          <div className="flex items-end justify-between gap-6 mb-10 flex-wrap">
+            <div>
+              <div className="kicker mb-2">Directorio</div>
+              <h2 className="display text-4xl md:text-5xl max-w-[20ch]">
+                Cada cepa,{" "}
+                <span className="display-wonk" style={{ color: "var(--accent)" }}>
+                  contada
+                </span>{" "}
+                por quien la conoce.
+              </h2>
+            </div>
+            <Link to="/strains" className="btn btn-ghost">
+              Ver directorio
+              <Icon name="arrowRight" size={14} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {topStrains.map((strain: any) => (
               <StrainCard key={strain._id} strain={strain} />
             ))}
           </div>
-        </motion.section>
+        </section>
       )}
 
-      {/* Recent Reviews */}
-      {recentReviews.length > 0 && (
-        <motion.section
-          className="mx-auto max-w-[1200px] px-6 py-20"
-          {...sectionReveal}
-        >
-          <h2 className="font-display text-3xl font-bold text-white mb-8">
-            Reseñas Recientes
+      {/* Community voices */}
+      <section className="bg-sunken border-y border-line">
+        <div className="mx-auto max-w-[1200px] px-6 py-24">
+          <div className="kicker mb-3">Voces</div>
+          <h2 className="display text-4xl md:text-5xl max-w-[22ch] mb-14">
+            La comunidad es la{" "}
+            <span className="display-wonk" style={{ color: "var(--accent)" }}>
+              base de datos
+            </span>
+            .
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {recentReviews.map((review: any, index: number) => (
-              <motion.div
-                key={review._id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-              >
-                <Card className="border-white/10">
-                  <CardContent className="pt-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Avatar fallback={review.user?.displayName?.charAt(0) || "?"} size="sm" />
-                        <span className="text-sm font-medium text-white">
-                          {review.user?.displayName || "Anónimo"}
-                        </span>
-                      </div>
-                      <RatingStars rating={review.ratings.overall} size="sm" />
-                    </div>
-                    {review.strain && (
-                      <Link
-                        to={`/strains/${review.strain.slug}`}
-                        className="text-sm text-primary hover:underline"
-                      >
-                        {review.strain.name}
-                      </Link>
-                    )}
-                    {review.comment && (
-                      <p className="text-sm text-text-muted line-clamp-3">{review.comment}</p>
-                    )}
-                    <p className="text-xs text-text-muted/60">
-                      {formatRelativeTime(review.createdAt)}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {COMMUNITY_VOICES.map((v) => (
+              <figure key={v.name} className="flex flex-col gap-4">
+                <div
+                  className="display-wonk text-3xl leading-snug"
+                  style={{ color: "var(--fg)" }}
+                >
+                  <span style={{ color: "var(--accent)" }}>“</span>
+                  {v.quote}
+                  <span style={{ color: "var(--accent)" }}>”</span>
+                </div>
+                <figcaption className="kicker">
+                  {v.name} · {v.city} | {v.role}
+                </figcaption>
+              </figure>
             ))}
           </div>
-        </motion.section>
-      )}
+        </div>
+      </section>
+
+      {/* Editorial teaser */}
+      <section className="mx-auto max-w-[1200px] px-6 py-24">
+        <div className="flex items-end justify-between gap-6 mb-10 flex-wrap">
+          <div>
+            <div className="kicker mb-2">Lectura</div>
+            <h2 className="display text-4xl md:text-5xl">Magazine</h2>
+          </div>
+          <Link to="/editorial" className="btn btn-ghost">
+            Ver todo
+            <Icon name="arrowRight" size={14} />
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr] gap-6">
+          {FEATURED_ARTICLES.slice(0, 3).map((a, i) => (
+            <Link
+              key={a.slug}
+              to="/editorial"
+              className={`card p-5 flex flex-col gap-3 hover:bg-elev transition-colors ${i === 0 ? "md:row-span-1" : ""}`}
+            >
+              <div
+                className="ph"
+                style={{ aspectRatio: i === 0 ? "16/10" : "4/3" }}
+              >
+                {a.kicker}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="pill lilac">{a.kicker}</span>
+                <span className="kicker">{a.readTime}</span>
+              </div>
+              <h3
+                className="display"
+                style={{ fontSize: i === 0 ? 36 : 24, lineHeight: 1.08 }}
+              >
+                {a.title}
+              </h3>
+              <p className="text-sm text-fg-muted line-clamp-2">{a.dek}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* CTA */}
-      <motion.section
-        className="mx-auto max-w-[1200px] px-6 py-20"
-        {...sectionReveal}
-      >
-        <Card className="border-primary/20 glow-primary p-8 lg:p-12 text-center">
-          <h2 className="font-display text-3xl font-bold text-white mb-4">
-            Únete a la comunidad
+      <section className="mx-auto max-w-[1200px] px-6 pb-24">
+        <div className="card-strong p-10 md:p-14 text-center">
+          <div className="kicker mb-3" style={{ color: "var(--accent)" }}>
+            Únete
+          </div>
+          <h2 className="display text-4xl md:text-5xl mb-4">
+            Tu voz es la base de datos.
           </h2>
-          <p className="text-text-muted max-w-lg mx-auto mb-8">
-            Comparte tus experiencias, descubre nuevas cepas y gana puntos e insignias.
-            Tu voz importa.
+          <p className="text-fg-muted max-w-lg mx-auto mb-8">
+            Crea tu cuenta, personaliza tu perfil y empieza a documentar la planta —
+            con contexto, sin filtros verdes baratos.
           </p>
-          <Link to="/auth">
-            <Button size="lg">
-              Crear Cuenta Gratis
-              <span className="material-symbols-outlined text-lg">arrow_forward</span>
-            </Button>
+          <Link to="/auth?mode=register" className="btn btn-primary inline-flex">
+            Crear cuenta gratis
+            <Icon name="arrowRight" size={16} />
           </Link>
-        </Card>
-      </motion.section>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function Stat({ value, label }: { value: number; label: string }) {
+  return (
+    <div>
+      <div className="display text-4xl md:text-5xl tnum">{value.toLocaleString("es-MX")}</div>
+      <div className="kicker mt-1">{label}</div>
+    </div>
+  );
+}
+
+function MicroStat({
+  kicker,
+  value,
+  tone,
+}: {
+  kicker: string;
+  value: string | number;
+  tone?: "accent";
+}) {
+  return (
+    <div>
+      <div className="kicker mb-1">{kicker}</div>
+      <div
+        className="mono text-lg tnum"
+        style={{ color: tone === "accent" ? "var(--accent)" : "var(--fg)" }}
+      >
+        {value}
+      </div>
     </div>
   );
 }

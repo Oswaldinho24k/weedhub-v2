@@ -3,9 +3,7 @@ import type { Route } from "./+types/admin.reviews";
 import { connectDB } from "~/lib/db.server";
 import { ReviewModel } from "~/models/review.server";
 import { recalculateStrainRatings, updateUserStats } from "~/services/review.service.server";
-import { Card } from "~/components/ui/card";
-import { Button } from "~/components/ui/button";
-import { Badge } from "~/components/ui/badge";
+import { Icon } from "~/components/ui/icon";
 import { RatingStars } from "~/components/composite/rating-stars";
 import { formatDate } from "~/lib/utils";
 
@@ -52,13 +50,18 @@ export async function action({ request }: Route.ActionArgs) {
   await recalculateStrainRatings(String(review.strainId));
   await updateUserStats(String(review.userId));
 
-  return { success: true, message: `Reseña ${newStatus === "published" ? "publicada" : newStatus === "removed" ? "eliminada" : "flagged"}` };
+  return {
+    success: true,
+    message: `Reseña ${
+      newStatus === "published" ? "publicada" : newStatus === "removed" ? "eliminada" : "marcada"
+    }`,
+  };
 }
 
-const STATUS_STYLES: Record<string, string> = {
-  published: "bg-primary/10 text-primary",
-  flagged: "bg-accent-amber/10 text-accent-amber",
-  removed: "bg-red-500/10 text-red-400",
+const STATUS_PILL: Record<string, string> = {
+  published: "accent",
+  flagged: "warm",
+  removed: "warm",
 };
 
 export default function AdminReviewsPage({ loaderData }: Route.ComponentProps) {
@@ -67,53 +70,50 @@ export default function AdminReviewsPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-display text-xl font-bold text-white">
-        Reseñas ({reviews.length})
-      </h2>
+      <h2 className="display text-2xl">Reseñas ({reviews.length})</h2>
 
       {actionData?.message && (
-        <div className={`rounded-xl px-4 py-3 text-sm ${
-          actionData.success
-            ? "bg-primary/10 border border-primary/20 text-primary"
-            : "bg-red-500/10 border border-red-500/20 text-red-400"
-        }`}>
+        <div
+          className="rounded-md px-4 py-3 text-sm"
+          style={{
+            background: actionData.success ? "var(--accent-soft)" : "var(--warm-soft)",
+            color: actionData.success ? "var(--fg)" : "var(--warm)",
+          }}
+        >
           {actionData.message || actionData.error}
         </div>
       )}
 
       <div className="space-y-3">
         {reviews.map((review: any) => (
-          <div
-            key={review._id}
-            className="p-4 rounded-xl bg-forest-deep border border-white/5"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-sm font-bold text-white">
+          <article key={review._id} className="card p-5">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                  <span className="text-sm font-medium">
                     {review.user?.displayName || "Anónimo"}
                   </span>
-                  <span className="text-xs text-text-muted">{review.user?.email}</span>
-                  <Badge className={STATUS_STYLES[review.status]}>
+                  <span className="text-xs text-fg-dim">{review.user?.email}</span>
+                  <span className={`pill ${STATUS_PILL[review.status]}`}>
                     {review.status}
-                  </Badge>
+                  </span>
                 </div>
                 {review.strain && (
                   <Link
                     to={`/strains/${review.strain.slug}`}
-                    className="text-sm text-primary hover:underline"
+                    className="text-sm text-fg hover:text-accent"
                   >
                     {review.strain.name}
                   </Link>
                 )}
                 <div className="flex items-center gap-2 mt-1">
                   <RatingStars rating={review.ratings.overall} size="sm" />
-                  <span className="text-xs text-text-muted">
+                  <span className="text-xs text-fg-dim">
                     {formatDate(review.createdAt)}
                   </span>
                 </div>
                 {review.comment && (
-                  <p className="text-sm text-text-muted mt-2 line-clamp-2">
+                  <p className="text-sm text-fg-muted mt-2 line-clamp-3">
                     {review.comment}
                   </p>
                 )}
@@ -121,37 +121,49 @@ export default function AdminReviewsPage({ loaderData }: Route.ComponentProps) {
 
               <div className="flex gap-2">
                 {review.status !== "published" && (
-                  <Form method="post">
-                    <input type="hidden" name="reviewId" value={review._id} />
-                    <input type="hidden" name="status" value="published" />
-                    <Button variant="ghost" size="sm" type="submit">
-                      <span className="material-symbols-outlined text-sm text-primary">check</span>
-                    </Button>
-                  </Form>
+                  <ModBtn reviewId={review._id} status="published" icon="check" label="Publicar" />
                 )}
                 {review.status !== "flagged" && (
-                  <Form method="post">
-                    <input type="hidden" name="reviewId" value={review._id} />
-                    <input type="hidden" name="status" value="flagged" />
-                    <Button variant="ghost" size="sm" type="submit">
-                      <span className="material-symbols-outlined text-sm text-accent-amber">flag</span>
-                    </Button>
-                  </Form>
+                  <ModBtn reviewId={review._id} status="flagged" icon="alert" label="Marcar" />
                 )}
                 {review.status !== "removed" && (
-                  <Form method="post">
-                    <input type="hidden" name="reviewId" value={review._id} />
-                    <input type="hidden" name="status" value="removed" />
-                    <Button variant="ghost" size="sm" type="submit">
-                      <span className="material-symbols-outlined text-sm text-red-400">delete</span>
-                    </Button>
-                  </Form>
+                  <ModBtn reviewId={review._id} status="removed" icon="x" label="Eliminar" tone="warm" />
                 )}
               </div>
             </div>
-          </div>
+          </article>
         ))}
       </div>
     </div>
+  );
+}
+
+function ModBtn({
+  reviewId,
+  status,
+  icon,
+  label,
+  tone,
+}: {
+  reviewId: string;
+  status: string;
+  icon: "check" | "alert" | "x";
+  label: string;
+  tone?: "warm";
+}) {
+  return (
+    <Form method="post">
+      <input type="hidden" name="reviewId" value={reviewId} />
+      <input type="hidden" name="status" value={status} />
+      <button
+        type="submit"
+        className="btn btn-ghost !py-1.5 !px-3 text-xs"
+        style={tone === "warm" ? { color: "var(--warm)" } : undefined}
+        aria-label={label}
+      >
+        <Icon name={icon} size={14} />
+        {label}
+      </button>
+    </Form>
   );
 }

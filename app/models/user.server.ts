@@ -46,7 +46,15 @@ const userSchema = new Schema<IUser>(
     cannabisProfile: {
       experienceLevel: {
         type: String,
-        enum: ["principiante", "intermedio", "experimentado", "experto"],
+        enum: [
+          "principiante",
+          "novato",
+          "ocasional",
+          "regular",
+          "intermedio",
+          "experimentado",
+          "experto",
+        ],
         default: "principiante",
       },
       preferredEffects: [String],

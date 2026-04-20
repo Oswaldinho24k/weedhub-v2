@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "react-router";
-import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { Button } from "~/components/ui/button";
-import { Avatar } from "~/components/ui/avatar";
+import { useEffect, useRef, useState } from "react";
+import { Logo } from "./logo";
+import { ThemeToggle } from "./theme-toggle";
+import { Icon } from "~/components/ui/icon";
+import type { Theme } from "~/lib/theme.server";
 import { cn } from "~/lib/utils";
 
 interface NavbarProps {
@@ -12,188 +13,187 @@ interface NavbarProps {
     avatar?: string;
     role?: string;
   } | null;
+  theme: Theme;
 }
 
-export function Navbar({ user }: NavbarProps) {
+const NAV_LINKS = [
+  { to: "/strains", label: "Directorio" },
+  { to: "/community", label: "Comunidad" },
+  { to: "/editorial", label: "Magazine" },
+];
+
+export function Navbar({ user, theme }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [menuOpen]);
+
   return (
-    <nav className="sticky top-0 z-40 border-b border-white/5 bg-background-dark/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-line bg-[color-mix(in_oklch,var(--bg)_85%,transparent)] backdrop-blur">
       <div className="mx-auto max-w-[1200px] px-6">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-2xl">
-              potted_plant
-            </span>
-            <span className="font-display text-xl font-bold text-white">
-              Weed<span className="text-primary">Hub</span>
-            </span>
-          </Link>
+        <div className="flex h-16 items-center justify-between gap-6">
+          <Logo size={20} />
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-6">
-            <Link
-              to="/strains"
-              className="text-sm font-medium text-text-muted hover:text-white transition-colors"
-            >
-              Cepas
-            </Link>
-            <span className="text-sm font-medium text-text-muted/40 cursor-not-allowed">
-              Guías
-            </span>
-            <span className="text-sm font-medium text-text-muted/40 cursor-not-allowed">
-              Comunidad
-            </span>
-          </div>
+          <nav className="hidden md:flex items-center gap-7">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="text-sm text-fg-muted hover:text-fg transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
 
-          {/* Right Side */}
-          <div className="flex items-center gap-3">
-            {/* Search */}
+          <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => navigate("/strains?focus=search")}
-              className="hidden sm:flex items-center gap-2 h-10 px-4 rounded-xl bg-forest-muted border border-forest-accent text-text-muted/60 text-sm hover:border-primary/30 transition-colors"
+              className="hidden sm:inline-flex items-center gap-2 h-9 px-3 rounded-full border border-line text-fg-dim text-xs hover:border-line-strong transition-colors"
+              aria-label="Buscar cepas"
             >
-              <span className="material-symbols-outlined text-lg">search</span>
-              <span className="hidden lg:inline">Buscar cepas...</span>
+              <Icon name="search" size={14} />
+              <span className="hidden lg:inline">Buscar</span>
+              <kbd className="hidden lg:inline mono text-[10px] border border-line rounded px-1 py-0.5 text-fg-dim">⌘K</kbd>
             </button>
 
-            {user ? (
-              <div className="relative">
-                <button
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-white/5 transition-colors"
-                >
-                  <Avatar
-                    src={user.avatar}
-                    fallback={user.displayName.charAt(0).toUpperCase()}
-                    size="sm"
-                  />
-                  <span className="hidden sm:inline text-sm font-medium text-white">
-                    {user.displayName}
-                  </span>
-                  <span className="material-symbols-outlined text-text-muted text-lg">
-                    expand_more
-                  </span>
-                </button>
+            <ThemeToggle theme={theme} />
 
-                <AnimatePresence>
-                  {dropdownOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setDropdownOpen(false)}
-                      />
-                      <motion.div
-                        className="absolute right-0 top-full mt-2 w-48 rounded-xl bg-forest-deep border border-white/10 p-1 shadow-xl z-50"
-                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                        transition={{ duration: 0.15, ease: "easeOut" }}
+            {user ? (
+              <div className="relative" ref={menuRef}>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="flex items-center gap-2 h-9 px-1.5 pr-2 rounded-full border border-line hover:border-line-strong transition-colors"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                >
+                  <span
+                    className="h-7 w-7 rounded-full bg-elev flex items-center justify-center text-xs"
+                    style={{ color: "var(--accent)" }}
+                  >
+                    {user.displayName.charAt(0).toUpperCase()}
+                  </span>
+                  <Icon name="chevronDown" size={14} className="text-fg-dim" />
+                </button>
+                {menuOpen && (
+                  <div
+                    role="menu"
+                    className="fade-up absolute right-0 top-full mt-2 w-52 card-strong p-1 shadow-[var(--shadow-soft)] z-50"
+                  >
+                    <MenuItem to="/profile" icon="user" onClick={() => setMenuOpen(false)}>
+                      Mi perfil
+                    </MenuItem>
+                    <MenuItem to="/profile/saved" icon="bookmark" onClick={() => setMenuOpen(false)}>
+                      Cepas guardadas
+                    </MenuItem>
+                    <MenuItem to="/profile/edit" icon="settings" onClick={() => setMenuOpen(false)}>
+                      Editar perfil
+                    </MenuItem>
+                    {user.role === "admin" && (
+                      <MenuItem to="/admin" icon="crown" onClick={() => setMenuOpen(false)}>
+                        Admin
+                      </MenuItem>
+                    )}
+                    <hr className="hrule my-1" />
+                    <form action="/logout" method="post">
+                      <button
+                        type="submit"
+                        className="w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm text-warm hover:bg-elev transition-colors"
                       >
-                        <Link
-                          to="/profile"
-                          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-text-muted hover:bg-white/5 hover:text-white transition-colors"
-                          onClick={() => setDropdownOpen(false)}
-                        >
-                          <span className="material-symbols-outlined text-lg">person</span>
-                          Mi Perfil
-                        </Link>
-                        <Link
-                          to="/profile/edit"
-                          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-text-muted hover:bg-white/5 hover:text-white transition-colors"
-                          onClick={() => setDropdownOpen(false)}
-                        >
-                          <span className="material-symbols-outlined text-lg">settings</span>
-                          Editar Perfil
-                        </Link>
-                        {user.role === "admin" && (
-                          <Link
-                            to="/admin"
-                            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-text-muted hover:bg-white/5 hover:text-white transition-colors"
-                            onClick={() => setDropdownOpen(false)}
-                          >
-                            <span className="material-symbols-outlined text-lg">admin_panel_settings</span>
-                            Admin
-                          </Link>
-                        )}
-                        <div className="my-1 h-px bg-white/10" />
-                        <form action="/logout" method="post">
-                          <button
-                            type="submit"
-                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
-                          >
-                            <span className="material-symbols-outlined text-lg">logout</span>
-                            Cerrar Sesión
-                          </button>
-                        </form>
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
+                        <Icon name="logout" size={14} />
+                        Cerrar sesión
+                      </button>
+                    </form>
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <Link to="/auth">
-                  <Button variant="ghost" size="sm">
-                    Entrar
-                  </Button>
+              <div className="hidden sm:flex items-center gap-2">
+                <Link to="/auth" className="btn btn-ghost !py-2 !px-3 text-xs">
+                  Entrar
                 </Link>
-                <Link to="/auth">
-                  <Button size="sm">Registrarse</Button>
+                <Link to="/auth?mode=register" className="btn btn-primary !py-2 !px-3 text-xs">
+                  Crear cuenta
                 </Link>
               </div>
             )}
 
-            {/* Mobile hamburger */}
             <button
-              className="md:hidden p-2 text-text-muted hover:text-white"
-              onClick={() => setMobileOpen(!mobileOpen)}
+              type="button"
+              className="md:hidden h-9 w-9 grid place-items-center rounded-full border border-line text-fg-muted"
+              aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+              onClick={() => setMobileOpen((v) => !v)}
             >
-              <span className="material-symbols-outlined">
-                {mobileOpen ? "close" : "menu"}
-              </span>
+              <Icon name={mobileOpen ? "close" : "menu"} size={16} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            className="md:hidden border-t border-white/5 bg-background-dark/95 backdrop-blur-xl z-50 overflow-hidden"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <motion.div
-              className="px-6 py-4 space-y-2"
-              initial={{ y: -10 }}
-              animate={{ y: 0 }}
-              exit={{ y: -10 }}
-              transition={{ duration: 0.3 }}
-            >
+      {mobileOpen && (
+        <div className="md:hidden border-t border-line bg-bg fade-in">
+          <div className="px-6 py-4 space-y-1">
+            {NAV_LINKS.map((link) => (
               <Link
-                to="/strains"
-                className="block rounded-lg px-3 py-2 text-sm font-medium text-text-muted hover:bg-white/5 hover:text-white"
+                key={link.to}
+                to={link.to}
                 onClick={() => setMobileOpen(false)}
+                className="block rounded-md px-3 py-2 text-sm text-fg-muted hover:text-fg hover:bg-elev"
               >
-                Cepas
+                {link.label}
               </Link>
-              <span className="block rounded-lg px-3 py-2 text-sm font-medium text-text-muted/40">
-                Guías (próximamente)
-              </span>
-              <span className="block rounded-lg px-3 py-2 text-sm font-medium text-text-muted/40">
-                Comunidad (próximamente)
-              </span>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </nav>
+            ))}
+            {!user && (
+              <>
+                <hr className="hrule my-2" />
+                <Link to="/auth" className="block rounded-md px-3 py-2 text-sm">
+                  Entrar
+                </Link>
+                <Link to="/auth?mode=register" className="block rounded-md px-3 py-2 text-sm" style={{ color: "var(--accent)" }}>
+                  Crear cuenta
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}
+
+function MenuItem({
+  to,
+  icon,
+  children,
+  onClick,
+}: {
+  to: string;
+  icon: "user" | "settings" | "crown" | "bookmark";
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-fg-muted hover:bg-elev hover:text-fg transition-colors"
+      )}
+    >
+      <Icon name={icon} size={14} />
+      {children}
+    </Link>
   );
 }

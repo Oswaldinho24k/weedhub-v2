@@ -3,14 +3,7 @@ import { cn } from "~/lib/utils";
 
 const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(
-        "rounded-2xl bg-forest-deep p-4 border border-white/5 hover:border-primary/30 transition-colors",
-        className
-      )}
-      {...props}
-    />
+    <div ref={ref} className={cn("card p-5", className)} {...props} />
   )
 );
 Card.displayName = "Card";
@@ -31,11 +24,7 @@ CardContent.displayName = "CardContent";
 
 const CardFooter = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn("flex items-center pt-3", className)}
-      {...props}
-    />
+    <div ref={ref} className={cn("flex items-center pt-3", className)} {...props} />
   )
 );
 CardFooter.displayName = "CardFooter";

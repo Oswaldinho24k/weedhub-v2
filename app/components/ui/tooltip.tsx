@@ -19,13 +19,13 @@ function Tooltip({ content, children, className }: TooltipProps) {
       {children}
       {visible && (
         <div
+          role="tooltip"
           className={cn(
-            "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 text-xs font-medium text-white bg-forest-deep border border-white/10 rounded-lg whitespace-nowrap z-50",
+            "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 text-xs font-medium text-fg bg-elev border border-line rounded-md whitespace-nowrap z-50 shadow-[var(--shadow-soft)]",
             className
           )}
         >
           {content}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-forest-deep" />
         </div>
       )}
     </div>

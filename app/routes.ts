@@ -1,4 +1,4 @@
-import { type RouteConfig, index, route, layout } from "@react-router/dev/routes";
+import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [
   index("routes/_index.tsx"),
@@ -8,9 +8,15 @@ export default [
   route("strains", "routes/strains.tsx"),
   route("strains/:slug", "routes/strains.$slug.tsx"),
   route("strains/:slug/review", "routes/strains.$slug.review.tsx"),
+  route("community", "routes/community.tsx"),
+  route("editorial", "routes/editorial.tsx"),
+  route("ds", "routes/ds.tsx"),
+  route("terminos", "routes/terminos.tsx"),
+  route("privacidad", "routes/privacidad.tsx"),
   route("profile", "routes/profile.tsx"),
   route("profile/:userId", "routes/profile.$userId.tsx"),
   route("profile/edit", "routes/profile_.edit.tsx"),
+  route("profile/saved", "routes/profile_.saved.tsx"),
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.tsx"),
     route("strains", "routes/admin.strains.tsx"),
@@ -18,5 +24,7 @@ export default [
   ]),
   route("api/reviews/:reviewId/vote", "routes/api/reviews.$reviewId.vote.tsx"),
   route("api/strains/:strainId/save", "routes/api/strains.$strainId.save.tsx"),
+  route("api/theme", "routes/api/theme.tsx"),
+  route("api/newsletter", "routes/api/newsletter.tsx"),
   route("sitemap.xml", "routes/sitemap[.]xml.tsx"),
 ] satisfies RouteConfig;

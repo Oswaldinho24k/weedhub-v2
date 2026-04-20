@@ -1,87 +1,78 @@
-# Welcome to React Router!
+# WeedHub — Verde Noche
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Enciclopedia hispana del cannabis: directorio de cepas, reseñas con contexto (método · momento · experiencia) y editorial en español.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+Stack:
 
-## Features
+- **React Router v7** (SSR)
+- **Tailwind CSS v4** con sistema de tokens `oklch` (tema claro + oscuro)
+- **MongoDB** + Mongoose
+- **Fraunces** / **Instrument Sans** / **JetBrains Mono**
+- **Lucide** para iconografía
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## Requisitos
 
-## Getting Started
+- Node.js 20+
+- MongoDB 6+ (local o Atlas)
 
-### Installation
+## Configuración
 
-Install the dependencies:
+Copia `.env.example` a `.env` y completa los valores:
+
+```
+MONGODB_URI=mongodb://localhost:27017/weedhub
+SESSION_SECRET=<al menos 32 caracteres>
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
+```
+
+## Desarrollo
 
 ```bash
 npm install
+npm run seed      # carga ~50 cepas en la base de datos (requerido tras cada pull si cambia el modelo)
+npm run dev       # arranca en http://localhost:5173
 ```
 
-### Development
-
-Start the development server with HMR:
+Otros scripts:
 
 ```bash
-npm run dev
+npm run build       # build de producción
+npm run start       # sirve el build
+npm run typecheck   # tipos estrictos
 ```
 
-Your application will be available at `http://localhost:5173`.
+## Rutas principales
 
-## Building for Production
+| Ruta | Descripción |
+|---|---|
+| `/` | Landing editorial con estadísticas reales |
+| `/strains` | Directorio con filtros (tipo, efectos, vista grid/list) |
+| `/strains/:slug` | Detalle de cepa con curva de efectos, radar de terpenos y momentos del día |
+| `/strains/:slug/review` | Flujo de 5 pasos para publicar reseña con contexto |
+| `/auth` | Login / registro 50 % narrativa / 50 % formulario |
+| `/onboarding` | 5 pasos: perfil, objetivos, método, efectos, resumen |
+| `/profile` · `/profile/:userId` · `/profile/edit` | Perfil propio, público y edición |
+| `/community` | Voces de la comunidad + feed de reseñas |
+| `/editorial` | Magazine editorial (artículos curados) |
+| `/admin` | Panel de administración (solo rol `admin`) |
+| `/ds` | Referencia de design system (no listada en navegación) |
 
-Create a production build:
+## Temas
+
+- Dark (predeterminado) y light. Selector en el header — preferencia persistida en cookie `wh:theme`.
+- Todos los tokens en `oklch`; ver `app/app.css` y `/ds`.
+
+## Diseño
+
+Basado en el handoff "Verde Noche" (`design_handoff_weedhub/`). Los tokens en `design/styles.css` son canónicos; si un valor difiere entre el diseño y el código, la página `/ds` gana.
+
+## Deploy
+
+`Dockerfile` multi-stage incluido. Sirve con `npm run start` en el puerto 3000. Compatible con Fly.io, Railway, Cloud Run, etc.
 
 ```bash
-npm run build
+docker build -t weedhub .
+docker run -p 3000:3000 --env-file .env weedhub
 ```
-
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.

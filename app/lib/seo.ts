@@ -10,7 +10,13 @@ interface BuildMetaOptions {
   type?: string;
 }
 
-export function buildMeta({ title, description, url, image, type = "website" }: BuildMetaOptions) {
+export function buildMeta({
+  title,
+  description,
+  url,
+  image,
+  type = "website",
+}: BuildMetaOptions) {
   const ogImage = image || DEFAULT_OG_IMAGE;
 
   return [
@@ -22,7 +28,8 @@ export function buildMeta({ title, description, url, image, type = "website" }: 
     { property: "og:image", content: ogImage },
     { property: "og:type", content: type },
     { property: "og:site_name", content: SITE_NAME },
-    { property: "og:locale", content: "es_ES" },
+    { property: "og:locale", content: "es_MX" },
+    { property: "og:locale:alternate", content: "es_ES" },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:title", content: title },
     { name: "twitter:description", content: description },

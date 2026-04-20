@@ -1,44 +1,39 @@
-import { Link, useOutletContext } from "react-router";
+import { Link, useFetcher, useOutletContext } from "react-router";
 import type { Route } from "./+types/strains.$slug";
 import { connectDB } from "~/lib/db.server";
 import { StrainModel } from "~/models/strain.server";
 import { ReviewModel } from "~/models/review.server";
 import { SavedStrainModel } from "~/models/saved-strain.server";
 import { getUserFromSession } from "~/lib/auth.server";
-import { TERPENES } from "~/constants/cannabis";
-import { Card, CardContent, CardHeader } from "~/components/ui/card";
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
-import { Progress } from "~/components/ui/progress";
-import { Separator } from "~/components/ui/separator";
-import { CannabinoidBar } from "~/components/composite/cannabinoid-bar";
+import { StrainThumb } from "~/components/composite/strain-thumb";
+import { EffectBar } from "~/components/composite/effect-bar";
+import { TimeCurve } from "~/components/composite/time-curve";
+import { TerpeneRadar } from "~/components/composite/terpene-radar";
+import { MomentoBar } from "~/components/composite/momento-bar";
 import { RatingStars } from "~/components/composite/rating-stars";
 import { ReviewCard } from "~/components/composite/review-card";
-import { EffectsChipGroup } from "~/components/composite/effects-chip-group";
 import { StrainCard } from "~/components/composite/strain-card";
-import { useFetcher } from "react-router";
+import { Icon } from "~/components/ui/icon";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
-const TYPE_VARIANT: Record<string, "sativa" | "indica" | "hybrid"> = {
-  sativa: "sativa",
-  indica: "indica",
-  hybrid: "hybrid",
-};
 const TYPE_LABEL: Record<string, string> = {
   sativa: "Sativa",
   indica: "Indica",
   hybrid: "Híbrida",
 };
+const TYPE_PILL: Record<string, string> = {
+  sativa: "accent",
+  indica: "warm",
+  hybrid: "lilac",
+};
 
 export function meta({ data }: Route.MetaArgs) {
   const strain = data?.strain;
   const name = strain?.name || "Cepa";
-  const description = strain?.description
-    ? strain.description.slice(0, 160)
-    : `Información, reseñas y efectos de ${name} en WeedHub.`;
+  const description = strain?.descriptionEs || strain?.description || "";
   return buildMeta({
     title: `${name} — WeedHub`,
-    description,
+    description: description.slice(0, 160),
     url: `${SITE_URL}/strains/${strain?.slug || ""}`,
     image: strain?.imageUrl || undefined,
     type: "product",
@@ -63,7 +58,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     isSaved = !!saved;
   }
 
-  // Similar strains: same type, shared effects, exclude current
   const similarStrains = await StrainModel.aggregate([
     {
       $match: {
@@ -123,15 +117,27 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
   const context = useOutletContext<{ user?: any }>();
   const currentUser = context?.user;
   const saveFetcher = useFetcher();
+  const optimisticSaved = saveFetcher.state !== "idle" ? !isSaved : isSaved;
+  const pillVariant = TYPE_PILL[strain.type] || "";
 
-  const optimisticSaved =
-    saveFetcher.state !== "idle" ? !isSaved : isSaved;
+  // Normalize effects for bars: use flat strain.effects list with synthetic values
+  // based on position (seed doesn't have numeric effect values).
+  const effectValues = (strain.effects || []).slice(0, 5).map((e: string, i: number) => ({
+    label: e,
+    value: 90 - i * 10,
+  }));
+
+  // Terpene radar expects 0..1 values. Scale percentages (usually 0..2%).
+  const radarData = (strain.terpenes || []).slice(0, 6).map((t: any) => ({
+    name: t.name,
+    value: Math.min(1, t.percentage / 2),
+  }));
 
   const jsonLd: any = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: strain.name,
-    description: strain.description,
+    description: strain.descriptionEs || strain.description,
     url: `${SITE_URL}/strains/${strain.slug}`,
     ...(strain.imageUrl ? { image: strain.imageUrl } : {}),
   };
@@ -146,256 +152,254 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-8">
+    <div>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Hero */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        {/* Image */}
-        <div className="lg:col-span-1">
-          <div className="relative aspect-square rounded-2xl bg-forest-deep border border-white/5 overflow-hidden">
-            {strain.imageUrl ? (
-              <img
-                src={strain.imageUrl}
-                alt={`Cepa ${strain.name}, tipo ${TYPE_LABEL[strain.type]}`}
-                className="w-full h-full object-cover"
-                fetchPriority="high"
-                width={400}
-                height={400}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-6xl text-forest-accent">
-                  potted_plant
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Info */}
-        <div className="lg:col-span-2">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Badge variant={TYPE_VARIANT[strain.type]}>
-                  {TYPE_LABEL[strain.type]}
-                </Badge>
-                {strain.averageRatings.overall > 0 && (
-                  <div className="flex items-center gap-1">
-                    <RatingStars rating={strain.averageRatings.overall} size="sm" />
-                    <span className="text-sm font-bold text-white ml-1">
-                      {strain.averageRatings.overall.toFixed(1)}
-                    </span>
-                    <span className="text-xs text-text-muted">
-                      ({strain.reviewCount})
-                    </span>
-                  </div>
-                )}
-              </div>
-              <h1 className="font-display text-3xl lg:text-4xl font-bold text-white">
-                {strain.name}
-              </h1>
+      {/* Back */}
+      <div className="mx-auto max-w-[1200px] px-6 pt-6">
+        <Link
+          to="/strains"
+          className="inline-flex items-center gap-2 text-sm text-fg-muted hover:text-fg"
+        >
+          <Icon name="arrowLeft" size={14} />
+          Volver al directorio
+        </Link>
+      </div>
+
+      {/* Hero */}
+      <section className="mx-auto max-w-[1200px] px-6 pt-8 pb-14">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-10">
+          <div>
+            <div className="flex items-center gap-2 flex-wrap mb-5">
+              <span className={`pill ${pillVariant}`}>
+                {strain.typeBlend || TYPE_LABEL[strain.type]}
+              </span>
+              {strain.lineage && <span className="pill">{strain.lineage}</span>}
+            </div>
+            <h1
+              className="display"
+              style={{ fontSize: "clamp(48px, 7vw, 120px)", lineHeight: 0.98 }}
+            >
+              {strain.name}
+            </h1>
+            <p className="mt-6 text-lg text-fg-muted leading-relaxed max-w-[54ch]">
+              {strain.descriptionEs || strain.description}
+            </p>
+
+            <div className="mt-6 flex items-center gap-4">
+              <RatingStars rating={strain.averageRatings.overall || 0} size="md" />
+              <span className="mono text-sm tnum">
+                {(strain.averageRatings.overall || 0).toFixed(1)}
+              </span>
+              <span className="text-sm text-fg-dim">
+                {strain.reviewCount} reseñas
+              </span>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-2">
+            <div className="mt-8 flex items-center gap-3 flex-wrap">
+              <Link
+                to={`/strains/${strain.slug}/review`}
+                className="btn btn-primary"
+              >
+                <Icon name="edit" size={14} />
+                Publicar reseña
+              </Link>
               {currentUser && (
                 <saveFetcher.Form method="post" action={`/api/strains/${strain._id}/save`}>
-                  <Button variant="ghost" size="icon" type="submit">
-                    <span
-                      className="material-symbols-outlined text-xl"
-                      style={optimisticSaved ? { fontVariationSettings: "'FILL' 1", color: "var(--color-primary)" } : undefined}
-                    >
-                      bookmark
-                    </span>
-                  </Button>
+                  <button type="submit" className="btn btn-ghost">
+                    <Icon name={optimisticSaved ? "bookmarkOn" : "bookmark"} size={14} />
+                    {optimisticSaved ? "Guardada" : "Guardar"}
+                  </button>
                 </saveFetcher.Form>
+              )}
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => {
+                  if (typeof navigator !== "undefined" && "share" in navigator) {
+                    navigator.share({
+                      title: strain.name,
+                      url: window.location.href,
+                    });
+                  }
+                }}
+              >
+                <Icon name="share" size={14} />
+                Compartir
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-5">
+            <StrainThumb
+              name={strain.name}
+              colorHint={strain.colorHint}
+              imageUrl={strain.imageUrl}
+              ratio="wide"
+              className="w-full"
+            />
+            <div className="card p-5 grid grid-cols-5 gap-3">
+              <HeroStat kicker="THC" value={`${strain.cannabinoidProfile.thc.max}%`} tone="accent" />
+              <HeroStat kicker="CBD" value={`${strain.cannabinoidProfile.cbd.max || 0}%`} />
+              <HeroStat kicker="Terpeno" value={strain.dominantTerpene || "—"} />
+              <HeroStat
+                kicker="Efecto"
+                value={(strain.effects || [])[0] || "—"}
+              />
+              <HeroStat kicker="Cultivo" value={strain.difficulty || "—"} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Effects + Time curve */}
+      <section className="mx-auto max-w-[1200px] px-6 py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="card p-6">
+            <div className="flex items-baseline justify-between mb-5">
+              <h2 className="display text-2xl">Perfil de efectos</h2>
+              <span className="kicker">según {strain.reviewCount || "0"} reseñas</span>
+            </div>
+            <div className="space-y-4">
+              {effectValues.length > 0 ? (
+                effectValues.map((e) => (
+                  <EffectBar key={e.label} label={e.label} value={e.value} />
+                ))
+              ) : (
+                <p className="text-sm text-fg-muted">Sin datos todavía.</p>
               )}
             </div>
           </div>
 
-          <p className="text-text-muted leading-relaxed mb-6">
-            {strain.description}
-          </p>
+          <div className="card p-6">
+            <div className="flex items-baseline justify-between mb-5">
+              <h2 className="display text-2xl">Curva en el tiempo</h2>
+              <span className="kicker">efecto estimado</span>
+            </div>
+            {strain.timeCurve && strain.timeCurve.length > 0 ? (
+              <TimeCurve data={strain.timeCurve as any} />
+            ) : (
+              <p className="text-sm text-fg-muted">Sin curva estimada.</p>
+            )}
+          </div>
+        </div>
+      </section>
 
-          {/* Genetics */}
-          {(strain.genetics?.parent1 || strain.genetics?.parent2) && (
-            <div className="mb-6 p-4 rounded-xl bg-white/5">
-              <h3 className="text-sm font-bold text-white mb-2">Genética</h3>
-              <div className="flex items-center gap-2 text-sm text-text-muted">
-                {strain.genetics.parent1 && <span>{strain.genetics.parent1}</span>}
-                {strain.genetics.parent1 && strain.genetics.parent2 && (
-                  <span className="text-primary">×</span>
+      {/* Terpenes + Flavors/Momento */}
+      <section className="mx-auto max-w-[1200px] px-6 py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8">
+          <div className="card p-6">
+            <h2 className="display text-2xl mb-5">Terpenos dominantes</h2>
+            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-6 items-center">
+              {radarData.length > 0 && <TerpeneRadar terpenes={radarData} />}
+              <ul className="flex flex-col gap-3">
+                {(strain.terpenes || []).slice(0, 6).map((t: any) => (
+                  <li
+                    key={t.name}
+                    className="flex items-baseline justify-between border-b border-line pb-2"
+                  >
+                    <span className="text-sm text-fg">{t.name}</span>
+                    <span className="mono text-xs text-fg-muted tnum">
+                      {t.percentage.toFixed(2)}%
+                    </span>
+                  </li>
+                ))}
+                {(!strain.terpenes || strain.terpenes.length === 0) && (
+                  <li className="text-sm text-fg-muted">Sin datos de terpenos.</li>
                 )}
-                {strain.genetics.parent2 && <span>{strain.genetics.parent2}</span>}
-                {strain.genetics.breeder && (
-                  <span className="text-xs text-text-muted/60 ml-2">
-                    por {strain.genetics.breeder}
+              </ul>
+            </div>
+          </div>
+
+          <div className="card p-6 space-y-6">
+            <div>
+              <h2 className="display text-2xl mb-4">Sabor & aroma</h2>
+              <div className="flex flex-wrap gap-2">
+                {(strain.flavors || []).map((f: string) => (
+                  <span key={f} className="pill accent">
+                    {f}
                   </span>
+                ))}
+                {(!strain.flavors || strain.flavors.length === 0) && (
+                  <span className="text-sm text-fg-muted">Sin datos de sabor.</span>
                 )}
               </div>
             </div>
-          )}
-
-          {/* Cannabinoids */}
-          <div className="space-y-3 mb-6">
-            <CannabinoidBar
-              label="THC"
-              min={strain.cannabinoidProfile.thc.min}
-              max={strain.cannabinoidProfile.thc.max}
-              color="var(--color-primary)"
-            />
-            <CannabinoidBar
-              label="CBD"
-              min={strain.cannabinoidProfile.cbd.min}
-              max={strain.cannabinoidProfile.cbd.max}
-              color="var(--color-accent-purple)"
-            />
+            {strain.momento && (
+              <MomentoBar
+                manana={strain.momento.manana || 0}
+                tarde={strain.momento.tarde || 0}
+                noche={strain.momento.noche || 0}
+              />
+            )}
           </div>
-
-          {/* CTA */}
-          <Link to={`/strains/${strain.slug}/review`}>
-            <Button size="lg">
-              <span className="material-symbols-outlined text-lg">edit</span>
-              Escribir Reseña
-            </Button>
-          </Link>
         </div>
-      </div>
+      </section>
 
-      <Separator className="mb-8" />
+      {/* Reviews */}
+      <section className="mx-auto max-w-[1200px] px-6 py-14">
+        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-10">
+          <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+            <div className="kicker">Experiencias</div>
+            <h2 className="display text-3xl">De la comunidad.</h2>
+            <div className="card p-5">
+              <div className="display text-6xl tnum mb-1">
+                {(strain.averageRatings.overall || 0).toFixed(1)}
+              </div>
+              <RatingStars rating={strain.averageRatings.overall || 0} size="md" />
+              <div className="kicker mt-2">{strain.reviewCount} reseñas</div>
 
-      {/* Details Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left: Terpenes, Effects, Flavors */}
-        <div className="space-y-6">
-          {/* Terpenes */}
-          {strain.terpenes?.length > 0 && (
-            <Card className="border-white/10">
-              <CardHeader>
-                <h2 className="font-display font-bold text-white">Terpenos</h2>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {strain.terpenes.map((t: any) => {
-                  const terpInfo = TERPENES.find((tp) => tp.name === t.name);
-                  return (
-                    <div key={t.name}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-white">{t.name}</span>
-                        <span className="text-text-muted">{t.percentage}%</span>
+              {strain.reviewCount > 0 && (
+                <div className="mt-5 space-y-1.5">
+                  {[5, 4, 3, 2, 1].map((star) => {
+                    const count =
+                      strain.reviewDistribution?.[star as 1 | 2 | 3 | 4 | 5] || 0;
+                    const pct =
+                      strain.reviewCount > 0 ? (count / strain.reviewCount) * 100 : 0;
+                    return (
+                      <div
+                        key={star}
+                        className="grid grid-cols-[14px_1fr_28px] items-center gap-2 text-xs"
+                      >
+                        <span className="text-fg-dim tnum">{star}</span>
+                        <span className="h-1 rounded-full bg-sunken overflow-hidden">
+                          <span
+                            className="block h-full rounded-full"
+                            style={{ width: `${pct}%`, background: "var(--gold)" }}
+                          />
+                        </span>
+                        <span className="text-fg-dim tnum text-right">{count}</span>
                       </div>
-                      <Progress
-                        value={t.percentage}
-                        max={2}
-                        color={terpInfo?.color || "var(--color-primary)"}
-                      />
-                    </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Effects */}
-          {strain.effects?.length > 0 && (
-            <Card className="border-white/10">
-              <CardHeader>
-                <h2 className="font-display font-bold text-white">Efectos</h2>
-              </CardHeader>
-              <CardContent>
-                <EffectsChipGroup effects={strain.effects} />
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Flavors */}
-          {strain.flavors?.length > 0 && (
-            <Card className="border-white/10">
-              <CardHeader>
-                <h2 className="font-display font-bold text-white">Sabores</h2>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {strain.flavors.map((f: string) => (
-                    <span key={f} className="px-3 py-1.5 rounded-full bg-white/5 text-sm text-text-muted">
-                      {f}
-                    </span>
-                  ))}
+                    );
+                  })}
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Right: Ratings + Reviews */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Rating Summary */}
-          {strain.reviewCount > 0 && (
-            <Card className="border-white/10">
-              <CardHeader>
-                <h2 className="font-display font-bold text-white">Calificaciones</h2>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-8 items-start">
-                  <div className="text-center">
-                    <p className="font-display text-5xl font-bold text-white">
-                      {strain.averageRatings.overall.toFixed(1)}
-                    </p>
-                    <RatingStars rating={strain.averageRatings.overall} size="sm" />
-                    <p className="text-xs text-text-muted mt-1">{strain.reviewCount} reseñas</p>
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    {[5, 4, 3, 2, 1].map((star) => {
-                      const count = strain.reviewDistribution?.[star as 1|2|3|4|5] || 0;
-                      const pct = strain.reviewCount > 0 ? (count / strain.reviewCount) * 100 : 0;
-                      return (
-                        <div key={star} className="flex items-center gap-2 text-sm">
-                          <span className="w-4 text-right text-text-muted">{star}</span>
-                          <span className="material-symbols-outlined text-accent-amber text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>
-                            star
-                          </span>
-                          <div className="flex-1">
-                            <Progress value={pct} max={100} />
-                          </div>
-                          <span className="w-8 text-right text-xs text-text-muted">{count}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Reviews */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-xl font-bold text-white">
-                Reseñas ({strain.reviewCount})
-              </h2>
-              <Link to={`/strains/${strain.slug}/review`}>
-                <Button size="sm">
-                  <span className="material-symbols-outlined text-lg">edit</span>
-                  Escribir Reseña
-                </Button>
-              </Link>
+              )}
             </div>
+            <Link
+              to={`/strains/${strain.slug}/review`}
+              className="btn btn-primary w-full"
+            >
+              <Icon name="edit" size={14} />
+              Escribir reseña
+            </Link>
+          </aside>
 
+          <div>
             {reviews.length === 0 ? (
-              <div className="text-center py-12 rounded-2xl bg-forest-deep border border-white/5">
-                <span className="material-symbols-outlined text-4xl text-text-muted/40 mb-2 block">
-                  rate_review
-                </span>
-                <p className="text-text-muted mb-4">Sé el primero en reseñar esta cepa</p>
-                <Link to={`/strains/${strain.slug}/review`}>
-                  <Button>Escribir Reseña</Button>
+              <div className="card p-10 text-center">
+                <p className="text-fg-muted mb-4">Sé quien empiece la conversación.</p>
+                <Link
+                  to={`/strains/${strain.slug}/review`}
+                  className="btn btn-primary inline-flex"
+                >
+                  Escribir la primera reseña
                 </Link>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {reviews.map((review: any) => (
                   <ReviewCard
                     key={review._id}
@@ -407,24 +411,42 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
             )}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Similar Strains */}
+      {/* Similar */}
       {similarStrains.length > 0 && (
-        <>
-          <Separator className="my-8" />
-          <section>
-            <h2 className="font-display text-2xl font-bold text-white mb-6">
-              Cepas Similares
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {similarStrains.map((s: any) => (
-                <StrainCard key={s._id} strain={s} />
-              ))}
-            </div>
-          </section>
-        </>
+        <section className="mx-auto max-w-[1200px] px-6 py-14 border-t border-line">
+          <div className="kicker mb-3">Siguiendo el hilo</div>
+          <h2 className="display text-3xl md:text-4xl mb-8">Cepas cercanas.</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {similarStrains.map((s: any) => (
+              <StrainCard key={s._id} strain={s} />
+            ))}
+          </div>
+        </section>
       )}
+    </div>
+  );
+}
+
+function HeroStat({
+  kicker,
+  value,
+  tone,
+}: {
+  kicker: string;
+  value: string | number;
+  tone?: "accent";
+}) {
+  return (
+    <div>
+      <div className="kicker mb-1">{kicker}</div>
+      <div
+        className="mono text-sm tnum"
+        style={{ color: tone === "accent" ? "var(--accent)" : "var(--fg)" }}
+      >
+        {value}
+      </div>
     </div>
   );
 }

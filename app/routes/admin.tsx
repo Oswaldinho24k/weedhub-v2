@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from "react-router";
 import type { Route } from "./+types/admin";
 import { requireAdmin } from "~/lib/auth.server";
+import { Icon, type IconName } from "~/components/ui/icon";
 import { cn } from "~/lib/utils";
 
 export function meta() {
@@ -12,44 +13,51 @@ export async function loader({ request }: Route.LoaderArgs) {
   return null;
 }
 
-const NAV_ITEMS = [
-  { to: "/admin", label: "Dashboard", icon: "dashboard", end: true },
-  { to: "/admin/strains", label: "Cepas", icon: "potted_plant" },
-  { to: "/admin/reviews", label: "Reseñas", icon: "rate_review" },
+const NAV_ITEMS: { to: string; label: string; icon: IconName; end?: boolean }[] = [
+  { to: "/admin", label: "Dashboard", icon: "settings", end: true },
+  { to: "/admin/strains", label: "Cepas", icon: "leaf" },
+  { to: "/admin/reviews", label: "Reseñas", icon: "edit" },
 ];
 
 export default function AdminLayout() {
   const location = useLocation();
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-8">
-      <h1 className="font-display text-2xl font-bold text-white mb-6 flex items-center gap-2">
-        <span className="material-symbols-outlined text-primary">admin_panel_settings</span>
-        Administración
-      </h1>
+    <div className="mx-auto max-w-[1200px] px-6 py-10">
+      <div className="mb-8">
+        <div className="kicker mb-1">Panel de administración</div>
+        <h1 className="display text-4xl flex items-center gap-3">
+          <Icon name="crown" size={28} className="text-accent" />
+          Administración
+        </h1>
+      </div>
 
-      <div className="flex gap-4 mb-8 border-b border-white/10 pb-4">
+      <nav className="flex gap-2 mb-10 border-b border-line">
         {NAV_ITEMS.map((item) => {
           const isActive = item.end
             ? location.pathname === item.to
-            : location.pathname.startsWith(item.to);
+            : location.pathname.startsWith(item.to) && item.to !== "/admin";
           return (
             <Link
               key={item.to}
               to={item.to}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-primary text-background-dark"
-                  : "text-text-muted hover:bg-white/5 hover:text-white"
+                "inline-flex items-center gap-2 px-4 py-3 text-sm relative transition-colors",
+                isActive ? "text-fg" : "text-fg-muted hover:text-fg"
               )}
             >
-              <span className="material-symbols-outlined text-lg">{item.icon}</span>
+              <Icon name={item.icon} size={14} />
               {item.label}
+              {isActive && (
+                <span
+                  aria-hidden
+                  className="absolute left-0 right-0 -bottom-px h-0.5 bg-accent"
+                />
+              )}
             </Link>
           );
         })}
-      </div>
+      </nav>
 
       <Outlet />
     </div>
