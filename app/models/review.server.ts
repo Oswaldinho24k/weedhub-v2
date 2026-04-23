@@ -21,6 +21,7 @@ export interface IReview extends Document {
   helpfulVotes: mongoose.Types.ObjectId[];
   helpfulCount: number;
   status: "published" | "flagged" | "removed";
+  publishedAs: "username" | "anonymous";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,6 +60,12 @@ const reviewSchema = new Schema<IReview>(
       enum: ["published", "flagged", "removed"],
       default: "published",
     },
+    publishedAs: {
+      type: String,
+      enum: ["username", "anonymous"],
+      default: "anonymous",
+      required: true,
+    },
   },
   { timestamps: true }
 );
@@ -67,6 +74,7 @@ reviewSchema.index({ strainId: 1, createdAt: -1 });
 reviewSchema.index({ userId: 1, strainId: 1 }, { unique: true });
 reviewSchema.index({ userId: 1, createdAt: -1 });
 reviewSchema.index({ status: 1 });
+reviewSchema.index({ publishedAs: 1 });
 
 export const ReviewModel =
   (mongoose.models.Review as mongoose.Model<IReview>) ||

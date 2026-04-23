@@ -51,6 +51,18 @@ export async function action({ request }: Route.ActionArgs) {
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
+    const aliases = String(formData.get("aliases") || "")
+      .split(/[,\n]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const aliasSlugs = aliases.map((a) =>
+      a
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "")
+    );
 
     if (!name || !description) {
       return { error: "Nombre y descripción son requeridos" };
@@ -79,6 +91,8 @@ export async function action({ request }: Route.ActionArgs) {
     await StrainModel.create({
       name,
       slug,
+      aliases,
+      aliasSlugs,
       type,
       description,
       cannabinoidProfile: {
@@ -267,6 +281,14 @@ export default function AdminStrainsPage({ loaderData }: Route.ComponentProps) {
               name="effects"
               placeholder="Relajación, Euforia"
               className="admin-input"
+            />
+          </AdminField>
+          <AdminField label="Aliases (uno por línea o coma)">
+            <textarea
+              name="aliases"
+              rows={2}
+              placeholder="Larry Bird&#10;Gelato #33"
+              className="admin-input !h-auto py-2"
             />
           </AdminField>
           <AdminField label="Sabores (coma)">

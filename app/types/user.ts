@@ -31,12 +31,30 @@ export interface EarnedBadge {
   earnedAt: string;
 }
 
+export type AcquisitionSourceValue =
+  | "friend"
+  | "search"
+  | "social"
+  | "press"
+  | "magazine"
+  | "event"
+  | "other";
+
 export interface User {
   _id: string;
   email: string;
-  displayName: string;
+  username: string;
+  anonymousHandle: string;
+  publishAsAnonymous: boolean;
+  displayName?: string;
   avatar?: string;
   role: UserRole;
+  country: string;
+  city?: string;
+  showCityPublicly: boolean;
+  birthYear?: number;
+  acquisitionSource?: AcquisitionSourceValue;
+  locale?: string;
   cannabisProfile: CannabisProfile;
   stats: UserStats;
   earnedBadges: EarnedBadge[];

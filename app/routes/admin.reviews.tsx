@@ -12,7 +12,7 @@ export async function loader() {
   const reviews = await ReviewModel.find()
     .sort({ createdAt: -1 })
     .limit(50)
-    .populate("userId", "displayName email")
+    .populate("userId", "username anonymousHandle email")
     .populate("strainId", "name slug")
     .lean();
 
@@ -22,9 +22,14 @@ export async function loader() {
       ratings: r.ratings,
       comment: r.comment,
       status: r.status,
+      publishedAs: r.publishedAs,
       createdAt: r.createdAt.toISOString(),
       user: r.userId
-        ? { displayName: (r.userId as any).displayName, email: (r.userId as any).email }
+        ? {
+            username: (r.userId as any).username,
+            anonymousHandle: (r.userId as any).anonymousHandle,
+            email: (r.userId as any).email,
+          }
         : null,
       strain: r.strainId
         ? { name: (r.strainId as any).name, slug: (r.strainId as any).slug }
@@ -91,8 +96,13 @@ export default function AdminReviewsPage({ loaderData }: Route.ComponentProps) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2 flex-wrap">
                   <span className="text-sm font-medium">
-                    {review.user?.displayName || "Anónimo"}
+                    {review.user?.username ? `@${review.user.username}` : "Anónimo"}
                   </span>
+                  {review.publishedAs === "anonymous" && review.user?.anonymousHandle && (
+                    <span className="mono text-xs text-fg-dim">
+                      publicado como {review.user.anonymousHandle}
+                    </span>
+                  )}
                   <span className="text-xs text-fg-dim">{review.user?.email}</span>
                   <span className={`pill ${STATUS_PILL[review.status]}`}>
                     {review.status}

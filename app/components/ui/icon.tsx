@@ -124,12 +124,14 @@ export function Icon({
   size = 18,
   strokeWidth = 1.6,
   className,
+  style,
   "aria-hidden": ariaHidden = true,
 }: {
   name: IconName;
   size?: number;
   strokeWidth?: number;
   className?: string;
+  style?: React.CSSProperties;
   "aria-hidden"?: boolean;
 }) {
   const Cmp = registry[name];
@@ -138,6 +140,7 @@ export function Icon({
       size={size}
       strokeWidth={strokeWidth}
       className={className}
+      style={style}
       aria-hidden={ariaHidden}
     />
   );

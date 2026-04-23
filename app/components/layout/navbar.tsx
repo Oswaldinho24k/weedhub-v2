@@ -2,13 +2,16 @@ import { Link, useNavigate } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
+import { LanguageSwitcher } from "./language-switcher";
 import { Icon } from "~/components/ui/icon";
+import { useT, useHref } from "~/lib/i18n-context";
 import type { Theme } from "~/lib/theme.server";
 import { cn } from "~/lib/utils";
 
 interface NavbarProps {
   user?: {
     _id: string;
+    username?: string;
     displayName: string;
     avatar?: string;
     role?: string;
@@ -16,17 +19,19 @@ interface NavbarProps {
   theme: Theme;
 }
 
-const NAV_LINKS = [
-  { to: "/strains", label: "Directorio" },
-  { to: "/community", label: "Comunidad" },
-  { to: "/editorial", label: "Magazine" },
-];
-
 export function Navbar({ user, theme }: NavbarProps) {
+  const t = useT();
+  const href = useHref();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const navLinks = [
+    { to: href("/strains"), label: t.nav.directory },
+    { to: href("/community"), label: t.nav.community },
+    { to: href("/editorial"), label: t.nav.editorial },
+  ];
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -45,7 +50,7 @@ export function Navbar({ user, theme }: NavbarProps) {
           <Logo size={20} />
 
           <nav className="hidden md:flex items-center gap-7">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
@@ -59,15 +64,15 @@ export function Navbar({ user, theme }: NavbarProps) {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => navigate("/strains?focus=search")}
+              onClick={() => navigate(href("/strains?focus=search"))}
               className="hidden sm:inline-flex items-center gap-2 h-9 px-3 rounded-full border border-line text-fg-dim text-xs hover:border-line-strong transition-colors"
-              aria-label="Buscar cepas"
+              aria-label={t.nav.search}
             >
               <Icon name="search" size={14} />
-              <span className="hidden lg:inline">Buscar</span>
-              <kbd className="hidden lg:inline mono text-[10px] border border-line rounded px-1 py-0.5 text-fg-dim">⌘K</kbd>
+              <span className="hidden lg:inline">{t.nav.search}</span>
             </button>
 
+            <LanguageSwitcher />
             <ThemeToggle theme={theme} />
 
             {user ? (
@@ -80,30 +85,49 @@ export function Navbar({ user, theme }: NavbarProps) {
                   aria-expanded={menuOpen}
                 >
                   <span
-                    className="h-7 w-7 rounded-full bg-elev flex items-center justify-center text-xs"
+                    className="h-7 w-7 rounded-full bg-elev overflow-hidden flex items-center justify-center text-xs"
                     style={{ color: "var(--accent)" }}
                   >
-                    {user.displayName.charAt(0).toUpperCase()}
+                    {user.avatar ? (
+                      <img src={user.avatar} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      user.displayName.charAt(0).toUpperCase()
+                    )}
                   </span>
                   <Icon name="chevronDown" size={14} className="text-fg-dim" />
                 </button>
                 {menuOpen && (
                   <div
                     role="menu"
-                    className="fade-up absolute right-0 top-full mt-2 w-52 card-strong p-1 shadow-[var(--shadow-soft)] z-50"
+                    className="fade-up absolute right-0 top-full mt-2 w-56 card-strong p-1 shadow-[var(--shadow-soft)] z-50"
                   >
+                    {user.username && (
+                      <div className="px-3 py-2 border-b border-line">
+                        <div className="kicker">{t.nav.session}</div>
+                        <div className="text-sm font-medium mt-0.5">@{user.username}</div>
+                      </div>
+                    )}
                     <MenuItem to="/profile" icon="user" onClick={() => setMenuOpen(false)}>
-                      Mi perfil
+                      {t.nav.myProfile}
                     </MenuItem>
+                    {user.username && (
+                      <MenuItem
+                        to={`/profile/${user.username}`}
+                        icon="eye"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        {t.nav.publicProfile}
+                      </MenuItem>
+                    )}
                     <MenuItem to="/profile/saved" icon="bookmark" onClick={() => setMenuOpen(false)}>
-                      Cepas guardadas
+                      {t.nav.savedStrains}
                     </MenuItem>
                     <MenuItem to="/profile/edit" icon="settings" onClick={() => setMenuOpen(false)}>
-                      Editar perfil
+                      {t.nav.editProfile}
                     </MenuItem>
                     {user.role === "admin" && (
                       <MenuItem to="/admin" icon="crown" onClick={() => setMenuOpen(false)}>
-                        Admin
+                        {t.nav.admin}
                       </MenuItem>
                     )}
                     <hr className="hrule my-1" />
@@ -113,21 +137,16 @@ export function Navbar({ user, theme }: NavbarProps) {
                         className="w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm text-warm hover:bg-elev transition-colors"
                       >
                         <Icon name="logout" size={14} />
-                        Cerrar sesión
+                        {t.nav.logout}
                       </button>
                     </form>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="hidden sm:flex items-center gap-2">
-                <Link to="/auth" className="btn btn-ghost !py-2 !px-3 text-xs">
-                  Entrar
-                </Link>
-                <Link to="/auth?mode=register" className="btn btn-primary !py-2 !px-3 text-xs">
-                  Crear cuenta
-                </Link>
-              </div>
+              <Link to="/auth" className="hidden sm:inline-flex btn btn-primary !py-2 !px-4 text-xs">
+                {t.nav.start}
+              </Link>
             )}
 
             <button
@@ -145,7 +164,7 @@ export function Navbar({ user, theme }: NavbarProps) {
       {mobileOpen && (
         <div className="md:hidden border-t border-line bg-bg fade-in">
           <div className="px-6 py-4 space-y-1">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
@@ -158,11 +177,12 @@ export function Navbar({ user, theme }: NavbarProps) {
             {!user && (
               <>
                 <hr className="hrule my-2" />
-                <Link to="/auth" className="block rounded-md px-3 py-2 text-sm">
-                  Entrar
-                </Link>
-                <Link to="/auth?mode=register" className="block rounded-md px-3 py-2 text-sm" style={{ color: "var(--accent)" }}>
-                  Crear cuenta
+                <Link
+                  to="/auth"
+                  className="block rounded-md px-3 py-2 text-sm"
+                  style={{ color: "var(--accent)" }}
+                >
+                  {t.nav.start}
                 </Link>
               </>
             )}
@@ -180,7 +200,7 @@ function MenuItem({
   onClick,
 }: {
   to: string;
-  icon: "user" | "settings" | "crown" | "bookmark";
+  icon: "user" | "settings" | "crown" | "bookmark" | "eye";
   children: React.ReactNode;
   onClick?: () => void;
 }) {

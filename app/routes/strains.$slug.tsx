@@ -14,13 +14,10 @@ import { RatingStars } from "~/components/composite/rating-stars";
 import { ReviewCard } from "~/components/composite/review-card";
 import { StrainCard } from "~/components/composite/strain-card";
 import { Icon } from "~/components/ui/icon";
+import { useT, useHref } from "~/lib/i18n-context";
+import { pickStrainDescription } from "~/lib/strain-description";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
-const TYPE_LABEL: Record<string, string> = {
-  sativa: "Sativa",
-  indica: "Indica",
-  hybrid: "Híbrida",
-};
 const TYPE_PILL: Record<string, string> = {
   sativa: "accent",
   indica: "warm",
@@ -48,7 +45,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const reviews = await ReviewModel.find({ strainId: strain._id, status: "published" })
     .sort({ helpfulCount: -1, createdAt: -1 })
     .limit(10)
-    .populate("userId", "displayName avatar cannabisProfile.experienceLevel")
+    .populate(
+      "userId",
+      "username anonymousHandle avatar earnedBadges publishAsAnonymous country city showCityPublicly"
+    )
     .lean();
 
   const user = await getUserFromSession(request);
@@ -84,24 +84,32 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       createdAt: strain.createdAt.toISOString(),
       updatedAt: strain.updatedAt.toISOString(),
     },
-    reviews: reviews.map((r) => ({
-      _id: String(r._id),
-      ratings: r.ratings,
-      comment: r.comment,
-      context: r.context,
-      effectsExperienced: r.effectsExperienced,
-      helpfulVotes: r.helpfulVotes.map(String),
-      helpfulCount: r.helpfulCount,
-      createdAt: r.createdAt.toISOString(),
-      user: r.userId
-        ? {
-            _id: String((r.userId as any)._id),
-            displayName: (r.userId as any).displayName,
-            avatar: (r.userId as any).avatar,
-            cannabisProfile: (r.userId as any).cannabisProfile,
-          }
-        : undefined,
-    })),
+    reviews: reviews.map((r) => {
+      const u = r.userId as any;
+      return {
+        _id: String(r._id),
+        ratings: r.ratings,
+        comment: r.comment,
+        context: r.context,
+        effectsExperienced: r.effectsExperienced,
+        helpfulVotes: r.helpfulVotes.map(String),
+        helpfulCount: r.helpfulCount,
+        createdAt: r.createdAt.toISOString(),
+        publishedAs: r.publishedAs,
+        user: u
+          ? {
+              username: u.username,
+              anonymousHandle: u.anonymousHandle,
+              avatar: u.avatar,
+              earnedBadges: u.earnedBadges,
+              publishAsAnonymous: u.publishAsAnonymous,
+              country: u.country,
+              city: u.city,
+              showCityPublicly: u.showCityPublicly,
+            }
+          : undefined,
+      };
+    }),
     isSaved,
     similarStrains: similarStrains.map((s: any) => ({
       ...s,
@@ -114,11 +122,21 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
 export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
   const { strain, reviews, isSaved, similarStrains } = loaderData;
-  const context = useOutletContext<{ user?: any }>();
+  const context = useOutletContext<{ user?: any; locale?: "es" | "pt" | "en" }>();
   const currentUser = context?.user;
+  const locale = context?.locale || "es";
+  const t = useT();
+  const href = useHref();
   const saveFetcher = useFetcher();
   const optimisticSaved = saveFetcher.state !== "idle" ? !isSaved : isSaved;
   const pillVariant = TYPE_PILL[strain.type] || "";
+  const typeLabel =
+    strain.type === "sativa"
+      ? t.strainTypes.sativa
+      : strain.type === "indica"
+        ? t.strainTypes.indica
+        : t.strainTypes.hybrid;
+  const strainDescription = pickStrainDescription(strain, locale);
 
   // Normalize effects for bars: use flat strain.effects list with synthetic values
   // based on position (seed doesn't have numeric effect values).
@@ -161,11 +179,11 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
       {/* Back */}
       <div className="mx-auto max-w-[1200px] px-6 pt-6">
         <Link
-          to="/strains"
+          to={href("/strains")}
           className="inline-flex items-center gap-2 text-sm text-fg-muted hover:text-fg"
         >
           <Icon name="arrowLeft" size={14} />
-          Volver al directorio
+          {t.strain.backToDirectory}
         </Link>
       </div>
 
@@ -175,7 +193,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
           <div>
             <div className="flex items-center gap-2 flex-wrap mb-5">
               <span className={`pill ${pillVariant}`}>
-                {strain.typeBlend || TYPE_LABEL[strain.type]}
+                {strain.typeBlend || typeLabel}
               </span>
               {strain.lineage && <span className="pill">{strain.lineage}</span>}
             </div>
@@ -185,8 +203,14 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
             >
               {strain.name}
             </h1>
+            {strain.aliases && strain.aliases.length > 0 && (
+              <div className="mt-3 text-xs text-fg-dim">
+                <span className="kicker mr-2">{t.strain.alsoKnownAs}</span>
+                {strain.aliases.join(" · ")}
+              </div>
+            )}
             <p className="mt-6 text-lg text-fg-muted leading-relaxed max-w-[54ch]">
-              {strain.descriptionEs || strain.description}
+              {strainDescription}
             </p>
 
             <div className="mt-6 flex items-center gap-4">
@@ -195,7 +219,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
                 {(strain.averageRatings.overall || 0).toFixed(1)}
               </span>
               <span className="text-sm text-fg-dim">
-                {strain.reviewCount} reseñas
+                {strain.reviewCount} {t.strain.reviewsCount}
               </span>
             </div>
 
@@ -205,13 +229,13 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
                 className="btn btn-primary"
               >
                 <Icon name="edit" size={14} />
-                Publicar reseña
+                {t.strain.publishReview}
               </Link>
               {currentUser && (
                 <saveFetcher.Form method="post" action={`/api/strains/${strain._id}/save`}>
                   <button type="submit" className="btn btn-ghost">
                     <Icon name={optimisticSaved ? "bookmarkOn" : "bookmark"} size={14} />
-                    {optimisticSaved ? "Guardada" : "Guardar"}
+                    {optimisticSaved ? t.strain.savedStrain : t.strain.saveStrain}
                   </button>
                 </saveFetcher.Form>
               )}
@@ -228,7 +252,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
                 }}
               >
                 <Icon name="share" size={14} />
-                Compartir
+                {t.strain.share}
               </button>
             </div>
           </div>
@@ -242,14 +266,14 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
               className="w-full"
             />
             <div className="card p-5 grid grid-cols-5 gap-3">
-              <HeroStat kicker="THC" value={`${strain.cannabinoidProfile.thc.max}%`} tone="accent" />
-              <HeroStat kicker="CBD" value={`${strain.cannabinoidProfile.cbd.max || 0}%`} />
-              <HeroStat kicker="Terpeno" value={strain.dominantTerpene || "—"} />
+              <HeroStat kicker={t.strain.heroStats.thc} value={`${strain.cannabinoidProfile.thc.max}%`} tone="accent" />
+              <HeroStat kicker={t.strain.heroStats.cbd} value={`${strain.cannabinoidProfile.cbd.max || 0}%`} />
+              <HeroStat kicker={t.strain.heroStats.terpene} value={strain.dominantTerpene || "—"} />
               <HeroStat
-                kicker="Efecto"
+                kicker={t.strain.heroStats.effect}
                 value={(strain.effects || [])[0] || "—"}
               />
-              <HeroStat kicker="Cultivo" value={strain.difficulty || "—"} />
+              <HeroStat kicker={t.strain.heroStats.difficulty} value={strain.difficulty || "—"} />
             </div>
           </div>
         </div>
@@ -260,8 +284,10 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="card p-6">
             <div className="flex items-baseline justify-between mb-5">
-              <h2 className="display text-2xl">Perfil de efectos</h2>
-              <span className="kicker">según {strain.reviewCount || "0"} reseñas</span>
+              <h2 className="display text-2xl">{t.strain.effectsPanelTitle}</h2>
+              <span className="kicker">
+                {t.strain.effectsAccording.replace("{count}", String(strain.reviewCount || 0))}
+              </span>
             </div>
             <div className="space-y-4">
               {effectValues.length > 0 ? (
@@ -269,20 +295,20 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
                   <EffectBar key={e.label} label={e.label} value={e.value} />
                 ))
               ) : (
-                <p className="text-sm text-fg-muted">Sin datos todavía.</p>
+                <p className="text-sm text-fg-muted">{t.strain.noEffectsData}</p>
               )}
             </div>
           </div>
 
           <div className="card p-6">
             <div className="flex items-baseline justify-between mb-5">
-              <h2 className="display text-2xl">Curva en el tiempo</h2>
-              <span className="kicker">efecto estimado</span>
+              <h2 className="display text-2xl">{t.strain.curvePanelTitle}</h2>
+              <span className="kicker">{t.strain.curveSubtitle}</span>
             </div>
             {strain.timeCurve && strain.timeCurve.length > 0 ? (
               <TimeCurve data={strain.timeCurve as any} />
             ) : (
-              <p className="text-sm text-fg-muted">Sin curva estimada.</p>
+              <p className="text-sm text-fg-muted">{t.strain.noCurve}</p>
             )}
           </div>
         </div>
@@ -292,23 +318,23 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
       <section className="mx-auto max-w-[1200px] px-6 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8">
           <div className="card p-6">
-            <h2 className="display text-2xl mb-5">Terpenos dominantes</h2>
+            <h2 className="display text-2xl mb-5">{t.strain.terpenesTitle}</h2>
             <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-6 items-center">
               {radarData.length > 0 && <TerpeneRadar terpenes={radarData} />}
               <ul className="flex flex-col gap-3">
-                {(strain.terpenes || []).slice(0, 6).map((t: any) => (
+                {(strain.terpenes || []).slice(0, 6).map((terp: any) => (
                   <li
-                    key={t.name}
+                    key={terp.name}
                     className="flex items-baseline justify-between border-b border-line pb-2"
                   >
-                    <span className="text-sm text-fg">{t.name}</span>
+                    <span className="text-sm text-fg">{terp.name}</span>
                     <span className="mono text-xs text-fg-muted tnum">
-                      {t.percentage.toFixed(2)}%
+                      {terp.percentage.toFixed(2)}%
                     </span>
                   </li>
                 ))}
                 {(!strain.terpenes || strain.terpenes.length === 0) && (
-                  <li className="text-sm text-fg-muted">Sin datos de terpenos.</li>
+                  <li className="text-sm text-fg-muted">{t.strain.noTerpenes}</li>
                 )}
               </ul>
             </div>
@@ -316,7 +342,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
 
           <div className="card p-6 space-y-6">
             <div>
-              <h2 className="display text-2xl mb-4">Sabor & aroma</h2>
+              <h2 className="display text-2xl mb-4">{t.strain.flavorsTitle}</h2>
               <div className="flex flex-wrap gap-2">
                 {(strain.flavors || []).map((f: string) => (
                   <span key={f} className="pill accent">
@@ -324,7 +350,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
                   </span>
                 ))}
                 {(!strain.flavors || strain.flavors.length === 0) && (
-                  <span className="text-sm text-fg-muted">Sin datos de sabor.</span>
+                  <span className="text-sm text-fg-muted">{t.strain.noFlavors}</span>
                 )}
               </div>
             </div>
@@ -343,14 +369,16 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
       <section className="mx-auto max-w-[1200px] px-6 py-14">
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-10">
           <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
-            <div className="kicker">Experiencias</div>
-            <h2 className="display text-3xl">De la comunidad.</h2>
+            <div className="kicker">{t.strain.experiencesTitle}</div>
+            <h2 className="display text-3xl">{t.strain.experiencesFromCommunity}</h2>
             <div className="card p-5">
               <div className="display text-6xl tnum mb-1">
                 {(strain.averageRatings.overall || 0).toFixed(1)}
               </div>
               <RatingStars rating={strain.averageRatings.overall || 0} size="md" />
-              <div className="kicker mt-2">{strain.reviewCount} reseñas</div>
+              <div className="kicker mt-2">
+                {strain.reviewCount} {t.strain.reviewsCount}
+              </div>
 
               {strain.reviewCount > 0 && (
                 <div className="mt-5 space-y-1.5">
@@ -383,19 +411,19 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
               className="btn btn-primary w-full"
             >
               <Icon name="edit" size={14} />
-              Escribir reseña
+              {t.strain.writeReview}
             </Link>
           </aside>
 
           <div>
             {reviews.length === 0 ? (
               <div className="card p-10 text-center">
-                <p className="text-fg-muted mb-4">Sé quien empiece la conversación.</p>
+                <p className="text-fg-muted mb-4">{t.strain.noReviewsYet}</p>
                 <Link
                   to={`/strains/${strain.slug}/review`}
                   className="btn btn-primary inline-flex"
                 >
-                  Escribir la primera reseña
+                  {t.strain.beFirst}
                 </Link>
               </div>
             ) : (
@@ -416,8 +444,8 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
       {/* Similar */}
       {similarStrains.length > 0 && (
         <section className="mx-auto max-w-[1200px] px-6 py-14 border-t border-line">
-          <div className="kicker mb-3">Siguiendo el hilo</div>
-          <h2 className="display text-3xl md:text-4xl mb-8">Cepas cercanas.</h2>
+          <div className="kicker mb-3">{t.strain.similarKicker}</div>
+          <h2 className="display text-3xl md:text-4xl mb-8">{t.strain.similarTitle}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {similarStrains.map((s: any) => (
               <StrainCard key={s._id} strain={s} />

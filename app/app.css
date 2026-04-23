@@ -287,11 +287,6 @@ a { color: inherit; text-decoration: none; }
 @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
 .toast-in { animation: toastIn .2s ease-out both; }
 
-/* Hide decorative coordinate chip on narrow viewports */
-@media (max-width: 1180px) {
-  .hero-coords { display: none; }
-}
-
 /* Form controls (resets for pure-CSS inputs used in primitives) */
 button { font: inherit; color: inherit; }
 input, textarea, select { font: inherit; color: inherit; }

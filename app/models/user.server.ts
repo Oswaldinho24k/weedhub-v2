@@ -3,9 +3,18 @@ import mongoose, { Schema, type Document } from "mongoose";
 export interface IUser extends Document {
   email: string;
   passwordHash: string;
-  displayName: string;
+  username: string;
+  anonymousHandle: string;
+  publishAsAnonymous: boolean;
+  displayName?: string;
   avatar?: string;
   role: "user" | "admin";
+  country: string;
+  city?: string;
+  showCityPublicly: boolean;
+  birthYear?: number;
+  acquisitionSource?: string;
+  locale?: string;
   cannabisProfile: {
     experienceLevel: string;
     preferredEffects: string[];
@@ -40,14 +49,40 @@ const userSchema = new Schema<IUser>(
       trim: true,
     },
     passwordHash: { type: String, required: true },
-    displayName: { type: String, required: true, trim: true },
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: /^[a-z0-9_]+$/,
+      minlength: 3,
+      maxlength: 20,
+    },
+    anonymousHandle: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    publishAsAnonymous: { type: Boolean, default: true },
+    displayName: { type: String, trim: true },
     avatar: String,
     role: { type: String, enum: ["user", "admin"], default: "user" },
+    country: { type: String, required: true, default: "MX", uppercase: true },
+    city: { type: String, trim: true },
+    showCityPublicly: { type: Boolean, default: false },
+    birthYear: { type: Number, min: 1900, max: 2020 },
+    acquisitionSource: {
+      type: String,
+      enum: ["friend", "search", "social", "press", "magazine", "event", "other"],
+    },
+    locale: String,
     cannabisProfile: {
       experienceLevel: {
         type: String,
         enum: [
           "principiante",
+          "curioso",
           "novato",
           "ocasional",
           "regular",
@@ -90,6 +125,9 @@ const userSchema = new Schema<IUser>(
 );
 
 userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ username: 1 }, { unique: true });
+userSchema.index({ anonymousHandle: 1 }, { unique: true });
+userSchema.index({ country: 1 });
 
 export const UserModel =
   (mongoose.models.User as mongoose.Model<IUser>) ||

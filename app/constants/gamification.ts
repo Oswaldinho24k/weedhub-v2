@@ -1,6 +1,10 @@
-import type { BadgeDefinition } from "~/types/user";
+import type { BadgeDefinition, EarnedBadge } from "~/types/user";
 
-export const BADGES: BadgeDefinition[] = [
+export interface BadgeWithPriority extends BadgeDefinition {
+  displayPriority: number;
+}
+
+export const BADGES: BadgeWithPriority[] = [
   {
     id: "first-review",
     name: "Primera Reseña",
@@ -8,6 +12,7 @@ export const BADGES: BadgeDefinition[] = [
     icon: "edit_note",
     requirement: 1,
     type: "reviews",
+    displayPriority: 10,
   },
   {
     id: "reviewer-5",
@@ -16,6 +21,7 @@ export const BADGES: BadgeDefinition[] = [
     icon: "rate_review",
     requirement: 5,
     type: "reviews",
+    displayPriority: 50,
   },
   {
     id: "reviewer-25",
@@ -24,6 +30,7 @@ export const BADGES: BadgeDefinition[] = [
     icon: "military_tech",
     requirement: 25,
     type: "reviews",
+    displayPriority: 80,
   },
   {
     id: "reviewer-100",
@@ -32,6 +39,7 @@ export const BADGES: BadgeDefinition[] = [
     icon: "emoji_events",
     requirement: 100,
     type: "reviews",
+    displayPriority: 100,
   },
   {
     id: "helpful-10",
@@ -40,6 +48,7 @@ export const BADGES: BadgeDefinition[] = [
     icon: "thumb_up",
     requirement: 10,
     type: "helpful",
+    displayPriority: 40,
   },
   {
     id: "helpful-50",
@@ -48,6 +57,7 @@ export const BADGES: BadgeDefinition[] = [
     icon: "volunteer_activism",
     requirement: 50,
     type: "helpful",
+    displayPriority: 70,
   },
   {
     id: "explorer-10",
@@ -56,6 +66,7 @@ export const BADGES: BadgeDefinition[] = [
     icon: "explore",
     requirement: 10,
     type: "strains",
+    displayPriority: 45,
   },
   {
     id: "explorer-50",
@@ -64,8 +75,26 @@ export const BADGES: BadgeDefinition[] = [
     icon: "local_florist",
     requirement: 50,
     type: "strains",
+    displayPriority: 75,
   },
 ];
+
+const BADGE_BY_ID = new Map(BADGES.map((b) => [b.id, b]));
+
+export function getShowcaseBadge(
+  earnedBadges: EarnedBadge[] | undefined | null
+): BadgeWithPriority | null {
+  if (!earnedBadges || earnedBadges.length === 0) return null;
+  let best: BadgeWithPriority | null = null;
+  for (const eb of earnedBadges) {
+    const def = BADGE_BY_ID.get(eb.badgeId);
+    if (!def) continue;
+    if (!best || def.displayPriority > best.displayPriority) {
+      best = def;
+    }
+  }
+  return best;
+}
 
 export const POINTS = {
   REVIEW_CREATED: 10,

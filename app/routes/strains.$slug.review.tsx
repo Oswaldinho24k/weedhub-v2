@@ -10,6 +10,7 @@ import { awardPoints, checkAndAwardBadges } from "~/services/gamification.servic
 import { POINTS } from "~/constants/gamification";
 import { RatingStars } from "~/components/composite/rating-stars";
 import { Icon } from "~/components/ui/icon";
+import { useT } from "~/lib/i18n-context";
 import { cn } from "~/lib/utils";
 
 const POSITIVE_EFFECTS = [
@@ -93,11 +94,14 @@ export async function action({ params, request }: Route.ActionArgs) {
   const existing = await ReviewModel.findOne({ userId: user._id, strainId: strain._id });
   const isNew = !existing;
 
+  const publishedAs = user.publishAsAnonymous === false ? "username" : "anonymous";
+
   if (existing) {
     existing.ratings = ratings;
     existing.comment = comment;
     existing.context = { method, timeOfDay, setting };
     existing.effectsExperienced = effectsExperienced;
+    // publishedAs stays as originally set — snapshot is preserved
     await existing.save();
   } else {
     await ReviewModel.create({
@@ -107,6 +111,7 @@ export async function action({ params, request }: Route.ActionArgs) {
       comment,
       context: { method, timeOfDay, setting },
       effectsExperienced,
+      publishedAs,
     });
   }
 
@@ -127,6 +132,7 @@ const MOODS = ["😶", "🙁", "😐", "🙂", "🤩", "🤯"]; // idx 0..5
 
 export default function ReviewPage({ loaderData }: Route.ComponentProps) {
   const { strain, existingReview } = loaderData;
+  const t = useT();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
@@ -196,7 +202,7 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
             to={`/strains/${strain.slug}`}
             className="ml-auto text-xs text-fg-muted hover:text-fg"
           >
-            Cancelar
+            {t.review.cancelStep}
           </Link>
         </div>
       </div>
@@ -204,8 +210,8 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
       <div className="flex-1 mx-auto max-w-[760px] w-full px-6 py-10 fade-up">
         {step === 0 && (
           <div className="text-center">
-            <h1 className="display text-4xl md:text-5xl mb-3">¿Cómo fue tu experiencia?</h1>
-            <p className="text-fg-muted mb-8">Sé honesto. Tu reseña ayuda a otros.</p>
+            <h1 className="display text-4xl md:text-5xl mb-3">{t.review.ratingTitle}</h1>
+            <p className="text-fg-muted mb-8">{t.review.ratingBody}</p>
             <div className="text-6xl mb-6" aria-hidden>
               {MOODS[Math.max(0, Math.min(5, Math.round(overall)))]}
             </div>
@@ -218,34 +224,34 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
               />
             </div>
             <div className="card p-5 text-left space-y-4 max-w-[460px] mx-auto">
-              <div className="kicker">Calificación detallada</div>
-              <DetailRating label="Efecto" value={rEffects} onChange={setREffects} />
-              <DetailRating label="Sabor" value={rFlavor} onChange={setRFlavor} />
-              <DetailRating label="Potencia" value={rPotency} onChange={setRPotency} />
+              <div className="kicker">{t.review.detailedRating}</div>
+              <DetailRating label={t.review.detailedEffect} value={rEffects} onChange={setREffects} />
+              <DetailRating label={t.review.detailedFlavor} value={rFlavor} onChange={setRFlavor} />
+              <DetailRating label={t.review.detailedPotency} value={rPotency} onChange={setRPotency} />
             </div>
           </div>
         )}
 
         {step === 1 && (
           <div>
-            <h1 className="display text-4xl mb-3">¿En qué contexto?</h1>
-            <p className="text-fg-muted mb-8">El contexto hace la reseña útil.</p>
+            <h1 className="display text-4xl mb-3">{t.review.contextTitle}</h1>
+            <p className="text-fg-muted mb-8">{t.review.contextBody}</p>
             <ChipSection
-              label="Método"
+              label={t.review.contextMethod}
               options={METHODS}
               selected={method ? [method] : []}
               onToggle={(v) => setMethod(method === v ? "" : v)}
               tone="accent"
             />
             <ChipSection
-              label="Momento"
+              label={t.review.contextTime}
               options={TIMES}
               selected={timeOfDay ? [timeOfDay] : []}
               onToggle={(v) => setTimeOfDay(timeOfDay === v ? "" : v)}
               tone="accent"
             />
             <ChipSection
-              label="Situación"
+              label={t.review.contextSetting}
               options={SITUATIONS}
               selected={setting ? [setting] : []}
               onToggle={(v) => setSetting(setting === v ? "" : v)}
@@ -256,12 +262,12 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
 
         {step === 2 && (
           <div>
-            <h1 className="display text-4xl mb-3">¿Qué efectos sentiste?</h1>
-            <p className="text-fg-muted mb-8">Todo lo que notaste, no solo lo bueno.</p>
+            <h1 className="display text-4xl mb-3">{t.review.effectsTitle}</h1>
+            <p className="text-fg-muted mb-8">{t.review.effectsBody}</p>
             <div className="mb-8">
               <div className="kicker flex items-center gap-2 mb-3" style={{ color: "var(--accent)" }}>
                 <Icon name="smile" size={14} />
-                Positivos
+                {t.review.effectsPositive}
               </div>
               <div className="flex flex-wrap gap-2">
                 {POSITIVE_EFFECTS.map((e) => (
@@ -279,7 +285,7 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
             <div>
               <div className="kicker flex items-center gap-2 mb-3" style={{ color: "var(--warm)" }}>
                 <Icon name="alert" size={14} />
-                Neutrales o negativos
+                {t.review.effectsNegative}
               </div>
               <div className="flex flex-wrap gap-2">
                 {NEGATIVE_EFFECTS.map((e) => (
@@ -299,8 +305,8 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
 
         {step === 3 && (
           <div>
-            <h1 className="display text-4xl mb-3">¿A qué sabía?</h1>
-            <p className="text-fg-muted mb-8">Los sabores que más resaltaron.</p>
+            <h1 className="display text-4xl mb-3">{t.review.flavorsTitle}</h1>
+            <p className="text-fg-muted mb-8">{t.review.flavorsBody}</p>
             <div className="flex flex-wrap gap-2 justify-center max-w-[560px] mx-auto">
               {FLAVORS.map((f) => (
                 <ChipButton
@@ -317,11 +323,11 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
 
         {step === 4 && (
           <div>
-            <h1 className="display text-4xl mb-3">Casi terminamos.</h1>
-            <p className="text-fg-muted mb-8">Unos últimos detalles.</p>
+            <h1 className="display text-4xl mb-3">{t.review.detailsTitle}</h1>
+            <p className="text-fg-muted mb-8">{t.review.detailsBody}</p>
 
             <div className="mb-6">
-              <div className="kicker mb-3">¿Con qué frecuencia consumes esta cepa?</div>
+              <div className="kicker mb-3">{t.review.frequencyQuestion}</div>
               <div className="flex flex-wrap gap-2">
                 {FREQUENCIES.map((f) => (
                   <ChipButton
@@ -336,7 +342,7 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
             </div>
 
             <div className="mb-6">
-              <div className="kicker mb-3">¿La recomendarías?</div>
+              <div className="kicker mb-3">{t.review.recommendQuestion}</div>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
@@ -346,7 +352,7 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
                     recommend === "up" ? "btn-primary" : "btn-ghost"
                   )}
                 >
-                  <Icon name="thumbUp" size={14} /> Sí
+                  <Icon name="thumbUp" size={14} /> {t.review.recommendYes}
                 </button>
                 <button
                   type="button"
@@ -356,27 +362,30 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
                     recommend === "down" ? "btn-warm" : "btn-ghost"
                   )}
                 >
-                  <Icon name="thumbDown" size={14} /> No
+                  <Icon name="thumbDown" size={14} /> {t.review.recommendNo}
                 </button>
               </div>
             </div>
 
             <div className="mb-6">
               <label className="kicker block mb-3" htmlFor="comment">
-                Cuéntanos más <span className="text-fg-dim">({comment.length}/500)</span>
+                {t.review.tellMoreLabel}{" "}
+                <span className="text-fg-dim">
+                  ({t.review.tellMoreCounter.replace("{count}", String(comment.length))})
+                </span>
               </label>
               <textarea
                 id="comment"
                 value={comment}
                 onChange={(e) => setComment(e.target.value.slice(0, 500))}
                 rows={4}
-                placeholder="Describe tu experiencia, el sabor, los efectos…"
+                placeholder={t.review.tellMorePlaceholder}
                 className="w-full rounded-md border border-line bg-raised px-4 py-3 text-sm focus:outline-none focus:border-accent resize-y"
               />
             </div>
 
             <div className="text-xs text-fg-dim">
-              Al publicar aceptas las normas de la comunidad.
+              {t.review.communityGuidelines}
             </div>
           </div>
         )}
@@ -391,7 +400,7 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
             onClick={() => setStep((s) => Math.max(0, s - 1))}
           >
             <Icon name="arrowLeft" size={14} />
-            Atrás
+            {t.review.previousStep}
           </button>
           <div className="mono text-xs text-fg-dim tnum">
             {step + 1} / {total}
@@ -403,7 +412,7 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
               disabled={!canAdvance}
               onClick={() => setStep((s) => Math.min(total - 1, s + 1))}
             >
-              Siguiente
+              {t.review.nextStep}
               <Icon name="arrowRight" size={14} />
             </button>
           ) : (
@@ -430,7 +439,7 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
                 }}
                 disabled={isSubmitting || overall === 0}
               >
-                {isSubmitting ? "Enviando…" : "Publicar reseña"}
+                {isSubmitting ? t.common.sending : t.review.publish}
                 <Icon name="send" size={14} />
               </button>
             </Form>

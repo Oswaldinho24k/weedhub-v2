@@ -17,10 +17,17 @@ export interface Momento {
 export interface IStrain extends Document {
   name: string;
   slug: string;
+  aliases?: string[];
+  aliasSlugs?: string[];
   type: "sativa" | "indica" | "hybrid";
   typeBlend?: string;
   description: string;
   descriptionEs?: string;
+  descriptions?: {
+    es?: string;
+    pt?: string;
+    en?: string;
+  };
   lineage?: string;
   genetics: {
     parent1?: string;
@@ -59,6 +66,7 @@ export interface IStrain extends Document {
     5: number;
   };
   isArchived: boolean;
+  lastReviewedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -67,6 +75,8 @@ const strainSchema = new Schema<IStrain>(
   {
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true },
+    aliases: { type: [String], default: [] },
+    aliasSlugs: { type: [String], default: [], index: true },
     type: {
       type: String,
       enum: ["sativa", "indica", "hybrid"],
@@ -75,6 +85,11 @@ const strainSchema = new Schema<IStrain>(
     typeBlend: String,
     description: { type: String, required: true },
     descriptionEs: String,
+    descriptions: {
+      es: String,
+      pt: String,
+      en: String,
+    },
     lineage: String,
     genetics: {
       parent1: String,
@@ -136,6 +151,7 @@ const strainSchema = new Schema<IStrain>(
       5: { type: Number, default: 0 },
     },
     isArchived: { type: Boolean, default: false },
+  lastReviewedAt: Date,
   },
   { timestamps: true }
 );
@@ -143,8 +159,27 @@ const strainSchema = new Schema<IStrain>(
 strainSchema.index({ name: "text", description: "text" });
 strainSchema.index({ slug: 1 }, { unique: true });
 strainSchema.index({ type: 1 });
+strainSchema.index({ effects: 1 });
+strainSchema.index({ difficulty: 1 });
 strainSchema.index({ "averageRatings.overall": -1 });
 strainSchema.index({ reviewCount: -1 });
+strainSchema.index({ lastReviewedAt: -1 });
+strainSchema.index({ aliasSlugs: 1 });
+
+// Keep aliasSlugs in sync with aliases on save. Callers using updateOne/findByIdAndUpdate
+// must compute aliasSlugs themselves (see admin strain edit and seed helpers).
+strainSchema.pre("save", function () {
+  if (this.isModified("aliases")) {
+    this.aliasSlugs = (this.aliases || []).map((a) =>
+      a
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "")
+    );
+  }
+});
 
 export const StrainModel =
   (mongoose.models.Strain as mongoose.Model<IStrain>) ||

@@ -3,7 +3,8 @@ import type { Route } from "./+types/community";
 import { connectDB } from "~/lib/db.server";
 import { ReviewModel } from "~/models/review.server";
 import { ReviewCard } from "~/components/composite/review-card";
-import { COMMUNITY_VOICES } from "~/content/articles";
+import { getCommunityVoices } from "~/content/articles";
+import { useT, useHref, useLocale } from "~/lib/i18n-context";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
 export function meta() {
@@ -20,59 +21,73 @@ export async function loader() {
   const reviews = await ReviewModel.find({ status: "published" })
     .sort({ createdAt: -1 })
     .limit(15)
-    .populate("userId", "displayName avatar cannabisProfile.experienceLevel")
+    .populate(
+      "userId",
+      "username anonymousHandle avatar earnedBadges publishAsAnonymous country city showCityPublicly"
+    )
     .populate("strainId", "name slug colorHint")
     .lean();
 
   return {
-    reviews: reviews.map((r) => ({
-      _id: String(r._id),
-      ratings: r.ratings,
-      comment: r.comment,
-      context: r.context,
-      effectsExperienced: r.effectsExperienced,
-      helpfulVotes: (r.helpfulVotes || []).map(String),
-      helpfulCount: r.helpfulCount,
-      createdAt: r.createdAt.toISOString(),
-      user: r.userId
-        ? {
-            _id: String((r.userId as any)._id),
-            displayName: (r.userId as any).displayName,
-            avatar: (r.userId as any).avatar,
-            cannabisProfile: (r.userId as any).cannabisProfile,
-          }
-        : undefined,
-      strain: r.strainId
-        ? {
-            name: (r.strainId as any).name,
-            slug: (r.strainId as any).slug,
-            colorHint: (r.strainId as any).colorHint,
-          }
-        : null,
-    })),
+    reviews: reviews.map((r) => {
+      const u = r.userId as any;
+      return {
+        _id: String(r._id),
+        ratings: r.ratings,
+        comment: r.comment,
+        context: r.context,
+        effectsExperienced: r.effectsExperienced,
+        helpfulVotes: (r.helpfulVotes || []).map(String),
+        helpfulCount: r.helpfulCount,
+        createdAt: r.createdAt.toISOString(),
+        publishedAs: r.publishedAs,
+        user: u
+          ? {
+              username: u.username,
+              anonymousHandle: u.anonymousHandle,
+              avatar: u.avatar,
+              earnedBadges: u.earnedBadges,
+              publishAsAnonymous: u.publishAsAnonymous,
+              country: u.country,
+              city: u.city,
+              showCityPublicly: u.showCityPublicly,
+            }
+          : undefined,
+        strain: r.strainId
+          ? {
+              name: (r.strainId as any).name,
+              slug: (r.strainId as any).slug,
+              colorHint: (r.strainId as any).colorHint,
+            }
+          : null,
+      };
+    }),
   };
 }
 
 export default function CommunityPage({ loaderData }: Route.ComponentProps) {
   const { reviews } = loaderData;
+  const t = useT();
+  const href = useHref();
+  const locale = useLocale();
+  const COMMUNITY_VOICES = getCommunityVoices(locale);
 
   return (
     <div>
       <section className="mx-auto max-w-[1200px] px-6 pt-16 pb-14">
-        <div className="kicker mb-4">Comunidad</div>
+        <div className="kicker mb-4">{t.community.kicker}</div>
         <h1
           className="display max-w-[18ch]"
           style={{ fontSize: "clamp(44px, 7vw, 96px)", lineHeight: 0.98 }}
         >
-          Miles de{" "}
+          {t.community.headlinePrefix}
           <span className="display-wonk" style={{ color: "var(--accent)" }}>
-            voces
+            {t.community.headlineAccent}
           </span>
-          , una sola conversación.
+          {t.community.headlineSuffix}
         </h1>
         <p className="mt-6 text-lg text-fg-muted max-w-[54ch] leading-relaxed">
-          Lee, contribuye y aprende. Cada reseña trae contexto — quién, cómo, cuándo —
-          porque la planta se entiende en capas.
+          {t.community.body}
         </p>
       </section>
 
@@ -108,18 +123,18 @@ export default function CommunityPage({ loaderData }: Route.ComponentProps) {
       <section className="mx-auto max-w-[1200px] px-6 py-20">
         <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
           <div>
-            <div className="kicker mb-2">Feed</div>
-            <h2 className="display text-3xl md:text-4xl">Reseñas recientes.</h2>
+            <div className="kicker mb-2">{t.community.feedKicker}</div>
+            <h2 className="display text-3xl md:text-4xl">{t.community.feedTitle}</h2>
           </div>
-          <Link to="/strains" className="btn btn-ghost">
-            Reseñar una cepa
+          <Link to={href("/strains")} className="btn btn-ghost">
+            {t.community.writeReview}
           </Link>
         </div>
         {reviews.length === 0 ? (
           <div className="card p-10 text-center">
-            <p className="text-fg-muted mb-4">Aún no hay reseñas publicadas.</p>
-            <Link to="/strains" className="btn btn-primary inline-flex">
-              Sé quien rompa el hielo
+            <p className="text-fg-muted mb-4">{t.community.emptyBody}</p>
+            <Link to={href("/strains")} className="btn btn-primary inline-flex">
+              {t.community.emptyCta}
             </Link>
           </div>
         ) : (
@@ -128,9 +143,9 @@ export default function CommunityPage({ loaderData }: Route.ComponentProps) {
               <div key={review._id}>
                 {review.strain && (
                   <div className="kicker mb-2">
-                    Sobre{" "}
+                    {t.community.reviewAbout}{" "}
                     <Link
-                      to={`/strains/${review.strain.slug}`}
+                      to={href(`/strains/${review.strain.slug}`)}
                       className="hover:text-fg"
                     >
                       {review.strain.name}

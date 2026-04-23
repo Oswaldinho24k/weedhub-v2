@@ -6,15 +6,68 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(date: Date | string): string {
-  return new Intl.DateTimeFormat("es-MX", {
+type LocaleKey = "es" | "pt" | "en";
+
+const INTL_LOCALE: Record<LocaleKey, string> = {
+  es: "es-MX",
+  pt: "pt-BR",
+  en: "en-US",
+};
+
+function resolveIntlTag(locale?: string | null): string {
+  if (!locale) return INTL_LOCALE.es;
+  const base = locale.slice(0, 2).toLowerCase() as LocaleKey;
+  return INTL_LOCALE[base] || INTL_LOCALE.es;
+}
+
+export function formatDate(date: Date | string, locale?: string | null): string {
+  return new Intl.DateTimeFormat(resolveIntlTag(locale), {
     year: "numeric",
     month: "long",
     day: "numeric",
   }).format(new Date(date));
 }
 
-export function formatRelativeTime(date: Date | string): string {
+const REL_TEMPLATES: Record<
+  LocaleKey,
+  {
+    now: string;
+    minutes: (n: number) => string;
+    hours: (n: number) => string;
+    days: (n: number) => string;
+    weeks: (n: number) => string;
+  }
+> = {
+  es: {
+    now: "justo ahora",
+    minutes: (n) => `hace ${n} min`,
+    hours: (n) => `hace ${n} h`,
+    days: (n) => `hace ${n} d`,
+    weeks: (n) => `hace ${n} sem`,
+  },
+  pt: {
+    now: "agora mesmo",
+    minutes: (n) => `há ${n} min`,
+    hours: (n) => `há ${n} h`,
+    days: (n) => `há ${n} d`,
+    weeks: (n) => `há ${n} sem`,
+  },
+  en: {
+    now: "just now",
+    minutes: (n) => `${n}m ago`,
+    hours: (n) => `${n}h ago`,
+    days: (n) => `${n}d ago`,
+    weeks: (n) => `${n}w ago`,
+  },
+};
+
+export function formatRelativeTime(
+  date: Date | string,
+  locale?: string | null
+): string {
+  const base = ((locale || "es").slice(0, 2).toLowerCase() as LocaleKey) || "es";
+  const tpl = REL_TEMPLATES[base] || REL_TEMPLATES.es;
+
   const now = new Date();
   const then = new Date(date);
   const diffMs = now.getTime() - then.getTime();
@@ -22,12 +75,12 @@ export function formatRelativeTime(date: Date | string): string {
   const diffHours = Math.floor(diffMinutes / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMinutes < 1) return "justo ahora";
-  if (diffMinutes < 60) return `hace ${diffMinutes} min`;
-  if (diffHours < 24) return `hace ${diffHours}h`;
-  if (diffDays < 7) return `hace ${diffDays}d`;
-  if (diffDays < 30) return `hace ${Math.floor(diffDays / 7)} sem`;
-  return formatDate(date);
+  if (diffMinutes < 1) return tpl.now;
+  if (diffMinutes < 60) return tpl.minutes(diffMinutes);
+  if (diffHours < 24) return tpl.hours(diffHours);
+  if (diffDays < 7) return tpl.days(diffDays);
+  if (diffDays < 30) return tpl.weeks(Math.floor(diffDays / 7));
+  return formatDate(date, locale);
 }
 
 export function slugify(text: string): string {

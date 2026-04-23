@@ -42,6 +42,7 @@ export function StrainCard({ strain, variant = "card" }: StrainCardProps) {
   const typeLabel = strain.typeBlend || TYPE_LABEL[strain.type] || strain.type;
   const pillVariant = TYPE_PILL[strain.type] || "";
   const thcText = `${strain.cannabinoidProfile.thc.max}`;
+  const topEffect = strain.effects?.[0];
 
   if (variant === "row") {
     return (
@@ -64,8 +65,13 @@ export function StrainCard({ strain, variant = "card" }: StrainCardProps) {
           </div>
         </div>
         <div className="mono text-xs text-fg-muted">{strain.dominantTerpene || "—"}</div>
-        <div className="mono text-sm tnum" style={{ color: "var(--accent)" }}>
-          {thcText}%
+        <div className="flex items-baseline gap-1">
+          <span className="mono text-[10px] uppercase tracking-wider text-fg-dim">
+            THC
+          </span>
+          <span className="mono text-sm tnum" style={{ color: "var(--accent)" }}>
+            {thcText}%
+          </span>
         </div>
         <div className="flex items-center gap-1 text-sm text-fg">
           <Icon name="star" size={14} />
@@ -92,14 +98,17 @@ export function StrainCard({ strain, variant = "card" }: StrainCardProps) {
         {strain.dominantTerpene && (
           <span className="pill">{strain.dominantTerpene}</span>
         )}
+        {topEffect && <span className="pill">{topEffect}</span>}
       </div>
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="display text-2xl text-fg leading-tight">{strain.name}</h3>
-        <span
-          className="mono text-lg tnum shrink-0"
-          style={{ color: "var(--accent)" }}
-        >
-          {thcText}%
+        <span className="flex items-baseline gap-1 shrink-0">
+          <span className="mono text-[10px] uppercase tracking-wider text-fg-dim">
+            THC
+          </span>
+          <span className="mono text-lg tnum" style={{ color: "var(--accent)" }}>
+            {thcText}%
+          </span>
         </span>
       </div>
       {strain.lineage && (

@@ -7,8 +7,7 @@ interface LogoProps {
 
 export function Logo({ size = 22, to = "/" }: LogoProps) {
   return (
-    <Link to={to} className="inline-flex items-center gap-2 group">
-      <LeafGlyph size={size} />
+    <Link to={to} className="inline-flex items-center group">
       <span className="display" style={{ fontSize: size, letterSpacing: "-0.02em" }}>
         weed
         <span

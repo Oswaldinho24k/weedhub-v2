@@ -7,7 +7,8 @@ import { UserModel } from "~/models/user.server";
 import { StrainCard } from "~/components/composite/strain-card";
 import { StrainThumb } from "~/components/composite/strain-thumb";
 import { Icon } from "~/components/ui/icon";
-import { COMMUNITY_VOICES, FEATURED_ARTICLES } from "~/content/articles";
+import { getCommunityVoices, getFeaturedArticles } from "~/content/articles";
+import { useT, useHref, useLocale } from "~/lib/i18n-context";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
 export function meta() {
@@ -55,6 +56,11 @@ export async function loader() {
 
 export default function LandingPage({ loaderData }: Route.ComponentProps) {
   const { topStrains, featured, stats } = loaderData;
+  const t = useT();
+  const href = useHref();
+  const locale = useLocale();
+  const COMMUNITY_VOICES = getCommunityVoices(locale);
+  const FEATURED_ARTICLES = getFeaturedArticles(locale);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -79,44 +85,38 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
 
       {/* Hero */}
       <section className="relative mx-auto max-w-[1200px] px-6 pt-16 pb-20 md:pt-24 md:pb-28">
-        <div className="hero-coords absolute top-16 right-6 mono text-[10px] text-fg-dim text-right leading-5 tnum">
-          <div>LAT 19.4326</div>
-          <div>LON −99.1332</div>
-          <div>TZ −06 · CDMX</div>
-        </div>
         <div className="flex items-center gap-2 mb-6">
           <Icon name="sparkle" size={14} className="text-accent" />
-          <span className="kicker">Informa · Conecta · Cultiva</span>
+          <span className="kicker">{t.landing.heroKickerSuperchip}</span>
         </div>
-        <div className="kicker mb-6">N° 001 / Primavera ’26 · México</div>
+        <div className="kicker mb-6">{t.landing.heroKickerIssue}</div>
         <h1
           className="display max-w-[18ch]"
           style={{ fontSize: "clamp(52px, 8.2vw, 128px)", lineHeight: 0.98 }}
         >
-          La enciclopedia{" "}
+          {t.landing.heroHeadlinePrefix}
           <span className="display-wonk" style={{ color: "var(--accent)" }}>
-            viva
-          </span>{" "}
-          del cannabis hispano.
+            {t.landing.heroHeadlineAccent}
+          </span>
+          {t.landing.heroHeadlineSuffix}
         </h1>
         <p className="mt-8 text-lg md:text-xl text-fg-muted max-w-[52ch] leading-relaxed">
-          No somos un catálogo de dispensarios. Somos la comunidad que cuenta el
-          contexto detrás de cada cepa — método, momento, experiencia.
+          {t.landing.heroBody}
         </p>
         <div className="mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <Link to="/strains" className="btn btn-primary">
-            Explorar cepas
+          <Link to={href("/strains")} className="btn btn-primary">
+            {t.landing.heroCtaPrimary}
             <Icon name="arrowRight" size={16} />
           </Link>
           <Link to="/onboarding" className="btn btn-ghost">
-            Personalizar mi perfil
+            {t.landing.heroCtaGhost}
           </Link>
         </div>
 
         <div className="mt-20 grid grid-cols-3 gap-8 max-w-[640px]">
-          <Stat value={stats.totalStrains} label="cepas documentadas" />
-          <Stat value={stats.totalReviews} label="reseñas con contexto" />
-          <Stat value={stats.totalUsers} label="voces en la comunidad" />
+          <Stat value={stats.totalStrains} label={t.landing.statsStrains} />
+          <Stat value={stats.totalReviews} label={t.landing.statsReviews} />
+          <Stat value={stats.totalUsers} label={t.landing.statsVoices} />
         </div>
       </section>
 
@@ -127,14 +127,14 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
         <section className="mx-auto max-w-[1200px] px-6 py-24">
           <div className="flex items-center justify-between mb-10">
             <div>
-              <div className="kicker mb-2">Cepa del mes</div>
+              <div className="kicker mb-2">{t.landing.featuredKicker}</div>
               <h2 className="display text-4xl md:text-5xl">{featured.name}</h2>
             </div>
             <Link
-              to={`/strains/${featured.slug}`}
+              to={href(`/strains/${featured.slug}`)}
               className="hidden sm:inline-flex items-center gap-2 text-sm text-fg-muted hover:text-fg"
             >
-              Lee el perfil completo
+              {t.landing.featuredSeeFull}
               <Icon name="arrowRight" size={14} />
             </Link>
           </div>
@@ -156,17 +156,17 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
               </p>
               <div className="grid grid-cols-4 gap-4 pt-3 border-t border-line">
                 <MicroStat
-                  kicker="THC"
+                  kicker={t.landing.microStat.thc}
                   value={`${featured.cannabinoidProfile.thc.max}%`}
                   tone="accent"
                 />
                 <MicroStat
-                  kicker="CBD"
+                  kicker={t.landing.microStat.cbd}
                   value={`${featured.cannabinoidProfile.cbd.max || 0}%`}
                 />
-                <MicroStat kicker="Tipo" value={featured.type} />
+                <MicroStat kicker={t.landing.microStat.type} value={featured.type} />
                 <MicroStat
-                  kicker="Terpeno"
+                  kicker={t.landing.microStat.terpene}
                   value={featured.dominantTerpene || "—"}
                 />
               </div>
@@ -182,17 +182,17 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
         <section className="mx-auto max-w-[1200px] px-6 py-24">
           <div className="flex items-end justify-between gap-6 mb-10 flex-wrap">
             <div>
-              <div className="kicker mb-2">Directorio</div>
+              <div className="kicker mb-2">{t.landing.directoryKicker}</div>
               <h2 className="display text-4xl md:text-5xl max-w-[20ch]">
-                Cada cepa,{" "}
+                {t.landing.directoryHeadlinePrefix}
                 <span className="display-wonk" style={{ color: "var(--accent)" }}>
-                  contada
-                </span>{" "}
-                por quien la conoce.
+                  {t.landing.directoryHeadlineAccent}
+                </span>
+                {t.landing.directoryHeadlineSuffix}
               </h2>
             </div>
-            <Link to="/strains" className="btn btn-ghost">
-              Ver directorio
+            <Link to={href("/strains")} className="btn btn-ghost">
+              {t.landing.directoryCta}
               <Icon name="arrowRight" size={14} />
             </Link>
           </div>
@@ -207,13 +207,13 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
       {/* Community voices */}
       <section className="bg-sunken border-y border-line">
         <div className="mx-auto max-w-[1200px] px-6 py-24">
-          <div className="kicker mb-3">Voces</div>
+          <div className="kicker mb-3">{t.landing.voicesKicker}</div>
           <h2 className="display text-4xl md:text-5xl max-w-[22ch] mb-14">
-            La comunidad es la{" "}
+            {t.landing.voicesHeadlinePrefix}
             <span className="display-wonk" style={{ color: "var(--accent)" }}>
-              base de datos
+              {t.landing.voicesHeadlineAccent}
             </span>
-            .
+            {t.landing.voicesHeadlineSuffix}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {COMMUNITY_VOICES.map((v) => (
@@ -239,11 +239,11 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
       <section className="mx-auto max-w-[1200px] px-6 py-24">
         <div className="flex items-end justify-between gap-6 mb-10 flex-wrap">
           <div>
-            <div className="kicker mb-2">Lectura</div>
-            <h2 className="display text-4xl md:text-5xl">Magazine</h2>
+            <div className="kicker mb-2">{t.landing.magazineKicker}</div>
+            <h2 className="display text-4xl md:text-5xl">{t.landing.magazineTitle}</h2>
           </div>
-          <Link to="/editorial" className="btn btn-ghost">
-            Ver todo
+          <Link to={href("/editorial")} className="btn btn-ghost">
+            {t.landing.magazineCta}
             <Icon name="arrowRight" size={14} />
           </Link>
         </div>
@@ -251,7 +251,7 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
           {FEATURED_ARTICLES.slice(0, 3).map((a, i) => (
             <Link
               key={a.slug}
-              to="/editorial"
+              to={href("/editorial")}
               className={`card p-5 flex flex-col gap-3 hover:bg-elev transition-colors ${i === 0 ? "md:row-span-1" : ""}`}
             >
               <div
@@ -280,17 +280,16 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
       <section className="mx-auto max-w-[1200px] px-6 pb-24">
         <div className="card-strong p-10 md:p-14 text-center">
           <div className="kicker mb-3" style={{ color: "var(--accent)" }}>
-            Únete
+            {t.landing.ctaKicker}
           </div>
           <h2 className="display text-4xl md:text-5xl mb-4">
-            Tu voz es la base de datos.
+            {t.landing.ctaHeadline}
           </h2>
           <p className="text-fg-muted max-w-lg mx-auto mb-8">
-            Crea tu cuenta, personaliza tu perfil y empieza a documentar la planta —
-            con contexto, sin filtros verdes baratos.
+            {t.landing.ctaBody}
           </p>
           <Link to="/auth?mode=register" className="btn btn-primary inline-flex">
-            Crear cuenta gratis
+            {t.landing.ctaButton}
             <Icon name="arrowRight" size={16} />
           </Link>
         </div>
@@ -302,7 +301,7 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
 function Stat({ value, label }: { value: number; label: string }) {
   return (
     <div>
-      <div className="display text-4xl md:text-5xl tnum">{value.toLocaleString("es-MX")}</div>
+      <div className="display text-4xl md:text-5xl tnum">{value.toLocaleString()}</div>
       <div className="kicker mt-1">{label}</div>
     </div>
   );

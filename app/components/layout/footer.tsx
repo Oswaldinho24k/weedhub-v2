@@ -1,8 +1,14 @@
 import { Link } from "react-router";
 import { Logo } from "./logo";
 import { NewsletterSignup } from "./newsletter-signup";
+import { useT, useHref } from "~/lib/i18n-context";
 
 export function Footer() {
+  const t = useT();
+  const href = useHref();
+  const year = new Date().getFullYear();
+  const madeIn = t.footer.madeIn.replace("{flag}", "🇲🇽");
+
   return (
     <footer className="border-t border-line mt-20">
       <div className="mx-auto max-w-[1200px] px-6 py-16">
@@ -10,36 +16,34 @@ export function Footer() {
           <div>
             <Logo size={20} />
             <p className="text-sm text-fg-muted mt-4 max-w-xs leading-relaxed mb-8">
-              La enciclopedia viva del cannabis hispano. Informa, conecta, cultiva.
+              {t.footer.tagline}
             </p>
             <NewsletterSignup />
           </div>
 
-          <FooterColumn title="Producto">
-            <FooterLink to="/strains">Directorio</FooterLink>
-            <FooterLink to="/community">Comunidad</FooterLink>
-            <FooterLink to="/editorial">Magazine</FooterLink>
+          <FooterColumn title={t.footer.productTitle}>
+            <FooterLink to={href("/strains")}>{t.nav.directory}</FooterLink>
+            <FooterLink to={href("/community")}>{t.nav.community}</FooterLink>
+            <FooterLink to={href("/editorial")}>{t.nav.editorial}</FooterLink>
           </FooterColumn>
 
-          <FooterColumn title="Empresa">
-            <FooterLink to="/editorial">Sobre WeedHub</FooterLink>
-            <FooterLink to="/auth?mode=register">Únete</FooterLink>
+          <FooterColumn title={t.footer.companyTitle}>
+            <FooterLink to={href("/editorial")}>{t.footer.about}</FooterLink>
+            <FooterLink to="/auth?mode=register">{t.footer.joinUs}</FooterLink>
           </FooterColumn>
 
-          <FooterColumn title="Legal">
-            <FooterLink to="/terminos">Términos</FooterLink>
-            <FooterLink to="/privacidad">Privacidad</FooterLink>
-            <span className="block text-sm text-fg-dim">Solo +18</span>
+          <FooterColumn title={t.footer.legalTitle}>
+            <FooterLink to={href("/terminos")}>{t.footer.terms}</FooterLink>
+            <FooterLink to={href("/privacidad")}>{t.footer.privacy}</FooterLink>
+            <span className="block text-sm text-fg-dim">{t.footer.ageGate}</span>
           </FooterColumn>
         </div>
 
         <div className="mt-12 pt-8 border-t border-line flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
           <p className="text-xs text-fg-dim mono">
-            © {new Date().getFullYear()} WEEDHUB · USO RESPONSABLE
+            © {year} WEEDHUB · {t.footer.responsibleUse}
           </p>
-          <p className="text-xs text-fg-dim">
-            Hecho en <span aria-label="México">🇲🇽</span>, para Latinoamérica.
-          </p>
+          <p className="text-xs text-fg-dim">{madeIn}</p>
         </div>
       </div>
     </footer>

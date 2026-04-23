@@ -1,7 +1,10 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import mongoose from "mongoose";
-import { strains } from "./strains.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const envPath = path.resolve(process.cwd(), ".env");
 if (fs.existsSync(envPath)) {
@@ -18,6 +21,10 @@ if (fs.existsSync(envPath)) {
 }
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/weedhub";
+
+const strains: any[] = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "data", "strains.json"), "utf-8")
+);
 
 const COLOR_PALETTE = [
   "#6aa56a",
@@ -93,44 +100,74 @@ function timeCurve(type: string) {
 }
 
 // Curated Spanish descriptions + overrides for hero strains shown in the design.
+// aliases are well-known alternate names users may type; dedup matches against these.
 const HERO_OVERRIDES: Record<string, Partial<any>> = {
   "blue-dream": {
     descriptionEs:
       "Un clásico californiano: la relajación corporal del Blueberry con la euforia cerebral del Haze. Ideal para el día — mantiene claridad mental y cuerpo suelto.",
     lineage: "Blueberry × Haze",
     typeBlend: "60% Sativa",
+    aliases: ["BD", "Azure Haze"],
   },
   "og-kush": {
     descriptionEs:
       "La raíz de incontables variedades modernas. Cuerpo pesado, aroma a combustible y pino, con un colocón que se instala por horas.",
     lineage: "Chemdawg × Hindu Kush",
     typeBlend: "Indica-dom",
+    aliases: ["OG", "Original Kush", "Original Gangster Kush"],
   },
   gelato: {
     descriptionEs:
       "Postre líquido: dulce, cremoso, con punzadas cítricas. Híbrida balanceada que relaja sin apagarte.",
     lineage: "Sunset Sherbet × Thin Mint GSC",
     typeBlend: "Híbrida balanceada",
+    aliases: ["Larry Bird", "Gelato 33", "Gelato #33"],
   },
   "jack-herer": {
     descriptionEs:
       "Nombre en honor al activista. Euforia limpia y social, aroma a pino y especia. La sativa de cabecera para crear.",
     lineage: "Haze × (Northern Lights #5 × Shiva Skunk)",
     typeBlend: "55% Sativa",
+    aliases: ["JH", "Premium Jack", "Platinum Jack"],
   },
   "purple-punch": {
     descriptionEs:
       "Postre de uva y arándano. Golpe frontal a la cabeza y luego descanso profundo. Para cerrar el día.",
     lineage: "Larry OG × Granddaddy Purple",
     typeBlend: "Indica-dom",
+    aliases: ["PP"],
   },
   "acapulco-gold": {
     descriptionEs:
       "La landrace mexicana que definió una era. Euforia dorada, ligera, con notas terrosas y dulces. Patrimonio vivo.",
     lineage: "Landrace mexicana",
     typeBlend: "Sativa pura",
+    aliases: ["Acapulco Oro", "Mexican Gold", "Oro de Acapulco"],
+  },
+  "girl-scout-cookies": {
+    descriptionEs:
+      "La híbrida californiana que redefinió el dulce en el cannabis. Dulce, terrosa, con un colocón cerebral denso.",
+    lineage: "OG Kush × Durban Poison",
+    typeBlend: "Indica-dom",
+    aliases: ["GSC", "Cookies", "Girl Scout", "Forum Cookies"],
+  },
+  "gorilla-glue-4": {
+    descriptionEs:
+      "Híbrida pegajosa como su nombre. Colocón pesado, aroma a diésel y pino. Ícono moderno.",
+    lineage: "Chem's Sister × Sour Dubb × Chocolate Diesel",
+    typeBlend: "Híbrida balanceada",
+    aliases: ["GG4", "Gorilla Glue", "Original Glue", "420 Glue"],
   },
 };
+
+function slugifyAlias(raw: string): string {
+  return raw
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
 
 async function seed() {
   console.log("🌿 Connecting to MongoDB...");
@@ -139,35 +176,32 @@ async function seed() {
   const db = mongoose.connection.db;
   if (!db) throw new Error("Failed to get database reference");
 
-  console.log("🗑️  Clearing existing data...");
-  const collections = await db.listCollections().toArray();
-  for (const col of collections) {
-    await db.dropCollection(col.name);
-  }
+  console.log("♻️  Upserting strains by slug (preserving _ids, users, reviews, submissions)...");
+  const strainsCol = db.collection("strains");
+  const now = new Date();
 
-  const transformed = strains.map((s: any) => {
-    const thc = {
-      min: s.cannabinoidProfile.thcMin || 0,
-      max: s.cannabinoidProfile.thcMax || 0,
-    };
-    const cbd = {
-      min: s.cannabinoidProfile.cbdMin || 0,
-      max: s.cannabinoidProfile.cbdMax || 0,
-    };
-    const lineage =
-      s.genetics?.parent1 && s.genetics?.parent2
-        ? `${s.genetics.parent1} × ${s.genetics.parent2}`
-        : undefined;
+  let inserted = 0;
+  let updated = 0;
+
+  const ops = strains.map((s: any) => {
+    const thcMin = s.cannabinoidProfile?.thc?.min ?? s.cannabinoidProfile?.thcMin ?? 0;
+    const thcMax = s.cannabinoidProfile?.thc?.max ?? s.cannabinoidProfile?.thcMax ?? 0;
+    const cbdMin = s.cannabinoidProfile?.cbd?.min ?? s.cannabinoidProfile?.cbdMin ?? 0;
+    const cbdMax = s.cannabinoidProfile?.cbd?.max ?? s.cannabinoidProfile?.cbdMax ?? 0;
+    const thc = { min: thcMin, max: thcMax };
+    const cbd = { min: cbdMin, max: cbdMax };
     const override = HERO_OVERRIDES[s.slug] || {};
+    const aliases: string[] = override.aliases || [];
 
-    return {
+    const set = {
       name: s.name,
-      slug: s.slug,
+      aliases,
+      aliasSlugs: aliases.map(slugifyAlias),
       type: s.type,
       typeBlend: override.typeBlend || TYPE_BLEND[s.type],
       description: s.description,
       descriptionEs: override.descriptionEs || s.description,
-      lineage: override.lineage || lineage,
+      lineage: override.lineage || s.lineage || (s.genetics?.parent1 && s.genetics?.parent2 ? `${s.genetics.parent1} × ${s.genetics.parent2}` : undefined),
       genetics: s.genetics || {},
       cannabinoidProfile: { thc, cbd },
       terpenes: s.terpenes || [],
@@ -179,6 +213,14 @@ async function seed() {
       momento: MOMENTO_BY_TYPE[s.type] || MOMENTO_BY_TYPE.hybrid,
       colorHint: colorHint(s.slug),
       imageUrl: s.imageUrl,
+      isArchived: false,
+      updatedAt: now,
+    };
+
+    // Only seed rating/review fields on INSERT; never overwrite values maintained
+    // by real reviews (review.server.ts updates these via aggregation triggers).
+    const setOnInsert = {
+      slug: s.slug,
       averageRatings: {
         overall: 0,
         potency: 0,
@@ -189,17 +231,30 @@ async function seed() {
       },
       reviewCount: 0,
       reviewDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-      isArchived: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: now,
+    };
+
+    return {
+      updateOne: {
+        filter: { slug: s.slug },
+        update: { $set: set, $setOnInsert: setOnInsert },
+        upsert: true,
+      },
     };
   });
 
-  console.log(`🌱 Inserting ${transformed.length} strains...`);
-  await db.collection("strains").insertMany(transformed);
+  // bulkWrite in chunks to avoid huge single ops
+  const CHUNK = 500;
+  for (let i = 0; i < ops.length; i += CHUNK) {
+    const res = await strainsCol.bulkWrite(ops.slice(i, i + CHUNK), { ordered: false });
+    inserted += res.upsertedCount || 0;
+    updated += res.modifiedCount || 0;
+  }
 
   console.log("✅ Seed complete!");
-  console.log(`   - ${transformed.length} strains inserted`);
+  console.log(`   - ${strains.length} strains processed`);
+  console.log(`   - ${inserted} inserted (new), ${updated} updated (existing _ids preserved)`);
+  console.log(`   - users, reviews, saved-strains, strain-submissions untouched`);
 
   await mongoose.disconnect();
   process.exit(0);

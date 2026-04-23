@@ -54,6 +54,7 @@ export async function recalculateStrainRatings(strainId: string) {
       },
       reviewCount: r.count,
       reviewDistribution: distribution,
+      lastReviewedAt: new Date(),
     });
   } else {
     await StrainModel.findByIdAndUpdate(strainId, {

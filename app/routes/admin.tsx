@@ -17,6 +17,7 @@ const NAV_ITEMS: { to: string; label: string; icon: IconName; end?: boolean }[] 
   { to: "/admin", label: "Dashboard", icon: "settings", end: true },
   { to: "/admin/strains", label: "Cepas", icon: "leaf" },
   { to: "/admin/reviews", label: "Reseñas", icon: "edit" },
+  { to: "/admin/submissions", label: "Sugerencias", icon: "plus" },
 ];
 
 export default function AdminLayout() {

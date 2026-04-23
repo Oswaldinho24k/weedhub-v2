@@ -1,35 +1,37 @@
-import { FEATURED_ARTICLES } from "~/content/articles";
+import { getFeaturedArticles } from "~/content/articles";
+import { useT, useLocale } from "~/lib/i18n-context";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
 export function meta() {
   return buildMeta({
     title: "Magazine — WeedHub",
     description:
-      "Ciencia, cultura y crónica cannábica hispanohablante. Artículos editoriales sobre terpenos, landraces, microdosis y más.",
+      "Ciencia, cultura y crónica cannábica. Artículos editoriales sobre terpenos, landraces, microdosis y más.",
     url: `${SITE_URL}/editorial`,
   });
 }
 
 export default function EditorialPage() {
-  const [lead, ...rest] = FEATURED_ARTICLES;
+  const t = useT();
+  const locale = useLocale();
+  const [lead, ...rest] = getFeaturedArticles(locale);
 
   return (
     <div>
       <section className="mx-auto max-w-[1200px] px-6 pt-16 pb-10">
-        <div className="kicker mb-4">Magazine</div>
+        <div className="kicker mb-4">{t.editorial.kicker}</div>
         <h1
           className="display max-w-[22ch]"
           style={{ fontSize: "clamp(44px, 7vw, 96px)", lineHeight: 0.98 }}
         >
-          Ciencia, cultura y{" "}
+          {t.editorial.headlinePrefix}
           <span className="display-wonk" style={{ color: "var(--accent)" }}>
-            crónica
-          </span>{" "}
-          cannábica.
+            {t.editorial.headlineAccent}
+          </span>
+          {t.editorial.headlineSuffix}
         </h1>
         <p className="mt-6 text-lg text-fg-muted max-w-[52ch] leading-relaxed">
-          Textos largos para leer con café. Sin hype, sin clickbait — solo buen
-          material cannábico en español.
+          {t.editorial.body}
         </p>
       </section>
 
@@ -47,15 +49,14 @@ export default function EditorialPage() {
               <span className="pill lilac">{lead.kicker}</span>
               <span className="kicker">{lead.readTime}</span>
             </div>
-            <h2
-              className="display"
-              style={{ fontSize: 48, lineHeight: 1.05 }}
-            >
+            <h2 className="display" style={{ fontSize: 48, lineHeight: 1.05 }}>
               {lead.title}
             </h2>
             <p className="text-fg-muted leading-relaxed">{lead.dek}</p>
             {lead.author && (
-              <div className="kicker mt-2">Por {lead.author}</div>
+              <div className="kicker mt-2">
+                {t.editorial.byAuthor.replace("{author}", lead.author)}
+              </div>
             )}
           </div>
         </article>
@@ -74,15 +75,14 @@ export default function EditorialPage() {
                   <span className="pill lilac">{a.kicker}</span>
                   <span className="kicker">{a.readTime}</span>
                 </div>
-                <h3
-                  className="display"
-                  style={{ fontSize: 28, lineHeight: 1.1 }}
-                >
+                <h3 className="display" style={{ fontSize: 28, lineHeight: 1.1 }}>
                   {a.title}
                 </h3>
                 <p className="text-sm text-fg-muted line-clamp-3">{a.dek}</p>
                 {a.author && (
-                  <div className="kicker mt-auto pt-3">Por {a.author}</div>
+                  <div className="kicker mt-auto pt-3">
+                    {t.editorial.byAuthor.replace("{author}", a.author)}
+                  </div>
                 )}
               </div>
             </article>

@@ -7,9 +7,14 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "seed": "npx tsx seed/index.ts"
+    "seed": "npx tsx seed/index.ts",
+    "seed:csv": "npx tsx seed/import-csv.ts",
+    "seed:full": "npx tsx seed/seed-full.ts",
+    "migrate:aliases": "npx tsx seed/migrate-aliases.ts",
+    "migrate:identity": "npx tsx seed/migrate-identity.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.90.0",
     "@react-router/node": "7.12.0",
     "@react-router/serve": "7.12.0",
     "bcryptjs": "^3.0.3",

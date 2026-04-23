@@ -4,7 +4,12 @@ import type { Route } from "./+types/auth";
 import { connectDB } from "~/lib/db.server";
 import { hashPassword, verifyPassword, createUserSession, getUserFromSession } from "~/lib/auth.server";
 import { UserModel } from "~/models/user.server";
+import { validateUsername } from "~/lib/username";
+import { isUsernameAvailable } from "~/lib/username.server";
+import { generateAnonymousHandle } from "~/lib/anon-handle.server";
+import { LATIN_COUNTRIES, isValidCountry } from "~/constants/locations";
 import { Icon } from "~/components/ui/icon";
+import { useT } from "~/lib/i18n-context";
 import { cn } from "~/lib/utils";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
@@ -12,7 +17,7 @@ export function meta() {
   return buildMeta({
     title: "Entrar o registrarse — WeedHub",
     description:
-      "Inicia sesión o crea tu cuenta en WeedHub. Reseñas con contexto, perfil personalizado y tu propia bitácora cannábica.",
+      "Inicia sesión o crea tu cuenta en WeedHub. Publica reseñas con contexto, con handle real o anónimo.",
     url: `${SITE_URL}/auth`,
   });
 }
@@ -29,7 +34,6 @@ export async function action({ request }: Route.ActionArgs) {
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const password = String(formData.get("password") || "");
   const intent = String(formData.get("intent") || "login");
-  const displayName = String(formData.get("displayName") || "").trim();
 
   if (!email || !email.includes("@")) {
     return { error: "Correo electrónico inválido" };
@@ -58,11 +62,35 @@ export async function action({ request }: Route.ActionArgs) {
     if (existingUser) {
       return { error: "Ya existe una cuenta con este correo" };
     }
-    if (!displayName || displayName.length < 2) {
-      return { error: "El nombre debe tener al menos 2 caracteres" };
+
+    const usernameCheck = validateUsername(String(formData.get("username") || ""));
+    if (!usernameCheck.ok) {
+      return { error: usernameCheck.error || "Username inválido" };
     }
+    const available = await isUsernameAvailable(usernameCheck.value!);
+    if (!available) {
+      return { error: "Ese username ya está tomado" };
+    }
+
+    const country = String(formData.get("country") || "MX").toUpperCase();
+    if (!isValidCountry(country)) {
+      return { error: "País inválido" };
+    }
+
+    const anonymousHandle = await generateAnonymousHandle();
+    const locale = parseLocale(request.headers.get("Accept-Language"));
+
     const passwordHash = await hashPassword(password);
-    const user = await UserModel.create({ email, passwordHash, displayName });
+    const user = await UserModel.create({
+      email,
+      passwordHash,
+      username: usernameCheck.value!,
+      anonymousHandle,
+      publishAsAnonymous: true,
+      country,
+      locale,
+      displayName: usernameCheck.value!,
+    });
     const cookie = await createUserSession(String(user._id), request);
     return redirect("/onboarding", {
       headers: { "Set-Cookie": cookie },
@@ -70,6 +98,12 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   return { error: "Acción no válida" };
+}
+
+function parseLocale(header: string | null): string {
+  if (!header) return "es-MX";
+  const first = header.split(",")[0].trim().split(";")[0].trim();
+  return first || "es-MX";
 }
 
 function passwordStrength(pw: string) {
@@ -91,16 +125,18 @@ export default function AuthPage() {
   );
   const [showPw, setShowPw] = useState(false);
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const t = useT();
 
   useEffect(() => {
     if (actionData?.needsRegister) setMode("register");
   }, [actionData]);
 
   const pwScore = passwordStrength(password);
+  const usernameValidation = username ? validateUsername(username) : null;
 
   return (
     <div className="min-h-[calc(100vh-56px)] grid grid-cols-1 md:grid-cols-2">
-      {/* Left narrative panel */}
       <aside className="bg-sunken border-b md:border-b-0 md:border-r border-line px-8 py-12 md:px-14 md:py-16 flex flex-col">
         <div className="kicker mb-6">Manifiesto #003</div>
         <h1
@@ -114,12 +150,11 @@ export default function AuthPage() {
           .
         </h1>
         <p className="mt-8 text-fg-muted leading-relaxed max-w-[42ch]">
-          Una comunidad donde cada reseña trae contexto. Método, momento, experiencia.
-          No hay hype neón ni lenguaje genérico — solo personas documentando la planta.
+          {t.auth.createAccountBody}
         </p>
 
         <ul className="mt-10 space-y-4 text-sm">
-          <Promise>Directorio editorial, no catálogo de dispensario.</Promise>
+          <Promise>Elige tu username · publica anónimo por default.</Promise>
           <Promise>Datos reales sobre la experiencia, no barras de colores.</Promise>
           <Promise>Voces hispanohablantes, desde CDMX hasta Medellín.</Promise>
         </ul>
@@ -127,62 +162,71 @@ export default function AuthPage() {
         <div className="mt-auto pt-16 grid grid-cols-3 gap-6 max-w-[420px]">
           <div>
             <div className="display text-3xl tnum">847</div>
-            <div className="kicker mt-1">Cepas</div>
+            <div className="kicker mt-1">{t.nav.directory}</div>
           </div>
           <div>
             <div className="display text-3xl tnum">12K</div>
-            <div className="kicker mt-1">Reseñas</div>
+            <div className="kicker mt-1">{t.common.reviewsWord}</div>
           </div>
           <div>
             <div className="display text-3xl tnum">23</div>
-            <div className="kicker mt-1">Países</div>
+            <div className="kicker mt-1">{t.auth.countryLabel}</div>
           </div>
         </div>
       </aside>
 
-      {/* Form panel */}
       <div className="px-8 py-12 md:px-14 md:py-16 flex flex-col justify-center">
         <div className="max-w-[420px] w-full mx-auto">
           <div className="flex gap-6 border-b border-line mb-8">
             <TabButton active={mode === "login"} onClick={() => setMode("login")}>
-              Iniciar sesión
+              {t.auth.loginTab}
             </TabButton>
             <TabButton active={mode === "register"} onClick={() => setMode("register")}>
-              Crear cuenta
+              {t.auth.registerTab}
             </TabButton>
           </div>
 
           <h2 className="display text-3xl mb-2">
-            {mode === "login" ? "Bienvenide de vuelta." : "Crea tu cuenta."}
+            {mode === "login" ? t.auth.welcomeBack : t.auth.createAccount}
           </h2>
           <p className="text-fg-muted mb-8">
-            {mode === "login"
-              ? "Retoma tu perfil y experiencias."
-              : "Tu voz hace que la comunidad crezca."}
+            {mode === "login" ? t.auth.welcomeBackBody : t.auth.createAccountBody}
           </p>
 
           <Form method="post" className="space-y-5">
             <input type="hidden" name="intent" value={mode} />
 
             {mode === "register" && (
-              <Field label="Nombre o alias">
-                <input
-                  name="displayName"
-                  type="text"
-                  placeholder="Tu nombre"
-                  required
-                  minLength={2}
-                  autoComplete="name"
-                  className="w-full bg-transparent text-sm outline-none"
-                />
-              </Field>
+              <div>
+                <Field label={t.auth.usernameLabel} icon="user">
+                  <input
+                    name="username"
+                    type="text"
+                    placeholder={t.auth.usernamePlaceholder}
+                    required
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                    autoComplete="username"
+                    className="w-full bg-transparent text-sm outline-none"
+                  />
+                </Field>
+                <p className="mt-2 text-xs" style={{
+                  color: usernameValidation?.ok === false
+                    ? "var(--warm)"
+                    : "var(--fg-dim)",
+                }}>
+                  {usernameValidation?.ok === false
+                    ? usernameValidation.error
+                    : t.auth.usernameHint}
+                </p>
+              </div>
             )}
 
-            <Field label="Correo electrónico" icon="mail">
+            <Field label={t.auth.emailLabel} icon="mail">
               <input
                 name="email"
                 type="email"
-                placeholder="tu@correo.com"
+                placeholder={t.auth.emailPlaceholder}
                 required
                 defaultValue={actionData?.email || ""}
                 autoComplete="email"
@@ -192,14 +236,14 @@ export default function AuthPage() {
 
             <div>
               <Field
-                label="Contraseña"
+                label={t.auth.passwordLabel}
                 icon="lock"
                 trailing={
                   <button
                     type="button"
                     onClick={() => setShowPw((v) => !v)}
                     className="text-fg-dim hover:text-fg"
-                    aria-label={showPw ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    aria-label={showPw ? t.auth.hidePassword : t.auth.showPassword}
                   >
                     <Icon name={showPw ? "eyeOff" : "eye"} size={16} />
                   </button>
@@ -237,6 +281,24 @@ export default function AuthPage() {
               )}
             </div>
 
+            {mode === "register" && (
+              <div>
+                <div className="kicker mb-2">{t.auth.countryLabel}</div>
+                <select
+                  name="country"
+                  defaultValue="MX"
+                  className="w-full h-11 rounded-md border border-line bg-raised px-3 text-sm focus:outline-none focus:border-accent"
+                  required
+                >
+                  {LATIN_COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {mode === "login" && (
               <div className="flex items-center justify-between">
                 <label className="inline-flex items-center gap-2 text-sm text-fg-muted cursor-pointer">
@@ -245,14 +307,14 @@ export default function AuthPage() {
                     name="remember"
                     className="accent-[color:var(--accent)]"
                   />
-                  Recordarme
+                  {t.auth.rememberMe}
                 </label>
                 <button
                   type="button"
                   className="text-sm text-fg-muted hover:text-fg"
-                  onClick={() => alert("Función próximamente disponible")}
+                  onClick={() => alert(t.auth.comingSoon)}
                 >
-                  ¿Olvidaste tu contraseña?
+                  {t.auth.forgotPassword}
                 </button>
               </div>
             )}
@@ -261,14 +323,28 @@ export default function AuthPage() {
               <div className="space-y-3 pt-1">
                 <label className="inline-flex items-start gap-2 text-sm text-fg-muted cursor-pointer">
                   <input type="checkbox" required className="mt-1 accent-[color:var(--accent)]" />
-                  <span>
-                    Tengo 18 años o más y consumo de manera responsable.
-                  </span>
+                  <span>{t.auth.eighteenPlus}</span>
                 </label>
                 <label className="inline-flex items-start gap-2 text-sm text-fg-muted cursor-pointer">
                   <input type="checkbox" required className="mt-1 accent-[color:var(--accent)]" />
                   <span>
-                    Acepto los términos y la política de privacidad.
+                    {t.auth.acceptTermsTemplate
+                      .split(/\{terms\}|\{privacy\}/)
+                      .map((part: string, i: number) => (
+                        <span key={i}>
+                          {part}
+                          {i === 0 && (
+                            <Link to="/terminos" className="text-accent underline">
+                              {t.auth.termsLink}
+                            </Link>
+                          )}
+                          {i === 1 && (
+                            <Link to="/privacidad" className="text-accent underline">
+                              {t.auth.privacyLink}
+                            </Link>
+                          )}
+                        </span>
+                      ))}
                   </span>
                 </label>
               </div>
@@ -282,17 +358,17 @@ export default function AuthPage() {
 
             <button type="submit" className="btn btn-primary w-full" disabled={isSubmitting}>
               {isSubmitting
-                ? "Un momento…"
+                ? t.auth.submitting
                 : mode === "login"
-                  ? "Entrar a WeedHub"
-                  : "Crear mi cuenta"}
+                  ? t.auth.submitLogin
+                  : t.auth.submitRegister}
               <Icon name="arrowRight" size={14} />
             </button>
           </Form>
 
           <div className="flex items-center gap-4 my-8">
             <div className="h-px flex-1 bg-line" />
-            <span className="kicker">O continúa con</span>
+            <span className="kicker">{t.auth.oauthDivider}</span>
             <div className="h-px flex-1 bg-line" />
           </div>
 
@@ -300,14 +376,14 @@ export default function AuthPage() {
             <button
               type="button"
               className="btn btn-ghost"
-              onClick={() => alert("OAuth próximamente disponible")}
+              onClick={() => alert(t.auth.oauthComingSoon)}
             >
               Google
             </button>
             <button
               type="button"
               className="btn btn-ghost"
-              onClick={() => alert("OAuth próximamente disponible")}
+              onClick={() => alert(t.auth.oauthComingSoon)}
             >
               Apple
             </button>
@@ -315,7 +391,7 @@ export default function AuthPage() {
 
           <p className="text-xs text-fg-dim text-center mt-8">
             <Link to="/" className="hover:text-fg underline underline-offset-2">
-              ← Volver al inicio
+              ← {t.common.backToHome}
             </Link>
           </p>
         </div>

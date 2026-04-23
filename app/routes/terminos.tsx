@@ -1,6 +1,14 @@
-import { TERMS_SECTIONS, LEGAL_COMPANY } from "~/content/legal";
+import { useOutletContext } from "react-router";
+import { getTermsSections, LEGAL_COMPANY } from "~/content/legal";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 import { LegalPage } from "~/components/layout/legal-page";
+
+const TITLE = {
+  es: "Términos de uso",
+  pt: "Termos de uso",
+  en: "Terms of service",
+};
+const KICKER = { es: "Legal", pt: "Legal", en: "Legal" };
 
 export function meta() {
   return buildMeta({
@@ -12,12 +20,14 @@ export function meta() {
 }
 
 export default function TerminosPage() {
+  const context = useOutletContext<{ locale?: "es" | "pt" | "en" }>();
+  const locale = context?.locale || "es";
   return (
     <LegalPage
-      kicker="Legal"
-      title="Términos de uso"
+      kicker={KICKER[locale]}
+      title={TITLE[locale]}
       lastUpdated={LEGAL_COMPANY.lastUpdated}
-      sections={TERMS_SECTIONS}
+      sections={getTermsSections(locale)}
     />
   );
 }

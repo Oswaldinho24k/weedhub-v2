@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/strains";
 import { connectDB } from "~/lib/db.server";
@@ -7,6 +7,7 @@ import { STRAIN_TYPES, EFFECTS } from "~/constants/cannabis";
 import { StrainCard } from "~/components/composite/strain-card";
 import { Icon } from "~/components/ui/icon";
 import { cn } from "~/lib/utils";
+import { useT } from "~/lib/i18n-context";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
 const PER_PAGE = 20;
@@ -27,23 +28,23 @@ export async function loader({ request }: Route.LoaderArgs) {
   const search = url.searchParams.get("search") || "";
   const type = url.searchParams.get("type") || "";
   const effectsParam = url.searchParams.get("effects") || "";
+  const difficulty = url.searchParams.get("difficulty") || "";
   const sort = url.searchParams.get("sort") || "name";
   const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
 
   const filter: any = { isArchived: false };
 
   if (search) {
-    filter.$or = [
-      { name: { $regex: search, $options: "i" } },
-      { description: { $regex: search, $options: "i" } },
-    ];
+    filter.$text = { $search: search };
   }
   if (type && ["sativa", "indica", "hybrid"].includes(type)) {
     filter.type = type;
   }
   if (effectsParam) {
-    const effects = effectsParam.split(",");
-    filter.effects = { $all: effects };
+    filter.effects = { $all: effectsParam.split(",") };
+  }
+  if (difficulty && ["Baja", "Moderada", "Alta"].includes(difficulty)) {
+    filter.difficulty = difficulty;
   }
 
   const sortMap: Record<string, any> = {
@@ -51,8 +52,11 @@ export async function loader({ request }: Route.LoaderArgs) {
     rating: { "averageRatings.overall": -1 },
     reviews: { reviewCount: -1 },
     newest: { createdAt: -1 },
+    trending: { lastReviewedAt: -1 },
   };
-  const sortQuery = sortMap[sort] || sortMap.name;
+  const sortQuery = search
+    ? { score: { $meta: "textScore" }, ...sortMap[sort] }
+    : sortMap[sort] || sortMap.name;
 
   const [strains, total] = await Promise.all([
     StrainModel.find(filter)
@@ -73,12 +77,13 @@ export async function loader({ request }: Route.LoaderArgs) {
     total,
     page,
     totalPages: Math.ceil(total / PER_PAGE),
-    filters: { search, type, effects: effectsParam, sort },
+    filters: { search, type, effects: effectsParam, difficulty, sort },
   };
 }
 
 export default function StrainsPage({ loaderData }: Route.ComponentProps) {
   const { strains, total, page, totalPages, filters } = loaderData;
+  const t = useT();
   const [searchParams, setSearchParams] = useSearchParams();
   const view = (searchParams.get("view") as "grid" | "list") || "grid";
   const [searchValue, setSearchValue] = useState(filters.search);
@@ -127,32 +132,37 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
 
       {/* Hero strip */}
       <section className="mx-auto max-w-[1200px] px-6 pt-14 pb-10">
-        <div className="kicker mb-4">Directorio · v0.1</div>
+        <div className="kicker mb-4">{t.directory.heroKicker}</div>
         <h1
           className="display max-w-[18ch]"
           style={{ fontSize: "clamp(40px, 6.2vw, 84px)", lineHeight: 1.02 }}
         >
-          {total.toLocaleString("es-MX")} cepas.{" "}
+          {total.toLocaleString()} {t.directory.heroHeadlineA}.{" "}
           <span className="display-wonk tnum" style={{ color: "var(--accent)" }}>
-            {(total * 145).toLocaleString("es-MX")}
+            {(total * 145).toLocaleString()}
           </span>{" "}
-          experiencias. Una sola fuente de verdad.
+          {t.directory.heroHeadlineB}
         </h1>
         <div className="mt-8 flex items-center gap-3 max-w-[720px]">
           <div className="flex-1 flex items-center gap-3 bg-raised border border-line rounded-md px-4 h-12 focus-within:border-accent transition-colors">
             <Icon name="search" size={16} className="text-fg-dim" />
             <input
               className="flex-1 bg-transparent text-sm placeholder:text-fg-dim outline-none"
-              placeholder="Buscar por nombre, aroma, efecto…"
+              placeholder={t.directory.searchPlaceholder}
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
               autoFocus={searchParams.get("focus") === "search"}
             />
-            <kbd className="mono text-[10px] border border-line rounded px-1.5 py-0.5 text-fg-dim">
-              ⌘K
-            </kbd>
           </div>
         </div>
+        <Link
+          to="/strains/sugerir"
+          className="inline-flex items-center gap-2 mt-4 text-sm text-fg-muted hover:text-fg transition-colors"
+        >
+          <Icon name="plus" size={14} />
+          {t.suggest.ctaNotFound}
+          <Icon name="arrowRight" size={12} />
+        </Link>
       </section>
 
       {/* Sticky filter bar */}
@@ -160,15 +170,37 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
         <div className="mx-auto max-w-[1200px] px-6 py-3 flex items-center gap-4 flex-wrap">
           <div className="flex gap-2">
             <FilterChip active={!filters.type} onClick={() => updateFilter("type", "")}>
-              Todos
+              {t.strainTypes.all}
             </FilterChip>
-            {STRAIN_TYPES.map((t) => (
+            {STRAIN_TYPES.map((type) => {
+              const label =
+                type.value === "sativa"
+                  ? t.strainTypes.sativa
+                  : type.value === "indica"
+                    ? t.strainTypes.indica
+                    : t.strainTypes.hybrid;
+              return (
+                <FilterChip
+                  key={type.value}
+                  active={filters.type === type.value}
+                  onClick={() => updateFilter("type", type.value)}
+                >
+                  {label}
+                </FilterChip>
+              );
+            })}
+          </div>
+
+          <div className="hidden md:block w-px h-5 bg-line" />
+
+          <div className="flex gap-2">
+            {(["Baja", "Moderada", "Alta"] as const).map((d) => (
               <FilterChip
-                key={t.value}
-                active={filters.type === t.value}
-                onClick={() => updateFilter("type", t.value)}
+                key={d}
+                active={filters.difficulty === d}
+                onClick={() => updateFilter("difficulty", filters.difficulty === d ? "" : d)}
               >
-                {t.label}
+                {d}
               </FilterChip>
             ))}
           </div>
@@ -198,7 +230,7 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
 
           <div className="ml-auto flex items-center gap-4">
             <span className="mono text-xs text-fg-dim tnum">
-              {total} {total === 1 ? "resultado" : "resultados"}
+              {total} {total === 1 ? t.directory.resultsSingular : t.directory.resultsPlural}
             </span>
 
             <div className="flex border border-line rounded-md overflow-hidden">
@@ -218,10 +250,11 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
               onChange={(e) => updateFilter("sort", e.target.value)}
               className="mono text-xs bg-raised border border-line rounded-md px-2 py-1.5 focus:outline-none focus:border-accent"
             >
-              <option value="name">Nombre A–Z</option>
-              <option value="rating">Mejor valorada</option>
-              <option value="reviews">Más reseñas</option>
-              <option value="newest">Más reciente</option>
+              <option value="name">{t.directory.sortName}</option>
+              <option value="rating">{t.directory.sortRating}</option>
+              <option value="reviews">{t.directory.sortReviews}</option>
+              <option value="newest">{t.directory.sortNewest}</option>
+              <option value="trending">{t.directory.sortTrending}</option>
             </select>
           </div>
         </div>
@@ -230,19 +263,21 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
       <section className="mx-auto max-w-[1200px] px-6 py-10">
         {strains.length === 0 ? (
           <div className="text-center py-20">
-            <div className="kicker mb-3">Sin coincidencias</div>
-            <h2 className="display text-3xl mb-3">
-              Ninguna cepa cumple esos filtros.
-            </h2>
-            <p className="text-fg-muted mb-6">
-              Prueba ajustando el tipo, limpiando efectos o con otro término.
-            </p>
-            <button
-              className="btn btn-ghost"
-              onClick={() => setSearchParams(new URLSearchParams())}
-            >
-              Limpiar filtros
-            </button>
+            <div className="kicker mb-3">{t.directory.emptyKicker}</div>
+            <h2 className="display text-3xl mb-3">{t.directory.emptyTitle}</h2>
+            <p className="text-fg-muted mb-6">{t.directory.emptyBody}</p>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <button
+                className="btn btn-ghost"
+                onClick={() => setSearchParams(new URLSearchParams())}
+              >
+                {t.directory.clearFilters}
+              </button>
+              <Link to="/strains/sugerir" className="btn btn-primary inline-flex">
+                <Icon name="plus" size={14} />
+                {t.suggest.ctaEmptyState}
+              </Link>
+            </div>
           </div>
         ) : view === "list" ? (
           <div>
@@ -266,7 +301,7 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
               onClick={() => updateFilter("page", String(page - 1))}
             >
               <Icon name="chevronLeft" size={14} />
-              Anterior
+              {t.directory.previous}
             </button>
             <span className="mono text-xs text-fg-muted tnum">
               {page} / {totalPages}
@@ -276,7 +311,7 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
               disabled={page >= totalPages}
               onClick={() => updateFilter("page", String(page + 1))}
             >
-              Siguiente
+              {t.directory.next}
               <Icon name="chevronRight" size={14} />
             </button>
           </div>

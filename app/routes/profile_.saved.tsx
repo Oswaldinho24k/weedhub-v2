@@ -5,6 +5,7 @@ import { connectDB } from "~/lib/db.server";
 import { SavedStrainModel } from "~/models/saved-strain.server";
 import { StrainCard } from "~/components/composite/strain-card";
 import { Icon } from "~/components/ui/icon";
+import { useT } from "~/lib/i18n-context";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
 export function meta() {
@@ -39,6 +40,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function SavedStrainsPage({ loaderData }: Route.ComponentProps) {
   const { strains } = loaderData;
+  const t = useT();
 
   return (
     <div className="mx-auto max-w-[1200px] px-6 py-10">
@@ -48,18 +50,18 @@ export default function SavedStrainsPage({ loaderData }: Route.ComponentProps) {
           className="inline-flex items-center gap-2 text-sm text-fg-muted hover:text-fg"
         >
           <Icon name="arrowLeft" size={14} />
-          Volver al perfil
+          {t.profileEdit.backToProfile}
         </Link>
-        <div className="kicker mt-6 mb-1">Tu biblioteca</div>
+        <div className="kicker mt-6 mb-1">{t.profile.libraryKicker}</div>
         <h1
           className="display"
           style={{ fontSize: "clamp(40px, 6vw, 72px)", lineHeight: 1.02 }}
         >
-          Cepas guardadas
+          {t.profile.savedTitle}
         </h1>
         <p className="text-fg-muted mt-4">
           {strains.length}{" "}
-          {strains.length === 1 ? "cepa guardada" : "cepas guardadas"}.
+          {strains.length === 1 ? t.profile.savedSingular : t.profile.savedPlural}.
         </p>
       </div>
 
@@ -71,13 +73,12 @@ export default function SavedStrainsPage({ loaderData }: Route.ComponentProps) {
           >
             <Icon name="bookmark" size={22} />
           </div>
-          <h2 className="display text-2xl mb-2">Aún no has guardado cepas.</h2>
+          <h2 className="display text-2xl mb-2">{t.profile.savedEmptyTitle}</h2>
           <p className="text-fg-muted mb-6 max-w-[42ch] mx-auto">
-            Usa el botón <span className="text-fg">Guardar</span> en cualquier
-            ficha para armar tu biblioteca personal.
+            {t.profile.savedEmptyBody}
           </p>
           <Link to="/strains" className="btn btn-primary inline-flex">
-            Explorar el directorio
+            {t.profile.savedEmptyCta}
             <Icon name="arrowRight" size={14} />
           </Link>
         </div>

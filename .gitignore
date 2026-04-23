@@ -9,3 +9,8 @@
 
 # Seed compiled
 seed/*.js
+
+# Generated images
+/strain-cards/
+/strain-cards-sample/
+/social-posts/

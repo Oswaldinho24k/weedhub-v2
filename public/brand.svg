@@ -1,0 +1,6 @@
+<svg viewBox="0 0 1000 1000" width="400" height="400" xmlns="http://www.w3.org/2000/svg" style="display: block;"><defs><style>
+          @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..900,30..100;1,9..144,300..900,30..100&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap');
+          .m-display { font-family: 'Fraunces', Georgia, serif; font-variation-settings: 'opsz' 144, 'SOFT' 30; font-weight: 500; }
+          .m-italic { font-family: 'Fraunces', Georgia, serif; font-style: italic; font-variation-settings: 'opsz' 144, 'SOFT' 60; font-weight: 500; }
+          .m-mono { font-family: 'JetBrains Mono', monospace; letter-spacing: 0.22em; text-transform: uppercase; }
+        </style><radialGradient id="m-atmos" cx="25%" cy="20%" r="80%"><stop offset="0%" stop-color="oklch(94% 0.015 85)" stop-opacity="0.07"/><stop offset="100%" stop-color="oklch(94% 0.015 85)" stop-opacity="0"/></radialGradient></defs><rect width="1000" height="1000" fill="oklch(16% 0.025 150)"/><rect width="1000" height="1000" fill="url(#m-atmos)"/><text x="500" y="580" text-anchor="middle" font-size="172" style="letter-spacing: -0.04em;"><tspan class="m-display" fill="oklch(94% 0.015 85)">weed</tspan><tspan class="m-italic" fill="oklch(76% 0.17 145)">hub</tspan></text></svg>
