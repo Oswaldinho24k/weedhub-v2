@@ -54,6 +54,8 @@ export const es = {
     learn: "Aprender",
     top100: "Top 100",
     conditions: "Para condiciones",
+    findMyStrain: "Recomiéndame una cepa",
+    blog: "Blog",
     greenMap: "Mapa Verde",
     glossary: "Glosario",
     login: "Entrar",

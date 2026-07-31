@@ -49,6 +49,8 @@ export const pt: Dictionary = {
     learn: "Aprender",
     top100: "Top 100",
     conditions: "Por Condição",
+    findMyStrain: "Recomende-me uma cepa",
+    blog: "Blog",
     greenMap: "Mapa Verde",
     glossary: "Glossário",
     login: "Entrar",

@@ -41,11 +41,13 @@ export function Navbar({ user, theme }: NavbarProps) {
         { to: href("/strains"), label: t.nav.directory },
         { to: "/top-100", label: t.nav.top100 },
         { to: "/para", label: t.nav.conditions },
+        { to: "/recomendar", label: t.nav.findMyStrain },
       ],
     },
     {
       label: t.nav.learn,
       items: [
+        { to: "/blog", label: t.nav.blog },
         { to: href("/guias"), label: t.nav.guides },
         { to: href("/glosario"), label: t.nav.glossary },
         { to: href("/editorial"), label: t.nav.editorial },

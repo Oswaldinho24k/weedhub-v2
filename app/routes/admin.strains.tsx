@@ -61,6 +61,7 @@ export async function loader({ request }: Route.LoaderArgs) {
           parent1: editStrain.genetics?.parent1 ?? "",
           parent2: editStrain.genetics?.parent2 ?? "",
           breeder: editStrain.genetics?.breeder ?? "",
+          geneticsChildren: (editStrain.genetics?.children ?? []).join(", "),
           growFlowerMin: editStrain.grow?.floweringWeeks?.min ?? "",
           growFlowerMax: editStrain.grow?.floweringWeeks?.max ?? "",
           growYieldIndoor: editStrain.grow?.yieldIndoor ?? "",
@@ -235,6 +236,10 @@ export async function action({ request }: Route.ActionArgs) {
       "genetics.parent1": String(formData.get("parent1") || "").trim() || undefined,
       "genetics.parent2": String(formData.get("parent2") || "").trim() || undefined,
       "genetics.breeder": String(formData.get("breeder") || "").trim() || undefined,
+      "genetics.children": String(formData.get("geneticsChildren") || "")
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean),
       "cannabinoidProfile.thc": {
         min: parseFloat(String(formData.get("thcMin") || "0")),
         max: parseFloat(String(formData.get("thcMax") || "0")),
@@ -522,7 +527,7 @@ type EditStrainData = {
   effects: string; flavors: string; terpenes: string;
   thcMin: number; thcMax: number; cbdMin: number; cbdMax: number;
   cbg: number | ""; cbn: number | "";
-  parent1: string; parent2: string; breeder: string;
+  parent1: string; parent2: string; breeder: string; geneticsChildren: string;
   growFlowerMin: number | ""; growFlowerMax: number | "";
   growYieldIndoor: string; growYieldOutdoor: string;
   growHeightMin: number | ""; growHeightMax: number | "";
@@ -672,6 +677,14 @@ function EditStrainDialog({
               <input name="breeder" defaultValue={strain.breeder} className="admin-input" />
             </AdminField>
           </div>
+          <AdminField label="Descendientes (slugs separados por coma)">
+            <input
+              name="geneticsChildren"
+              defaultValue={strain.geneticsChildren}
+              className="admin-input"
+              placeholder="blue-dream, og-kush, girl-scout-cookies"
+            />
+          </AdminField>
         </div>
 
         {/* Cultivo */}

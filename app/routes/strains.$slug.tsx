@@ -20,6 +20,7 @@ import { buildMeta, SITE_URL } from "~/lib/seo";
 import { CONDITIONS_BY_SLUG } from "~/constants/conditions";
 import { QuickRateWidget } from "~/components/composite/quick-rate-widget";
 import { QuickRatingModel } from "~/models/quick-rating.server";
+import { GeneticTree } from "~/components/composite/genetic-tree";
 
 const TYPE_PILL: Record<string, string> = {
   sativa: "accent",
@@ -350,6 +351,15 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
       </section>
+
+      {/* Genetics tree */}
+      {(strain.genetics?.parent1 || strain.genetics?.parent2 || (strain.genetics?.children && strain.genetics.children.length > 0)) && (
+        <section className="mx-auto max-w-[1200px] px-6 py-8 border-t border-line">
+          <div className="kicker mb-3">Genética</div>
+          <h2 className="display text-2xl mb-6">Árbol genético</h2>
+          <GeneticTree strain={strain as any} />
+        </section>
+      )}
 
       {/* Effects + Time curve */}
       <section className="mx-auto max-w-[1200px] px-6 py-10">

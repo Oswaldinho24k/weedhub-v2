@@ -33,6 +33,7 @@ export interface IStrain extends Document {
     parent1?: string;
     parent2?: string;
     breeder?: string;
+    children?: string[];
   };
   cannabinoidProfile: {
     thc: { min: number; max: number };
@@ -106,6 +107,7 @@ const strainSchema = new Schema<IStrain>(
       parent1: String,
       parent2: String,
       breeder: String,
+      children: { type: [String], default: [] },
     },
     cannabinoidProfile: {
       thc: {

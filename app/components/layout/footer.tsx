@@ -29,6 +29,7 @@ export function Footer() {
           </FooterColumn>
 
           <FooterColumn title={t.nav.learn}>
+            <FooterLink to="/blog">{t.nav.blog}</FooterLink>
             <FooterLink to={href("/guias")}>{t.nav.guides}</FooterLink>
             <FooterLink to={href("/glosario")}>{t.nav.glossary}</FooterLink>
             <FooterLink to={href("/editorial")}>{t.nav.editorial}</FooterLink>

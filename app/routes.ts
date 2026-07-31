@@ -62,9 +62,18 @@ export default [
     route("articles", "routes/admin.articles.tsx"),
   ]),
 
+  // AI recommender
+  route("recomendar", "routes/recomendar.tsx"),
+  route("api/ai/find-strain", "routes/api/ai.find-strain.tsx"),
+
   // Mapa Verde — legal status by country
   route("mapa-verde", "routes/mapa-verde.tsx"),
   route("mapa-verde/:country", "routes/mapa-verde.$country.tsx"),
+
+  // Blog
+  route("blog", "routes/blog.tsx"),
+  route("blog/:slug", "routes/blog.$slug.tsx"),
+  route("blog.rss", "routes/blog[.]rss.tsx"),
 
   // Rankings y editoriales
   route("top-100", "routes/top-100.tsx"),
