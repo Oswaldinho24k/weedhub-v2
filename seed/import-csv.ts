@@ -29,6 +29,10 @@ if (fs.existsSync(envPath)) {
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/weedhub";
 
+function parseList(raw: string): string[] {
+  return raw.split(",").map((v) => v.trim()).filter((v) => v && v !== "None");
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const COLOR_PALETTE = ["#6aa56a", "#b57b4a", "#a47ab5", "#d9a843", "#5fa8c2", "#c25f8a"];
@@ -136,8 +140,8 @@ async function main() {
     if (existing.has(slug)) { skipped++; continue; }
 
     const type = (typeRaw || "hybrid").toLowerCase();
-    const effects = effectsRaw ? effectsRaw.split(",").map((e) => e.trim()).filter(Boolean) : [];
-    const flavors = flavorRaw ? flavorRaw.split(",").map((f) => f.trim()).filter(Boolean) : [];
+    const effects = effectsRaw ? parseList(effectsRaw) : [];
+    const flavors = flavorRaw ? parseList(flavorRaw) : [];
     const thcMax = 20; // CSV has no cannabinoid data — use sensible default
 
     ops.push({

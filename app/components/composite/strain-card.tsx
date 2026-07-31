@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { StrainThumb } from "./strain-thumb";
 import { Icon } from "~/components/ui/icon";
+import { useT } from "~/lib/i18n-context";
 
 interface StrainCardProps {
   strain: {
@@ -39,10 +40,13 @@ const TYPE_PILL: Record<string, string> = {
 };
 
 export function StrainCard({ strain, variant = "card" }: StrainCardProps) {
+  const t = useT();
   const typeLabel = strain.typeBlend || TYPE_LABEL[strain.type] || strain.type;
   const pillVariant = TYPE_PILL[strain.type] || "";
   const thcText = `${strain.cannabinoidProfile.thc.max}`;
   const topEffect = strain.effects?.[0];
+  const tEffect = (key: string) => (t.effects as Record<string, string>)[key] ?? key;
+  const tFlavor = (key: string) => (t.flavors as Record<string, string>)[key] ?? key;
 
   if (variant === "row") {
     return (
@@ -52,7 +56,10 @@ export function StrainCard({ strain, variant = "card" }: StrainCardProps) {
       >
         <StrainThumb
           name={strain.name}
+          type={strain.type as any}
           colorHint={strain.colorHint}
+          dominantTerpene={strain.dominantTerpene}
+          thcMax={strain.cannabinoidProfile.thc.max}
           imageUrl={strain.imageUrl}
           ratio="square"
           className="w-16 h-16"
@@ -89,7 +96,10 @@ export function StrainCard({ strain, variant = "card" }: StrainCardProps) {
     >
       <StrainThumb
         name={strain.name}
+        type={strain.type as any}
         colorHint={strain.colorHint}
+        dominantTerpene={strain.dominantTerpene}
+        thcMax={strain.cannabinoidProfile.thc.max}
         imageUrl={strain.imageUrl}
         ratio="wide"
       />
@@ -98,7 +108,7 @@ export function StrainCard({ strain, variant = "card" }: StrainCardProps) {
         {strain.dominantTerpene && (
           <span className="pill">{strain.dominantTerpene}</span>
         )}
-        {topEffect && <span className="pill">{topEffect}</span>}
+        {topEffect && <span className="pill">{tEffect(topEffect)}</span>}
       </div>
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="display text-2xl text-fg leading-tight">{strain.name}</h3>

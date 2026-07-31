@@ -10,17 +10,24 @@ import { Icon } from "~/components/ui/icon";
 import { getCommunityVoices, getFeaturedArticles } from "~/content/articles";
 import { useT, useHref, useLocale } from "~/lib/i18n-context";
 import { buildMeta, SITE_URL } from "~/lib/seo";
+import { resolveLocale } from "~/lib/locale.server";
+import { getDictionary } from "~/content/locales";
 
-export function meta() {
+export function meta({ data }: Route.MetaArgs) {
+  const locale = data?.locale || "es";
+  const dict = getDictionary(locale);
+  const prefix = locale !== "es" ? `/${locale}` : "";
   return buildMeta({
-    title: "WeedHub — La enciclopedia viva del cannabis hispano",
-    description:
-      "Informa, conecta, cultiva. Comunidad hispanohablante de reseñas cannábicas con contexto real — método, momento, experiencia.",
-    url: SITE_URL,
+    title: dict.meta.homeTitle,
+    description: dict.meta.homeDescription,
+    url: `${SITE_URL}${prefix}/`,
+    canonicalPath: "/",
+    locale,
   });
 }
 
-export async function loader() {
+export async function loader({ request }: Route.LoaderArgs) {
+  const locale = await resolveLocale(request);
   await connectDB();
 
   const [topStrains, featuredStrain, totalStrains, totalUsers, totalReviews] =
@@ -36,6 +43,7 @@ export async function loader() {
     ]);
 
   return {
+    locale,
     topStrains: topStrains.map((s) => ({
       ...s,
       _id: String(s._id),
@@ -61,20 +69,34 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
   const locale = useLocale();
   const COMMUNITY_VOICES = getCommunityVoices(locale);
   const FEATURED_ARTICLES = getFeaturedArticles(locale);
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "WeedHub",
-    inLanguage: "es",
-    url: SITE_URL,
-    description:
-      "Enciclopedia hispana de cannabis con reseñas contextuales, datos reales y perspectiva latinoamericana.",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${SITE_URL}/strains?search={search_term_string}`,
-      "query-input": "required name=search_term_string",
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "WeedHub",
+      inLanguage: "es",
+      url: SITE_URL,
+      description:
+        "Enciclopedia hispana de cannabis con reseñas contextuales, datos reales y perspectiva latinoamericana.",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${SITE_URL}/strains?search={search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
     },
-  };
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "WeedHub",
+      url: SITE_URL,
+      logo: `${SITE_URL}/brand.svg`,
+      description:
+        "Enciclopedia hispana de cannabis con reseñas contextuales y perspectiva latinoamericana.",
+      foundingDate: "2026",
+      areaServed: "Latin America",
+      sameAs: [],
+    },
+  ];
 
   return (
     <div>
@@ -89,8 +111,7 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
           <Icon name="sparkle" size={14} className="text-accent" />
           <span className="kicker">{t.landing.heroKickerSuperchip}</span>
         </div>
-        <div className="kicker mb-6">{t.landing.heroKickerIssue}</div>
-        <h1
+<h1
           className="display max-w-[18ch]"
           style={{ fontSize: "clamp(52px, 8.2vw, 128px)", lineHeight: 0.98 }}
         >

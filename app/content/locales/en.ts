@@ -42,6 +42,9 @@ export const en: Dictionary = {
     directory: "Directory",
     community: "Community",
     editorial: "Magazine",
+    guides: "Guides",
+    greenMap: "Green Map",
+    glossary: "Glossary",
     login: "Log in",
     register: "Sign up",
     start: "Get started",
@@ -85,7 +88,6 @@ export const en: Dictionary = {
 
   landing: {
     heroKickerSuperchip: "Inform · Connect · Cultivate",
-    heroKickerIssue: "No. 001 / Spring '26",
     heroHeadlinePrefix: "The ",
     heroHeadlineAccent: "living",
     heroHeadlineSuffix: " encyclopedia of cannabis.",
@@ -473,5 +475,56 @@ export const en: Dictionary = {
       "The living encyclopedia of cannabis. Reviews with real context — method, moment, experience.",
     savedStrainsTitle: "Saved strains — WeedHub",
     savedStrainsDescription: "Your library of saved strains on WeedHub.",
+    homeTitle: "WeedHub — The living cannabis encyclopedia for Latin America",
+    homeDescription:
+      "Inform, connect, cultivate. A Spanish-speaking community of contextual cannabis reviews — method, moment, experience.",
+    strainsTitle: "Strain directory — WeedHub",
+    strainsDescription:
+      "Explore hundreds of strains with filters by type, effects, and dominant terpene. Every profile is built from real community reviews.",
+    editorialTitle: "Magazine — WeedHub",
+    editorialDescription:
+      "Science, culture, and cannabis chronicles. Editorial articles on terpenes, landraces, microdosing, and more.",
+    communityTitle: "Community — WeedHub",
+    communityDescription:
+      "Spanish-speaking cannabis voices. Read the latest reviews and discover perspectives from CDMX, Medellín, Santiago, and beyond.",
+    terminosTitle: "Terms of service — WeedHub",
+    terminosDescription:
+      "Terms governing the use of WeedHub: minimum age, user-generated content, moderation, and responsibilities.",
+    privacidadTitle: "Privacy policy — WeedHub",
+    privacidadDescription:
+      "What data WeedHub collects, how we use it, and how to exercise your rights.",
+    guidesTitle: "Cannabis guides — WeedHub",
+    guidesDescription:
+      "Hype-free cannabis education. Terpenes, cannabinoids, strain types, consumption methods — science-based, written for humans.",
+    guideDetailTitle: "{title} — WeedHub",
+    reviewTitle: "Review {name} — WeedHub",
+    reviewDescription:
+      "Share your experience with {name} in the WeedHub community. Method, moment, effects, and more.",
   },
+
+  guides: {
+    kicker: "Guides",
+    headline: "Everything you need to know about cannabis.",
+    body: "Hype-free educational resources. Science-based, written for humans.",
+    readTime: "{min} read",
+    backToGuides: "All guides",
+    newsletterKicker: "Enjoyed this guide?",
+    newsletterBody: "Get a monthly digest of the best guides and magazine articles.",
+  },
+  effects: {
+    Relaxed: "Relaxed", Euphoric: "Euphoric", Happy: "Happy",
+    Creative: "Creative", Energetic: "Energetic", Focused: "Focused",
+    "Pain Relief": "Pain Relief", "Anti-anxiety": "Anti-anxiety",
+    Hungry: "Hungry", Sleepy: "Sleepy", Talkative: "Talkative",
+    Calm: "Calm", Meditative: "Meditative", Motivated: "Motivated",
+    Giggly: "Giggly", Uplifted: "Uplifted", Tingly: "Tingly",
+    Wellbeing: "Wellbeing",
+  } as Record<string, string>,
+  flavors: {
+    Earthy: "Earthy", Citrus: "Citrus", Sweet: "Sweet", Pine: "Pine",
+    Fruity: "Fruity", Diesel: "Diesel", Flowery: "Flowery", Spicy: "Spicy",
+    Skunk: "Skunk", Berry: "Berry", Tropical: "Tropical", Grape: "Grape",
+    Mint: "Mint", Cheese: "Cheese", Chocolate: "Chocolate", Coffee: "Coffee",
+    Vanilla: "Vanilla", Herbal: "Herbal",
+  } as Record<string, string>,
 };

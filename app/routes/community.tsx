@@ -6,17 +6,24 @@ import { ReviewCard } from "~/components/composite/review-card";
 import { getCommunityVoices } from "~/content/articles";
 import { useT, useHref, useLocale } from "~/lib/i18n-context";
 import { buildMeta, SITE_URL } from "~/lib/seo";
+import { resolveLocale } from "~/lib/locale.server";
+import { getDictionary } from "~/content/locales";
 
-export function meta() {
+export function meta({ data }: Route.MetaArgs) {
+  const locale = data?.locale || "es";
+  const dict = getDictionary(locale);
+  const prefix = locale !== "es" ? `/${locale}` : "";
   return buildMeta({
-    title: "Comunidad — WeedHub",
-    description:
-      "Voces hispanohablantes del cannabis. Lee las reseñas más recientes y descubre perspectivas desde CDMX, Medellín, Santiago y más.",
-    url: `${SITE_URL}/community`,
+    title: dict.meta.communityTitle,
+    description: dict.meta.communityDescription,
+    url: `${SITE_URL}${prefix}/community`,
+    canonicalPath: "/community",
+    locale,
   });
 }
 
-export async function loader() {
+export async function loader({ request }: Route.LoaderArgs) {
+  const locale = await resolveLocale(request);
   await connectDB();
   const reviews = await ReviewModel.find({ status: "published" })
     .sort({ createdAt: -1 })
@@ -29,6 +36,7 @@ export async function loader() {
     .lean();
 
   return {
+    locale,
     reviews: reviews.map((r) => {
       const u = r.userId as any;
       return {

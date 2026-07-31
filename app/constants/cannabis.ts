@@ -5,10 +5,10 @@ export const STRAIN_TYPES = [
 ] as const;
 
 export const EFFECTS = [
-  "Relajación", "Euforia", "Felicidad", "Creatividad", "Energía",
-  "Concentración", "Alivio del dolor", "Anti-ansiedad", "Apetito",
-  "Sueño", "Sociabilidad", "Calma", "Meditativo", "Motivación",
-  "Risas", "Bienestar", "Alivio muscular", "Anti-náusea",
+  "Relaxed", "Euphoric", "Happy", "Creative", "Energetic",
+  "Focused", "Pain Relief", "Anti-anxiety", "Hungry",
+  "Sleepy", "Talkative", "Calm", "Meditative", "Motivated",
+  "Giggly", "Uplifted", "Tingly", "Wellbeing",
 ] as const;
 
 export const TERPENES = [
@@ -23,9 +23,9 @@ export const TERPENES = [
 ] as const;
 
 export const FLAVORS = [
-  "Terroso", "Cítrico", "Dulce", "Pino", "Frutal", "Diesel",
-  "Floral", "Especiado", "Skunk", "Berry", "Tropical", "Uva",
-  "Menta", "Queso", "Chocolate", "Café", "Vainilla", "Herbal",
+  "Earthy", "Citrus", "Sweet", "Pine", "Fruity", "Diesel",
+  "Flowery", "Spicy", "Skunk", "Berry", "Tropical", "Grape",
+  "Mint", "Cheese", "Chocolate", "Coffee", "Vanilla", "Herbal",
 ] as const;
 
 export const CONSUMPTION_METHODS = [

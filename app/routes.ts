@@ -23,6 +23,10 @@ function publicRoutes(prefix: "" | "pt" | "en") {
     route(p("terminos"), "routes/terminos.tsx", { id: id("terminos") }),
     route(p("privacidad"), "routes/privacidad.tsx", { id: id("privacidad") }),
     route(p("ds"), "routes/ds.tsx", { id: id("ds") }),
+    route(p("guias"), "routes/guias.tsx", { id: id("guias") }),
+    route(p("guias/:slug"), "routes/guias.$slug.tsx", { id: id("guias-slug") }),
+    route(p("glosario"), "routes/glosario.tsx", { id: id("glosario") }),
+    route(p("glosario/:slug"), "routes/glosario.$slug.tsx", { id: id("glosario-slug") }),
   ];
 }
 
@@ -47,14 +51,44 @@ export default [
     route("strains", "routes/admin.strains.tsx"),
     route("reviews", "routes/admin.reviews.tsx"),
     route("submissions", "routes/admin.submissions.tsx"),
+    route("effects", "routes/admin.effects.tsx"),
+    route("users", "routes/admin.users.tsx"),
+    route("product-categories", "routes/admin.product-categories.tsx"),
+    route("brands", "routes/admin.brands.tsx"),
+    route("products", "routes/admin.products.tsx"),
+    route("dispensaries", "routes/admin.dispensaries.tsx"),
+    route("legal-status", "routes/admin.legal-status.tsx"),
+    route("glossary", "routes/admin.glossary.tsx"),
+    route("articles", "routes/admin.articles.tsx"),
   ]),
+
+  // Mapa Verde — legal status by country
+  route("mapa-verde", "routes/mapa-verde.tsx"),
+  route("mapa-verde/:country", "routes/mapa-verde.$country.tsx"),
+
+  // Rankings y editoriales
+  route("top-100", "routes/top-100.tsx"),
+
+  // Condiciones médicas
+  route("para", "routes/para.tsx"),
+  route("para/:condition", "routes/para.$condition.tsx"),
+
+  // Public stubs — content will be built as the platform grows
+  route("marcas", "routes/marcas.tsx"),
+  route("marcas/:slug", "routes/marcas.$slug.tsx"),
+  route("productos", "routes/productos.tsx"),
+  route("productos/:slug", "routes/productos.$slug.tsx"),
+  route("dispensarios", "routes/dispensarios.tsx"),
+  route("dispensarios/:slug", "routes/dispensarios.$slug.tsx"),
 
   // API + sitemap — locale-agnostic
   route("api/reviews/:reviewId/vote", "routes/api/reviews.$reviewId.vote.tsx"),
+  route("api/strains/:strainId/quick-rate", "routes/api/strains.$strainId.quick-rate.tsx"),
   route("api/strains/:strainId/save", "routes/api/strains.$strainId.save.tsx"),
   route("api/theme", "routes/api/theme.tsx"),
   route("api/newsletter", "routes/api/newsletter.tsx"),
   route("api/locale", "routes/api/locale.tsx"),
   route("api/strain-search", "routes/api/strain-search.tsx"),
+  route("api/admin/ai", "routes/api/admin.ai.tsx"),
   route("sitemap.xml", "routes/sitemap[.]xml.tsx"),
 ] satisfies RouteConfig;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Form, Link, redirect, useNavigation } from "react-router";
+import { Form, Link, redirect, useNavigation, useFetcher } from "react-router";
 import type { Route } from "./+types/strains.$slug.review";
 import { requireUser } from "~/lib/auth.server";
 import { connectDB } from "~/lib/db.server";
@@ -12,15 +12,11 @@ import { RatingStars } from "~/components/composite/rating-stars";
 import { Icon } from "~/components/ui/icon";
 import { useT } from "~/lib/i18n-context";
 import { cn } from "~/lib/utils";
-
-const POSITIVE_EFFECTS = [
-  "Relajado", "Feliz", "Creativo", "Euforia",
-  "Enérgico", "Concentrado", "Hablador", "Risa",
-];
-const NEGATIVE_EFFECTS = [
-  "Hambre", "Boca seca", "Ojos rojos",
-  "Mareo", "Paranoia", "Ansiedad",
-];
+import { EffectModel } from "~/models/effect.server";
+import { resolveLocale } from "~/lib/locale.server";
+import { getDictionary } from "~/content/locales";
+import { buildMeta, SITE_URL } from "~/lib/seo";
+import { CONDITIONS } from "~/constants/conditions";
 const METHODS = ["Fumado", "Vaporizado", "Comestible", "Concentrado"];
 const TIMES = ["Mañana", "Tarde", "Noche"];
 const SITUATIONS = ["Solo", "Con amigos", "Creativo", "Descanso"];
@@ -32,14 +28,29 @@ const FLAVORS = [
 const FREQUENCIES = ["Primera vez", "2–5 veces", "Semanal", "Frecuente"];
 
 export function meta({ data }: Route.MetaArgs) {
-  return [{ title: `Reseñar ${data?.strain?.name || "cepa"} — WeedHub` }];
+  const strainName = data?.strain?.name || "cepa";
+  const locale = data?.locale || "es";
+  const dict = getDictionary(locale);
+  return buildMeta({
+    title: dict.meta.reviewTitle.replace("{name}", strainName),
+    description: dict.meta.reviewDescription.replace("{name}", strainName),
+    url: `${SITE_URL}/strains/${data?.strain?.slug || ""}/review`,
+    locale,
+  });
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const user = await requireUser(request);
   await connectDB();
-  const strain = await StrainModel.findOne({ slug: params.slug }).lean();
+
+  const [strain, effects] = await Promise.all([
+    StrainModel.findOne({ slug: params.slug }).lean(),
+    EffectModel.find({ status: "approved" }).sort({ usageCount: -1 }).lean(),
+  ]);
   if (!strain) throw new Response("Cepa no encontrada", { status: 404 });
+
+  const locale = await resolveLocale(request);
+  const labelKey = locale === "pt" ? "labelPt" : locale === "en" ? "labelEn" : "labelEs";
 
   const existing = await ReviewModel.findOne({
     userId: user._id,
@@ -47,6 +58,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   }).lean();
 
   return {
+    locale,
     strain: {
       _id: String(strain._id),
       name: strain.name,
@@ -56,6 +68,12 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       lineage: strain.lineage,
       colorHint: strain.colorHint,
     },
+    positiveEffects: effects
+      .filter((e) => e.category === "positive")
+      .map((e) => ({ key: e.key, label: (e as any)[labelKey] || e.labelEn })),
+    negativeEffects: effects
+      .filter((e) => e.category === "negative")
+      .map((e) => ({ key: e.key, label: (e as any)[labelKey] || e.labelEn })),
     existingReview: existing
       ? {
           ratings: existing.ratings,
@@ -74,6 +92,29 @@ export async function action({ params, request }: Route.ActionArgs) {
   if (!strain) throw new Response("Cepa no encontrada", { status: 404 });
 
   const formData = await request.formData();
+  const intent = String(formData.get("intent") || "");
+
+  if (intent === "suggest_effect") {
+    const suggestion = String(formData.get("suggestion") || "").trim().slice(0, 60);
+    if (suggestion) {
+      const key = suggestion.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+      const exists = await EffectModel.findOne({ key });
+      if (!exists) {
+        await EffectModel.create({
+          key,
+          labelEs: suggestion,
+          labelEn: suggestion,
+          labelPt: suggestion,
+          category: "positive",
+          status: "pending",
+          source: "community",
+          usageCount: 0,
+          submittedBy: user._id,
+        });
+      }
+    }
+    return { suggestionSent: true };
+  }
 
   const overall = Number(formData.get("rating_overall")) || 3;
   const ratings = {
@@ -90,6 +131,7 @@ export async function action({ params, request }: Route.ActionArgs) {
   const timeOfDay = String(formData.get("timeOfDay") || "");
   const setting = String(formData.get("setting") || "");
   const effectsExperienced = formData.getAll("effectsExperienced").map(String);
+  const conditionsHelped = formData.getAll("conditionsHelped").map(String);
 
   const existing = await ReviewModel.findOne({ userId: user._id, strainId: strain._id });
   const isNew = !existing;
@@ -101,6 +143,7 @@ export async function action({ params, request }: Route.ActionArgs) {
     existing.comment = comment;
     existing.context = { method, timeOfDay, setting };
     existing.effectsExperienced = effectsExperienced;
+    existing.conditionsHelped = conditionsHelped;
     // publishedAs stays as originally set — snapshot is preserved
     await existing.save();
   } else {
@@ -111,6 +154,7 @@ export async function action({ params, request }: Route.ActionArgs) {
       comment,
       context: { method, timeOfDay, setting },
       effectsExperienced,
+      conditionsHelped,
       publishedAs,
     });
   }
@@ -131,13 +175,13 @@ export async function action({ params, request }: Route.ActionArgs) {
 const MOODS = ["😶", "🙁", "😐", "🙂", "🤩", "🤯"]; // idx 0..5
 
 export default function ReviewPage({ loaderData }: Route.ComponentProps) {
-  const { strain, existingReview } = loaderData;
+  const { strain, existingReview, positiveEffects, negativeEffects } = loaderData;
   const t = useT();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
   const [step, setStep] = useState(0);
-  const total = 5;
+  const total = 6;
 
   const [overall, setOverall] = useState(existingReview?.ratings?.overall || 0);
   const [rFlavor, setRFlavor] = useState(existingReview?.ratings?.flavor || 0);
@@ -149,6 +193,9 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
   const [setting, setSetting] = useState(existingReview?.context?.setting || "");
   const [effects, setEffects] = useState<string[]>(
     existingReview?.effectsExperienced || []
+  );
+  const [conditions, setConditions] = useState<string[]>(
+    (existingReview as { conditionsHelped?: string[] } | null)?.conditionsHelped || []
   );
   const [flavors, setFlavors] = useState<string[]>([]);
   const [frequency, setFrequency] = useState("");
@@ -162,6 +209,7 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
   const canAdvance = [
     overall > 0,
     !!method && !!timeOfDay,
+    true,
     true,
     true,
     true,
@@ -261,49 +309,42 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
         )}
 
         {step === 2 && (
-          <div>
-            <h1 className="display text-4xl mb-3">{t.review.effectsTitle}</h1>
-            <p className="text-fg-muted mb-8">{t.review.effectsBody}</p>
-            <div className="mb-8">
-              <div className="kicker flex items-center gap-2 mb-3" style={{ color: "var(--accent)" }}>
-                <Icon name="smile" size={14} />
-                {t.review.effectsPositive}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {POSITIVE_EFFECTS.map((e) => (
-                  <ChipButton
-                    key={e}
-                    active={effects.includes(e)}
-                    tone="accent"
-                    onClick={() => toggle(effects, e, setEffects)}
-                  >
-                    {e}
-                  </ChipButton>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div className="kicker flex items-center gap-2 mb-3" style={{ color: "var(--warm)" }}>
-                <Icon name="alert" size={14} />
-                {t.review.effectsNegative}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {NEGATIVE_EFFECTS.map((e) => (
-                  <ChipButton
-                    key={e}
-                    active={effects.includes(e)}
-                    tone="warm"
-                    onClick={() => toggle(effects, e, setEffects)}
-                  >
-                    {e}
-                  </ChipButton>
-                ))}
-              </div>
-            </div>
-          </div>
+          <EffectsStep
+            positiveEffects={positiveEffects}
+            negativeEffects={negativeEffects}
+            selected={effects}
+            onToggle={(key) => toggle(effects, key, setEffects)}
+            strainSlug={strain.slug}
+          />
         )}
 
         {step === 3 && (
+          <div>
+            <h1 className="display text-4xl mb-3">¿Te ayudó con algo?</h1>
+            <p className="text-fg-muted mb-8">
+              Opcional — si usaste esta cepa para una condición específica, selecciónala.
+              Ayuda a otros usuarios a encontrar lo que necesitan.
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center max-w-[560px] mx-auto">
+              {CONDITIONS.map((c) => (
+                <ChipButton
+                  key={c.slug}
+                  active={conditions.includes(c.slug)}
+                  onClick={() => toggle(conditions, c.slug, setConditions)}
+                >
+                  {c.labelEs}
+                </ChipButton>
+              ))}
+            </div>
+            {conditions.length > 0 && (
+              <p className="text-center text-xs text-fg-dim mt-6">
+                {conditions.length} condición{conditions.length !== 1 ? "es" : ""} seleccionada{conditions.length !== 1 ? "s" : ""}
+              </p>
+            )}
+          </div>
+        )}
+
+        {step === 4 && (
           <div>
             <h1 className="display text-4xl mb-3">{t.review.flavorsTitle}</h1>
             <p className="text-fg-muted mb-8">{t.review.flavorsBody}</p>
@@ -321,7 +362,7 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
           </div>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <div>
             <h1 className="display text-4xl mb-3">{t.review.detailsTitle}</h1>
             <p className="text-fg-muted mb-8">{t.review.detailsBody}</p>
@@ -430,6 +471,9 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
               {effects.map((e) => (
                 <input key={e} type="hidden" name="effectsExperienced" value={e} />
               ))}
+              {conditions.map((c) => (
+                <input key={c} type="hidden" name="conditionsHelped" value={c} />
+              ))}
               <button
                 type="submit"
                 className="btn"
@@ -445,6 +489,92 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
             </Form>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function EffectsStep({
+  positiveEffects,
+  negativeEffects,
+  selected,
+  onToggle,
+  strainSlug,
+}: {
+  positiveEffects: { key: string; label: string }[];
+  negativeEffects: { key: string; label: string }[];
+  selected: string[];
+  onToggle: (key: string) => void;
+  strainSlug: string;
+}) {
+  const t = useT();
+  const fetcher = useFetcher();
+  const [suggestion, setSuggestion] = useState("");
+  const sent = fetcher.data && "suggestionSent" in fetcher.data;
+
+  return (
+    <div>
+      <h1 className="display text-4xl mb-3">{t.review.effectsTitle}</h1>
+      <p className="text-fg-muted mb-8">{t.review.effectsBody}</p>
+      <div className="mb-8">
+        <div className="kicker flex items-center gap-2 mb-3" style={{ color: "var(--accent)" }}>
+          <Icon name="smile" size={14} />
+          {t.review.effectsPositive}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {positiveEffects.map((e) => (
+            <ChipButton
+              key={e.key}
+              active={selected.includes(e.key)}
+              tone="accent"
+              onClick={() => onToggle(e.key)}
+            >
+              {e.label}
+            </ChipButton>
+          ))}
+        </div>
+      </div>
+      <div className="mb-8">
+        <div className="kicker flex items-center gap-2 mb-3" style={{ color: "var(--warm)" }}>
+          <Icon name="alert" size={14} />
+          {t.review.effectsNegative}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {negativeEffects.map((e) => (
+            <ChipButton
+              key={e.key}
+              active={selected.includes(e.key)}
+              tone="warm"
+              onClick={() => onToggle(e.key)}
+            >
+              {e.label}
+            </ChipButton>
+          ))}
+        </div>
+      </div>
+      <div className="border-t border-line pt-5">
+        <div className="mono text-xs text-fg-dim mb-2">¿No encuentras el efecto?</div>
+        {sent ? (
+          <p className="text-sm text-accent">Sugerencia enviada, gracias.</p>
+        ) : (
+          <fetcher.Form method="post" action={`/strains/${strainSlug}/review`} className="flex gap-2">
+            <input type="hidden" name="intent" value="suggest_effect" />
+            <input
+              name="suggestion"
+              value={suggestion}
+              onChange={(e) => setSuggestion(e.target.value.slice(0, 60))}
+              placeholder="Ej: eufórico, sociable..."
+              className="input text-sm flex-1 max-w-[220px]"
+            />
+            <button
+              type="submit"
+              disabled={!suggestion.trim() || fetcher.state !== "idle"}
+              className="btn btn-ghost text-sm"
+            >
+              Sugerir
+            </button>
+          </fetcher.Form>
+        )}
       </div>
     </div>
   );

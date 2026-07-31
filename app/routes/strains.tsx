@@ -3,7 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/strains";
 import { connectDB } from "~/lib/db.server";
 import { StrainModel } from "~/models/strain.server";
-import { STRAIN_TYPES, EFFECTS } from "~/constants/cannabis";
+import { EffectModel } from "~/models/effect.server";
+import { resolveLocale } from "~/lib/locale.server";
+import { getDictionary } from "~/content/locales";
+import { STRAIN_TYPES } from "~/constants/cannabis";
+import { CONDITIONS } from "~/constants/conditions";
 import { StrainCard } from "~/components/composite/strain-card";
 import { Icon } from "~/components/ui/icon";
 import { cn } from "~/lib/utils";
@@ -11,14 +15,17 @@ import { useT } from "~/lib/i18n-context";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
 const PER_PAGE = 20;
-const STRAINS_URL = `${SITE_URL}/strains`;
 
-export function meta() {
+export function meta({ data }: Route.MetaArgs) {
+  const locale = data?.locale || "es";
+  const dict = getDictionary(locale);
+  const prefix = locale !== "es" ? `/${locale}` : "";
   return buildMeta({
-    title: "Directorio de cepas — WeedHub",
-    description:
-      "Explora cientos de cepas con filtros por tipo, efectos y terpeno dominante. Cada perfil se construye con reseñas contextuales de la comunidad.",
-    url: STRAINS_URL,
+    title: dict.meta.strainsTitle,
+    description: dict.meta.strainsDescription,
+    url: `${SITE_URL}${prefix}/strains`,
+    canonicalPath: "/strains",
+    locale,
   });
 }
 
@@ -29,23 +36,24 @@ export async function loader({ request }: Route.LoaderArgs) {
   const type = url.searchParams.get("type") || "";
   const effectsParam = url.searchParams.get("effects") || "";
   const difficulty = url.searchParams.get("difficulty") || "";
+  const condition = url.searchParams.get("condition") || "";
+  const autoflowering = url.searchParams.get("autoflowering") || "";
+  const feminized = url.searchParams.get("feminized") || "";
+  const climate = url.searchParams.get("climate") || "";
   const sort = url.searchParams.get("sort") || "name";
   const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
 
   const filter: any = { isArchived: false };
 
-  if (search) {
-    filter.$text = { $search: search };
-  }
-  if (type && ["sativa", "indica", "hybrid"].includes(type)) {
-    filter.type = type;
-  }
-  if (effectsParam) {
-    filter.effects = { $all: effectsParam.split(",") };
-  }
-  if (difficulty && ["Baja", "Moderada", "Alta"].includes(difficulty)) {
-    filter.difficulty = difficulty;
-  }
+  if (search) filter.$text = { $search: search };
+  if (type && ["sativa", "indica", "hybrid"].includes(type)) filter.type = type;
+  if (effectsParam) filter.effects = { $all: effectsParam.split(",") };
+  if (difficulty && ["Baja", "Moderada", "Alta"].includes(difficulty)) filter.difficulty = difficulty;
+  if (condition) filter.helpsWithConditions = condition;
+  if (autoflowering === "1") filter["grow.isAutoflowering"] = true;
+  if (feminized === "1") filter["grow.isFeminized"] = true;
+  if (climate && ["tropical", "mediterráneo", "continental", "frío"].includes(climate))
+    filter["grow.climate"] = climate;
 
   const sortMap: Record<string, any> = {
     name: { name: 1 },
@@ -58,16 +66,24 @@ export async function loader({ request }: Route.LoaderArgs) {
     ? { score: { $meta: "textScore" }, ...sortMap[sort] }
     : sortMap[sort] || sortMap.name;
 
-  const [strains, total] = await Promise.all([
+  const locale = await resolveLocale(request);
+  const labelKey = locale === "pt" ? "labelPt" : locale === "en" ? "labelEn" : "labelEs";
+
+  const [strains, total, topEffects] = await Promise.all([
     StrainModel.find(filter)
       .sort(sortQuery)
       .skip((page - 1) * PER_PAGE)
       .limit(PER_PAGE)
       .lean(),
     StrainModel.countDocuments(filter),
+    EffectModel.find({ status: "approved", category: "positive" })
+      .sort({ usageCount: -1 })
+      .limit(8)
+      .lean(),
   ]);
 
   return {
+    locale,
     strains: strains.map((s) => ({
       ...s,
       _id: String(s._id),
@@ -77,12 +93,16 @@ export async function loader({ request }: Route.LoaderArgs) {
     total,
     page,
     totalPages: Math.ceil(total / PER_PAGE),
-    filters: { search, type, effects: effectsParam, difficulty, sort },
+    filters: { search, type, effects: effectsParam, difficulty, condition, autoflowering, feminized, climate, sort },
+    effectFilters: topEffects.map((e) => ({ key: e.key, label: (e as any)[labelKey] || e.labelEn })),
   };
 }
 
 export default function StrainsPage({ loaderData }: Route.ComponentProps) {
-  const { strains, total, page, totalPages, filters } = loaderData;
+  const { strains, total, page, totalPages, filters, effectFilters } = loaderData;
+  const [showGrowFilters, setShowGrowFilters] = useState(
+    !!(filters.autoflowering || filters.feminized || filters.climate || filters.condition)
+  );
   const t = useT();
   const [searchParams, setSearchParams] = useSearchParams();
   const view = (searchParams.get("view") as "grid" | "list") || "grid";
@@ -113,7 +133,7 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "Cepas de Cannabis",
-    url: STRAINS_URL,
+    url: `${SITE_URL}/strains`,
     numberOfItems: total,
     itemListElement: strains.map((s: any, i: number) => ({
       "@type": "ListItem",
@@ -208,27 +228,37 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
           <div className="hidden md:block w-px h-5 bg-line" />
 
           <div className="flex gap-2 flex-wrap">
-            {EFFECTS.slice(0, 6).map((effect) => {
-              const isActive = currentEffects.includes(effect);
+            {effectFilters.map((effect) => {
+              const isActive = currentEffects.includes(effect.key);
               return (
                 <FilterChip
-                  key={effect}
+                  key={effect.key}
                   active={isActive}
                   tone="accent"
                   onClick={() => {
                     const next = isActive
-                      ? currentEffects.filter((e) => e !== effect)
-                      : [...currentEffects, effect];
+                      ? currentEffects.filter((e) => e !== effect.key)
+                      : [...currentEffects, effect.key];
                     updateFilter("effects", next.filter(Boolean).join(","));
                   }}
                 >
-                  {effect}
+                  {effect.label}
                 </FilterChip>
               );
             })}
           </div>
 
-          <div className="ml-auto flex items-center gap-4">
+          {/* Grow filters toggle */}
+          <button
+            type="button"
+            onClick={() => setShowGrowFilters((v) => !v)}
+            className={cn("chip ml-auto", showGrowFilters && "on")}
+          >
+            <Icon name="sprout" size={12} />
+            Cultivo
+          </button>
+
+          <div className="flex items-center gap-4">
             <span className="mono text-xs text-fg-dim tnum">
               {total} {total === 1 ? t.directory.resultsSingular : t.directory.resultsPlural}
             </span>
@@ -259,6 +289,55 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
       </section>
+
+      {/* Grow filters — secondary bar */}
+      {showGrowFilters && (
+        <section className="border-b border-line bg-sunken">
+          <div className="mx-auto max-w-[1200px] px-6 py-3 flex items-center gap-6 flex-wrap text-sm">
+            <div className="flex items-center gap-2">
+              <span className="kicker text-xs">Clima</span>
+              {(["tropical", "mediterráneo", "continental", "frío"] as const).map((c) => (
+                <FilterChip
+                  key={c}
+                  active={filters.climate === c}
+                  onClick={() => updateFilter("climate", filters.climate === c ? "" : c)}
+                >
+                  {c.charAt(0).toUpperCase() + c.slice(1)}
+                </FilterChip>
+              ))}
+            </div>
+            <div className="w-px h-5 bg-line" />
+            <div className="flex items-center gap-2">
+              <FilterChip
+                active={filters.autoflowering === "1"}
+                onClick={() => updateFilter("autoflowering", filters.autoflowering === "1" ? "" : "1")}
+              >
+                Autofloreciente
+              </FilterChip>
+              <FilterChip
+                active={filters.feminized === "1"}
+                onClick={() => updateFilter("feminized", filters.feminized === "1" ? "" : "1")}
+              >
+                Feminizada
+              </FilterChip>
+            </div>
+            <div className="w-px h-5 bg-line" />
+            <div className="flex items-center gap-2">
+              <span className="kicker text-xs">Condición</span>
+              <select
+                value={filters.condition}
+                onChange={(e) => updateFilter("condition", e.target.value)}
+                className="mono text-xs bg-raised border border-line rounded-md px-2 py-1.5 focus:outline-none focus:border-accent"
+              >
+                <option value="">Todas</option>
+                {CONDITIONS.map((c) => (
+                  <option key={c.slug} value={c.slug}>{c.emoji} {c.labelEs}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="mx-auto max-w-[1200px] px-6 py-10">
         {strains.length === 0 ? (

@@ -65,6 +65,17 @@ export interface IStrain extends Document {
     4: number;
     5: number;
   };
+  helpsWithConditions: string[];
+  conditionVotes: Record<string, number>;
+  grow?: {
+    floweringWeeks?: { min: number; max: number };
+    yieldIndoor?: string;
+    yieldOutdoor?: string;
+    heightCm?: { min: number; max: number };
+    climate?: "tropical" | "mediterráneo" | "continental" | "frío";
+    isAutoflowering?: boolean;
+    isFeminized?: boolean;
+  };
   isArchived: boolean;
   lastReviewedAt?: Date;
   createdAt: Date;
@@ -150,8 +161,19 @@ const strainSchema = new Schema<IStrain>(
       4: { type: Number, default: 0 },
       5: { type: Number, default: 0 },
     },
+    helpsWithConditions: { type: [String], default: [] },
+    conditionVotes: { type: Map, of: Number, default: {} },
+    grow: {
+      floweringWeeks: { min: Number, max: Number },
+      yieldIndoor: String,
+      yieldOutdoor: String,
+      heightCm: { min: Number, max: Number },
+      climate: { type: String, enum: ["tropical", "mediterráneo", "continental", "frío"] },
+      isAutoflowering: { type: Boolean, default: false },
+      isFeminized: { type: Boolean, default: false },
+    },
     isArchived: { type: Boolean, default: false },
-  lastReviewedAt: Date,
+    lastReviewedAt: Date,
   },
   { timestamps: true }
 );
@@ -160,6 +182,7 @@ strainSchema.index({ name: "text", description: "text" });
 strainSchema.index({ slug: 1 }, { unique: true });
 strainSchema.index({ type: 1 });
 strainSchema.index({ effects: 1 });
+strainSchema.index({ helpsWithConditions: 1 });
 strainSchema.index({ difficulty: 1 });
 strainSchema.index({ "averageRatings.overall": -1 });
 strainSchema.index({ reviewCount: -1 });

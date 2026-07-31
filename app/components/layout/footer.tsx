@@ -23,6 +23,10 @@ export function Footer() {
 
           <FooterColumn title={t.footer.productTitle}>
             <FooterLink to={href("/strains")}>{t.nav.directory}</FooterLink>
+            <FooterLink to={href("/guias")}>{t.nav.guides}</FooterLink>
+            <FooterLink to={href("/glosario")}>{t.nav.glossary}</FooterLink>
+            <FooterLink to="/top-100">Top 100 Cepas</FooterLink>
+            <FooterLink to="/mapa-verde">{t.nav.greenMap}</FooterLink>
             <FooterLink to={href("/community")}>{t.nav.community}</FooterLink>
             <FooterLink to={href("/editorial")}>{t.nav.editorial}</FooterLink>
           </FooterColumn>

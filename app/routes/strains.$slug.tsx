@@ -17,6 +17,9 @@ import { Icon } from "~/components/ui/icon";
 import { useT, useHref } from "~/lib/i18n-context";
 import { pickStrainDescription } from "~/lib/strain-description";
 import { buildMeta, SITE_URL } from "~/lib/seo";
+import { CONDITIONS_BY_SLUG } from "~/constants/conditions";
+import { QuickRateWidget } from "~/components/composite/quick-rate-widget";
+import { QuickRatingModel } from "~/models/quick-rating.server";
 
 const TYPE_PILL: Record<string, string> = {
   sativa: "accent",
@@ -34,6 +37,7 @@ export function meta({ data }: Route.MetaArgs) {
     url: `${SITE_URL}/strains/${strain?.slug || ""}`,
     image: strain?.imageUrl || undefined,
     type: "product",
+    canonicalPath: `/strains/${strain?.slug || ""}`,
   });
 }
 
@@ -53,28 +57,55 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   const user = await getUserFromSession(request);
   let isSaved = false;
+  let existingQuickRating: number | undefined;
   if (user) {
-    const saved = await SavedStrainModel.findOne({ userId: user._id, strainId: strain._id });
+    const [saved, qr] = await Promise.all([
+      SavedStrainModel.findOne({ userId: user._id, strainId: strain._id }),
+      QuickRatingModel.findOne({ userId: user._id, strainId: strain._id }).select("rating").lean(),
+    ]);
     isSaved = !!saved;
+    existingQuickRating = qr?.rating;
   }
+
+  const strainEffects = strain.effects || [];
+  const strainFlavors = strain.flavors || [];
+  const strainTerpeneNames = (strain.terpenes || []).map((t: any) => t.name);
 
   const similarStrains = await StrainModel.aggregate([
     {
       $match: {
-        type: strain.type,
         isArchived: false,
         _id: { $ne: strain._id },
+        // Must share at least one effect to be relevant
+        effects: { $elemMatch: { $in: strainEffects } },
       },
     },
     {
       $addFields: {
-        sharedEffects: {
-          $size: { $setIntersection: ["$effects", strain.effects || []] },
+        sharedEffects: { $size: { $setIntersection: ["$effects", strainEffects] } },
+        sharedFlavors: { $size: { $setIntersection: ["$flavors", strainFlavors] } },
+        sharedTerpeneNames: {
+          $filter: {
+            input: { $map: { input: "$terpenes", as: "t", in: "$$t.name" } },
+            as: "name",
+            cond: { $in: ["$$name", strainTerpeneNames] },
+          },
         },
       },
     },
-    { $sort: { sharedEffects: -1, "averageRatings.overall": -1 } },
-    { $limit: 3 },
+    {
+      $addFields: {
+        sharedTerpeneCount: { $size: "$sharedTerpeneNames" },
+        similarityScore: {
+          $add: [
+            { $multiply: ["$sharedEffects", 3] },
+            { $multiply: ["$sharedFlavors", 2] },
+          ],
+        },
+      },
+    },
+    { $sort: { similarityScore: -1, "averageRatings.overall": -1 } },
+    { $limit: 4 },
   ]);
 
   return {
@@ -111,17 +142,21 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       };
     }),
     isSaved,
+    existingQuickRating,
     similarStrains: similarStrains.map((s: any) => ({
       ...s,
       _id: String(s._id),
       createdAt: s.createdAt?.toISOString?.() || new Date().toISOString(),
       updatedAt: s.updatedAt?.toISOString?.() || new Date().toISOString(),
+      // Keep similarity metadata for UI
+      sharedEffects: s.sharedEffects ?? 0,
+      sharedFlavors: s.sharedFlavors ?? 0,
     })),
   };
 }
 
 export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
-  const { strain, reviews, isSaved, similarStrains } = loaderData;
+  const { strain, reviews, isSaved, similarStrains, existingQuickRating } = loaderData;
   const context = useOutletContext<{ user?: any; locale?: "es" | "pt" | "en" }>();
   const currentUser = context?.user;
   const locale = context?.locale || "es";
@@ -140,8 +175,11 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
 
   // Normalize effects for bars: use flat strain.effects list with synthetic values
   // based on position (seed doesn't have numeric effect values).
+  const tEffect = (key: string) => (t.effects as Record<string, string>)[key] ?? key;
+  const tFlavor = (key: string) => (t.flavors as Record<string, string>)[key] ?? key;
+
   const effectValues = (strain.effects || []).slice(0, 5).map((e: string, i: number) => ({
-    label: e,
+    label: tEffect(e),
     value: 90 - i * 10,
   }));
 
@@ -151,7 +189,9 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
     value: Math.min(1, t.percentage / 2),
   }));
 
-  const jsonLd: any = {
+  const prefix = locale !== "es" ? `/${locale}` : "";
+
+  const productJsonLd: any = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: strain.name,
@@ -160,7 +200,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
     ...(strain.imageUrl ? { image: strain.imageUrl } : {}),
   };
   if (strain.reviewCount > 0) {
-    jsonLd.aggregateRating = {
+    productJsonLd.aggregateRating = {
       "@type": "AggregateRating",
       ratingValue: strain.averageRatings.overall.toFixed(1),
       reviewCount: strain.reviewCount,
@@ -169,11 +209,40 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
     };
   }
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "WeedHub",
+        item: `${SITE_URL}${prefix}/`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: t.nav.directory,
+        item: `${SITE_URL}${prefix}/strains`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: strain.name,
+        item: `${SITE_URL}/strains/${strain.slug}`,
+      },
+    ],
+  };
+
   return (
     <div>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
       {/* Back */}
@@ -260,7 +329,10 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
           <div className="flex flex-col gap-5">
             <StrainThumb
               name={strain.name}
+              type={strain.type as any}
               colorHint={strain.colorHint}
+              dominantTerpene={strain.dominantTerpene}
+              thcMax={strain.cannabinoidProfile?.thc?.max}
               imageUrl={strain.imageUrl}
               ratio="wide"
               className="w-full"
@@ -271,7 +343,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
               <HeroStat kicker={t.strain.heroStats.terpene} value={strain.dominantTerpene || "—"} />
               <HeroStat
                 kicker={t.strain.heroStats.effect}
-                value={(strain.effects || [])[0] || "—"}
+                value={tEffect((strain.effects || [])[0] || "") || "—"}
               />
               <HeroStat kicker={t.strain.heroStats.difficulty} value={strain.difficulty || "—"} />
             </div>
@@ -346,7 +418,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
               <div className="flex flex-wrap gap-2">
                 {(strain.flavors || []).map((f: string) => (
                   <span key={f} className="pill accent">
-                    {f}
+                    {tFlavor(f)}
                   </span>
                 ))}
                 {(!strain.flavors || strain.flavors.length === 0) && (
@@ -364,6 +436,42 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
       </section>
+
+      {/* Grow info */}
+      {strain.grow && (strain.grow.floweringWeeks || strain.grow.yieldIndoor || strain.grow.yieldOutdoor) && (
+        <section className="mx-auto max-w-[1200px] px-6 py-10 border-t border-line">
+          <div className="kicker mb-3">Para cultivadores</div>
+          <h2 className="display text-2xl md:text-3xl mb-6">Datos de cultivo</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {strain.grow.floweringWeeks && (
+              <GrowStat
+                label="Floración"
+                value={`${strain.grow.floweringWeeks.min}–${strain.grow.floweringWeeks.max} sem`}
+              />
+            )}
+            {strain.difficulty && (
+              <GrowStat label="Dificultad" value={strain.difficulty} />
+            )}
+            {strain.grow.yieldIndoor && (
+              <GrowStat label="Indoor" value={strain.grow.yieldIndoor} />
+            )}
+            {strain.grow.yieldOutdoor && (
+              <GrowStat label="Outdoor" value={strain.grow.yieldOutdoor} />
+            )}
+            {strain.grow.heightCm && (
+              <GrowStat
+                label="Altura"
+                value={`${strain.grow.heightCm.min}–${strain.grow.heightCm.max} cm`}
+              />
+            )}
+            {strain.grow.climate && (
+              <GrowStat label="Clima" value={capitalizeFirst(strain.grow.climate)} />
+            )}
+            {strain.grow.isAutoflowering && <GrowStat label="Tipo" value="Autofloreciente" />}
+            {strain.grow.isFeminized && <GrowStat label="Semillas" value="Feminizadas" />}
+          </div>
+        </section>
+      )}
 
       {/* Reviews */}
       <section className="mx-auto max-w-[1200px] px-6 py-14">
@@ -413,6 +521,15 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
               <Icon name="edit" size={14} />
               {t.strain.writeReview}
             </Link>
+
+            <div className="card p-4 space-y-2">
+              <div className="kicker text-xs">Rating rápido</div>
+              <QuickRateWidget
+                strainId={strain._id}
+                isLoggedIn={!!currentUser}
+                existingRating={existingQuickRating}
+              />
+            </div>
           </aside>
 
           <div>
@@ -441,18 +558,82 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
         </div>
       </section>
 
+      {/* Condition votes */}
+      {strain.conditionVotes && Object.keys(strain.conditionVotes).length > 0 && (
+        <section className="mx-auto max-w-[1200px] px-6 py-10 border-t border-line">
+          <div className="kicker mb-3">Reportado por la comunidad</div>
+          <h2 className="display text-2xl md:text-3xl mb-6">¿Para qué ayuda?</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
+            {Object.entries(strain.conditionVotes as Record<string, number>)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 6)
+              .map(([slug, votes]) => {
+                const cond = CONDITIONS_BY_SLUG[slug];
+                if (!cond) return null;
+                const pct = strain.reviewCount > 0 ? Math.round((votes / strain.reviewCount) * 100) : 0;
+                return (
+                  <Link
+                    key={slug}
+                    to={`/para/${slug}`}
+                    className="card p-4 flex items-center gap-3 hover:border-accent transition-colors"
+                  >
+                    <div className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xl"
+                      style={{ background: "var(--sunken)" }}>
+                      {cond.emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-fg">{cond.labelEs}</div>
+                      <div className="h-1 rounded-full mt-1.5 overflow-hidden" style={{ background: "var(--sunken)" }}>
+                        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--accent)" }} />
+                      </div>
+                    </div>
+                    <div className="shrink-0 mono text-xs text-fg-muted tnum">{pct}%</div>
+                  </Link>
+                );
+              })}
+          </div>
+        </section>
+      )}
+
       {/* Similar */}
       {similarStrains.length > 0 && (
         <section className="mx-auto max-w-[1200px] px-6 py-14 border-t border-line">
           <div className="kicker mb-3">{t.strain.similarKicker}</div>
           <h2 className="display text-3xl md:text-4xl mb-8">{t.strain.similarTitle}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {similarStrains.map((s: any) => (
-              <StrainCard key={s._id} strain={s} />
+              <div key={s._id} className="flex flex-col gap-2">
+                <StrainCard strain={s} />
+                <div className="flex flex-wrap gap-1.5 px-1">
+                  {s.sharedEffects > 0 && (
+                    <span className="pill accent text-xs">
+                      {s.sharedEffects} efecto{s.sharedEffects !== 1 ? "s" : ""} comunes
+                    </span>
+                  )}
+                  {s.sharedFlavors > 0 && (
+                    <span className="pill text-xs">
+                      {s.sharedFlavors} sabor{s.sharedFlavors !== 1 ? "es" : ""} similares
+                    </span>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         </section>
       )}
+    </div>
+  );
+}
+
+function capitalizeFirst(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function GrowStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="card p-4">
+      <div className="kicker mb-1.5">{label}</div>
+      <div className="mono text-sm" style={{ color: "var(--accent)" }}>{value}</div>
     </div>
   );
 }

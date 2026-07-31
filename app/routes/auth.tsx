@@ -12,6 +12,7 @@ import { Icon } from "~/components/ui/icon";
 import { useT } from "~/lib/i18n-context";
 import { cn } from "~/lib/utils";
 import { buildMeta, SITE_URL } from "~/lib/seo";
+import { sendWelcomeEmail } from "~/lib/email.server";
 
 export function meta() {
   return buildMeta({
@@ -92,6 +93,8 @@ export async function action({ request }: Route.ActionArgs) {
       displayName: usernameCheck.value!,
     });
     const cookie = await createUserSession(String(user._id), request);
+    // Fire-and-forget — don't block registration if email fails
+    void sendWelcomeEmail(email, usernameCheck.value!);
     return redirect("/onboarding", {
       headers: { "Set-Cookie": cookie },
     });

@@ -44,6 +44,9 @@ export const pt: Dictionary = {
     directory: "Diretório",
     community: "Comunidade",
     editorial: "Magazine",
+    guides: "Guias",
+    greenMap: "Mapa Verde",
+    glossary: "Glossário",
     login: "Entrar",
     register: "Criar conta",
     start: "Começar",
@@ -87,7 +90,6 @@ export const pt: Dictionary = {
 
   landing: {
     heroKickerSuperchip: "Informa · Conecta · Cultiva",
-    heroKickerIssue: "N° 001 / Primavera '26 · Brasil",
     heroHeadlinePrefix: "A enciclopédia ",
     heroHeadlineAccent: "viva",
     heroHeadlineSuffix: " da cannabis.",
@@ -473,5 +475,56 @@ export const pt: Dictionary = {
       "A enciclopédia viva da cannabis. Avaliações com contexto real — método, momento, experiência.",
     savedStrainsTitle: "Variedades salvas — WeedHub",
     savedStrainsDescription: "Sua biblioteca de variedades salvas no WeedHub.",
+    homeTitle: "WeedHub — A enciclopédia viva da cannabis para a América Latina",
+    homeDescription:
+      "Informa, conecta, cultiva. Comunidade de avaliações contextuais de cannabis — método, momento, experiência.",
+    strainsTitle: "Diretório de variedades — WeedHub",
+    strainsDescription:
+      "Explore centenas de variedades com filtros por tipo, efeitos e terpeno dominante. Cada perfil é construído com avaliações reais da comunidade.",
+    editorialTitle: "Magazine — WeedHub",
+    editorialDescription:
+      "Ciência, cultura e crônica cannábica. Artigos editoriais sobre terpenos, landraces, microdosagem e mais.",
+    communityTitle: "Comunidade — WeedHub",
+    communityDescription:
+      "Vozes da cannabis em português. Leia as avaliações mais recentes e descubra perspectivas de São Paulo, Buenos Aires, Santiago e mais.",
+    terminosTitle: "Termos de uso — WeedHub",
+    terminosDescription:
+      "Termos que regem o uso do WeedHub: idade mínima, conteúdo gerado por usuários, moderação e responsabilidades.",
+    privacidadTitle: "Política de privacidade — WeedHub",
+    privacidadDescription:
+      "Quais dados o WeedHub coleta, como os usamos e como exercer seus direitos.",
+    guidesTitle: "Guias de cannabis — WeedHub",
+    guidesDescription:
+      "Educação sobre cannabis sem hype. Terpenos, canabinoides, tipos, métodos de consumo — baseados em ciência, escritos para humanos.",
+    guideDetailTitle: "{title} — WeedHub",
+    reviewTitle: "Avaliar {name} — WeedHub",
+    reviewDescription:
+      "Compartilhe sua experiência com {name} na comunidade WeedHub. Método, momento, efeitos e mais.",
   },
+
+  guides: {
+    kicker: "Guias",
+    headline: "Tudo o que você precisa saber sobre cannabis.",
+    body: "Recursos educativos sem hype. Baseados em ciência, escritos para humanos.",
+    readTime: "{min} de leitura",
+    backToGuides: "Ver todos os guias",
+    newsletterKicker: "Gostou deste guia?",
+    newsletterBody: "Receba um resumo mensal com os melhores guias e artigos do magazine.",
+  },
+  effects: {
+    Relaxed: "Relaxado", Euphoric: "Eufórico", Happy: "Feliz",
+    Creative: "Criativo", Energetic: "Energético", Focused: "Focado",
+    "Pain Relief": "Alívio da dor", "Anti-anxiety": "Ansiolítico",
+    Hungry: "Apetite", Sleepy: "Sono", Talkative: "Sociável",
+    Calm: "Calmo", Meditative: "Meditativo", Motivated: "Motivado",
+    Giggly: "Risadas", Uplifted: "Animado", Tingly: "Formigamento",
+    Wellbeing: "Bem-estar",
+  } as Record<string, string>,
+  flavors: {
+    Earthy: "Terroso", Citrus: "Cítrico", Sweet: "Doce", Pine: "Pinho",
+    Fruity: "Frutado", Diesel: "Diesel", Flowery: "Floral", Spicy: "Apimentado",
+    Skunk: "Skunk", Berry: "Frutas vermelhas", Tropical: "Tropical", Grape: "Uva",
+    Mint: "Menta", Cheese: "Queijo", Chocolate: "Chocolate", Coffee: "Café",
+    Vanilla: "Baunilha", Herbal: "Herbal",
+  } as Record<string, string>,
 };

@@ -54,6 +54,12 @@ import {
   Settings,
   Crown,
   TreePine,
+  Trash2,
+  Globe,
+  ExternalLink,
+  Calendar,
+  Scale,
+  CheckCircle2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -115,6 +121,12 @@ const registry = {
   settings: Settings,
   crown: Crown,
   tree: TreePine,
+  trash: Trash2,
+  globe: Globe,
+  externalLink: ExternalLink,
+  calendar: Calendar,
+  scale: Scale,
+  checkCircle: CheckCircle2,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof registry;

@@ -4,6 +4,8 @@ import type { Route } from "./+types/onboarding";
 import { requireUser } from "~/lib/auth.server";
 import { connectDB } from "~/lib/db.server";
 import { UserModel } from "~/models/user.server";
+import { EffectModel } from "~/models/effect.server";
+import { resolveLocale } from "~/lib/locale.server";
 import { POINTS } from "~/constants/gamification";
 import { ACQUISITION_SOURCES, isValidAcquisitionSource } from "~/constants/locations";
 import { Icon, type IconName } from "~/components/ui/icon";
@@ -15,7 +17,13 @@ export function meta() {
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request);
-  return null;
+  await connectDB();
+  const locale = await resolveLocale(request);
+  const labelKey = locale === "pt" ? "labelPt" : locale === "en" ? "labelEn" : "labelEs";
+  const allEffects = await EffectModel.find({ status: "approved" }).sort({ usageCount: -1 }).lean();
+  const makeList = (cat: "positive" | "negative") =>
+    allEffects.filter((e) => e.category === cat).map((e) => ({ key: e.key, label: (e as any)[labelKey] || e.labelEn }));
+  return { positiveEffects: makeList("positive"), negativeEffects: makeList("negative") };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -103,8 +111,6 @@ const METHODS: TileOpt[] = [
   { value: "unsure", title: "Aún no sé", desc: "Quiero explorar", icon: "question" },
 ];
 
-const POSITIVE = ["Relajado", "Feliz", "Creativo", "Euforia", "Enérgico", "Concentrado", "Hablador", "Risa"];
-const AVOID = ["Hambre", "Boca seca", "Ojos rojos", "Mareo", "Paranoia", "Ansiedad"];
 
 const STEP_LABELS = [
   "Perfil de consumidor",
@@ -114,7 +120,8 @@ const STEP_LABELS = [
   "Listo",
 ];
 
-export default function OnboardingPage() {
+export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
+  const { positiveEffects, negativeEffects } = loaderData;
   const t = useT();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -274,13 +281,13 @@ export default function OnboardingPage() {
                 </h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                {POSITIVE.map((p) => {
-                  const on = effects.includes("+" + p);
+                {positiveEffects.map((e) => {
+                  const on = effects.includes("+" + e.key);
                   return (
                     <button
-                      key={p}
+                      key={e.key}
                       type="button"
-                      onClick={() => toggleArr(effects, "+" + p, setEffects)}
+                      onClick={() => toggleArr(effects, "+" + e.key, setEffects)}
                       className="chip"
                       style={{
                         padding: "10px 16px",
@@ -290,7 +297,7 @@ export default function OnboardingPage() {
                         borderColor: on ? "var(--accent)" : "var(--line)",
                       }}
                     >
-                      {p}
+                      {e.label}
                       {on && <Icon name="check" size={12} strokeWidth={3} />}
                     </button>
                   );
@@ -306,13 +313,13 @@ export default function OnboardingPage() {
                 </h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                {AVOID.map((p) => {
-                  const on = effects.includes("-" + p);
+                {negativeEffects.map((e) => {
+                  const on = effects.includes("-" + e.key);
                   return (
                     <button
-                      key={p}
+                      key={e.key}
                       type="button"
-                      onClick={() => toggleArr(effects, "-" + p, setEffects)}
+                      onClick={() => toggleArr(effects, "-" + e.key, setEffects)}
                       className="chip"
                       style={{
                         padding: "10px 16px",
@@ -322,7 +329,7 @@ export default function OnboardingPage() {
                         borderColor: on ? "var(--warm)" : "var(--line)",
                       }}
                     >
-                      {p}
+                      {e.label}
                       {on && <Icon name="check" size={12} strokeWidth={3} />}
                     </button>
                   );

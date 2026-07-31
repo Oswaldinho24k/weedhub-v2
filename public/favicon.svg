@@ -1,0 +1,6 @@
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <rect width="32" height="32" rx="7" fill="oklch(16% 0.025 150)"/>
+  <text x="16" y="23" text-anchor="middle" font-size="19" font-family="Georgia, 'Times New Roman', serif" font-weight="500" letter-spacing="-0.03em">
+    <tspan fill="oklch(94% 0.015 85)">w</tspan><tspan fill="oklch(76% 0.17 145)" font-style="italic">h</tspan>
+  </text>
+</svg>

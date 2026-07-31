@@ -1,4 +1,4 @@
-import { Form, Link, useActionData, useNavigation, useSubmit } from "react-router";
+import { Form, Link, useActionData, useNavigation, useSearchParams, useSubmit } from "react-router";
 import { useRef, useState } from "react";
 import type { Route } from "./+types/admin.strains";
 import { connectDB } from "~/lib/db.server";
@@ -9,12 +9,18 @@ import { MAX_IMAGE_MB } from "~/lib/upload-config";
 import { Dialog, DialogHeader, DialogFooter } from "~/components/ui/dialog";
 import { Icon } from "~/components/ui/icon";
 
-export async function loader() {
+export async function loader({ request }: Route.LoaderArgs) {
   await connectDB();
-  const strains = await StrainModel.find()
-    .sort({ name: 1 })
-    .select("name slug type reviewCount isArchived imageUrl colorHint")
-    .lean();
+  const url = new URL(request.url);
+  const editId = url.searchParams.get("editId");
+
+  const [strains, editStrain] = await Promise.all([
+    StrainModel.find()
+      .sort({ name: 1 })
+      .select("name slug type reviewCount isArchived imageUrl colorHint")
+      .lean(),
+    editId ? StrainModel.findById(editId).lean() : Promise.resolve(null),
+  ]);
 
   return {
     strains: strains.map((s) => ({
@@ -27,6 +33,45 @@ export async function loader() {
       imageUrl: s.imageUrl,
       colorHint: s.colorHint,
     })),
+    editStrain: editStrain
+      ? {
+          _id: String(editStrain._id),
+          name: editStrain.name,
+          slug: editStrain.slug,
+          type: editStrain.type,
+          description: editStrain.description ?? "",
+          descriptionEs: editStrain.descriptionEs ?? "",
+          descriptions: editStrain.descriptions ?? {},
+          aliases: (editStrain.aliases ?? []).join("\n"),
+          lineage: editStrain.lineage ?? "",
+          colorHint: editStrain.colorHint ?? "",
+          dominantTerpene: editStrain.dominantTerpene ?? "",
+          difficulty: editStrain.difficulty ?? "",
+          effects: (editStrain.effects ?? []).join(", "),
+          flavors: (editStrain.flavors ?? []).join(", "),
+          terpenes: (editStrain.terpenes ?? [])
+            .map((t) => `${t.name}, ${t.percentage}`)
+            .join("\n"),
+          thcMin: editStrain.cannabinoidProfile?.thc?.min ?? 0,
+          thcMax: editStrain.cannabinoidProfile?.thc?.max ?? 0,
+          cbdMin: editStrain.cannabinoidProfile?.cbd?.min ?? 0,
+          cbdMax: editStrain.cannabinoidProfile?.cbd?.max ?? 0,
+          cbg: editStrain.cannabinoidProfile?.cbg ?? "",
+          cbn: editStrain.cannabinoidProfile?.cbn ?? "",
+          parent1: editStrain.genetics?.parent1 ?? "",
+          parent2: editStrain.genetics?.parent2 ?? "",
+          breeder: editStrain.genetics?.breeder ?? "",
+          growFlowerMin: editStrain.grow?.floweringWeeks?.min ?? "",
+          growFlowerMax: editStrain.grow?.floweringWeeks?.max ?? "",
+          growYieldIndoor: editStrain.grow?.yieldIndoor ?? "",
+          growYieldOutdoor: editStrain.grow?.yieldOutdoor ?? "",
+          growHeightMin: editStrain.grow?.heightCm?.min ?? "",
+          growHeightMax: editStrain.grow?.heightCm?.max ?? "",
+          growClimate: editStrain.grow?.climate ?? "",
+          growIsAutoflowering: editStrain.grow?.isAutoflowering ?? false,
+          growIsFeminized: editStrain.grow?.isFeminized ?? false,
+        }
+      : null,
   };
 }
 
@@ -138,6 +183,99 @@ export async function action({ request }: Route.ActionArgs) {
     return { success: true, message: "Cepa restaurada" };
   }
 
+  if (intent === "edit") {
+    const strainId = String(formData.get("strainId"));
+    const name = String(formData.get("name") || "").trim();
+    const type = String(formData.get("type") || "hybrid");
+    const description = String(formData.get("description") || "").trim();
+    const aliases = String(formData.get("aliases") || "")
+      .split(/[,\n]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const aliasSlugs = aliases.map((a) =>
+      a
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "")
+    );
+    const effects = String(formData.get("effects") || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const flavors = String(formData.get("flavors") || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const terpenes = String(formData.get("terpenes") || "")
+      .split("\n")
+      .map((line) => {
+        const [tname, pct] = line.split(",").map((s) => s.trim());
+        return tname ? { name: tname, percentage: parseFloat(pct) || 0 } : null;
+      })
+      .filter(Boolean) as { name: string; percentage: number }[];
+
+    const $set: Record<string, unknown> = {
+      name: name || undefined,
+      type,
+      description: description || undefined,
+      aliases,
+      aliasSlugs,
+      effects,
+      flavors,
+      terpenes,
+      lineage: String(formData.get("lineage") || "").trim() || undefined,
+      colorHint: String(formData.get("colorHint") || "").trim() || undefined,
+      dominantTerpene: String(formData.get("dominantTerpene") || "").trim() || undefined,
+      difficulty: String(formData.get("difficulty") || "") || undefined,
+      "descriptions.es": String(formData.get("descriptionEs") || "").trim() || undefined,
+      "descriptions.en": String(formData.get("descriptionEn") || "").trim() || undefined,
+      "descriptions.pt": String(formData.get("descriptionPt") || "").trim() || undefined,
+      "genetics.parent1": String(formData.get("parent1") || "").trim() || undefined,
+      "genetics.parent2": String(formData.get("parent2") || "").trim() || undefined,
+      "genetics.breeder": String(formData.get("breeder") || "").trim() || undefined,
+      "cannabinoidProfile.thc": {
+        min: parseFloat(String(formData.get("thcMin") || "0")),
+        max: parseFloat(String(formData.get("thcMax") || "0")),
+      },
+      "cannabinoidProfile.cbd": {
+        min: parseFloat(String(formData.get("cbdMin") || "0")),
+        max: parseFloat(String(formData.get("cbdMax") || "0")),
+      },
+    };
+    const cbg = parseFloat(String(formData.get("cbg") || ""));
+    if (!isNaN(cbg)) $set["cannabinoidProfile.cbg"] = cbg;
+    const cbn = parseFloat(String(formData.get("cbn") || ""));
+    if (!isNaN(cbn)) $set["cannabinoidProfile.cbn"] = cbn;
+
+    // Grow info
+    const growFlowerMin = parseFloat(String(formData.get("growFlowerMin") || ""));
+    const growFlowerMax = parseFloat(String(formData.get("growFlowerMax") || ""));
+    const growYieldIndoor = String(formData.get("growYieldIndoor") || "").trim();
+    const growYieldOutdoor = String(formData.get("growYieldOutdoor") || "").trim();
+    const growHeightMin = parseFloat(String(formData.get("growHeightMin") || ""));
+    const growHeightMax = parseFloat(String(formData.get("growHeightMax") || ""));
+    const growClimate = String(formData.get("growClimate") || "").trim();
+    const growIsAutoflowering = formData.getAll("growIsAutoflowering").includes("true");
+    const growIsFeminized = formData.getAll("growIsFeminized").includes("true");
+    if (!isNaN(growFlowerMin) && !isNaN(growFlowerMax))
+      $set["grow.floweringWeeks"] = { min: growFlowerMin, max: growFlowerMax };
+    if (growYieldIndoor) $set["grow.yieldIndoor"] = growYieldIndoor;
+    if (growYieldOutdoor) $set["grow.yieldOutdoor"] = growYieldOutdoor;
+    if (!isNaN(growHeightMin) && !isNaN(growHeightMax))
+      $set["grow.heightCm"] = { min: growHeightMin, max: growHeightMax };
+    if (growClimate) $set["grow.climate"] = growClimate;
+    $set["grow.isAutoflowering"] = growIsAutoflowering;
+    $set["grow.isFeminized"] = growIsFeminized;
+
+    // Remove undefined values
+    Object.keys($set).forEach((k) => $set[k] === undefined && delete $set[k]);
+
+    await StrainModel.findByIdAndUpdate(strainId, { $set });
+    return { success: true, message: "Cepa actualizada" };
+  }
+
   return { error: "Acción no válida" };
 }
 
@@ -153,10 +291,19 @@ const TYPE_PILL: Record<string, string> = {
 };
 
 export default function AdminStrainsPage({ loaderData }: Route.ComponentProps) {
-  const { strains } = loaderData;
+  const { strains, editStrain } = loaderData;
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const [showCreate, setShowCreate] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const showEdit = !!editStrain;
+
+  function openEdit(strainId: string) {
+    setSearchParams({ editId: strainId });
+  }
+  function closeEdit() {
+    setSearchParams({});
+  }
 
   return (
     <div className="space-y-6">
@@ -212,17 +359,26 @@ export default function AdminStrainsPage({ loaderData }: Route.ComponentProps) {
                 </div>
               </div>
             </div>
-            <Form method="post" className="shrink-0">
-              <input type="hidden" name="strainId" value={strain._id} />
+            <div className="flex items-center gap-2 shrink-0">
               <button
-                type="submit"
-                name="intent"
-                value={strain.isArchived ? "unarchive" : "archive"}
+                type="button"
+                onClick={() => openEdit(strain._id)}
                 className="btn btn-ghost !py-1.5 !px-3 text-xs"
               >
-                {strain.isArchived ? "Restaurar" : "Archivar"}
+                Editar
               </button>
-            </Form>
+              <Form method="post">
+                <input type="hidden" name="strainId" value={strain._id} />
+                <button
+                  type="submit"
+                  name="intent"
+                  value={strain.isArchived ? "unarchive" : "archive"}
+                  className="btn btn-ghost !py-1.5 !px-3 text-xs"
+                >
+                  {strain.isArchived ? "Restaurar" : "Archivar"}
+                </button>
+              </Form>
+            </div>
           </div>
         ))}
       </div>
@@ -325,6 +481,14 @@ export default function AdminStrainsPage({ loaderData }: Route.ComponentProps) {
         </Form>
       </Dialog>
 
+      {showEdit && editStrain && (
+        <EditStrainDialog
+          strain={editStrain as EditStrainData}
+          onClose={closeEdit}
+          navigation={navigation}
+        />
+      )}
+
       <style>{`
         .admin-input {
           display: block;
@@ -342,10 +506,251 @@ export default function AdminStrainsPage({ loaderData }: Route.ComponentProps) {
           border-color: var(--accent);
           box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 20%, transparent);
         }
+        .edit-section { border-top: 1px solid var(--line); padding-top: 1rem; margin-top: 1rem; }
+        .edit-section:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
       `}</style>
     </div>
   );
 }
+
+type EditStrainData = {
+  _id: string; name: string; slug: string; type: string;
+  description: string; descriptionEs: string;
+  descriptions: { es?: string; en?: string; pt?: string };
+  aliases: string; lineage: string; colorHint: string;
+  dominantTerpene: string; difficulty: string;
+  effects: string; flavors: string; terpenes: string;
+  thcMin: number; thcMax: number; cbdMin: number; cbdMax: number;
+  cbg: number | ""; cbn: number | "";
+  parent1: string; parent2: string; breeder: string;
+  growFlowerMin: number | ""; growFlowerMax: number | "";
+  growYieldIndoor: string; growYieldOutdoor: string;
+  growHeightMin: number | ""; growHeightMax: number | "";
+  growClimate: string;
+  growIsAutoflowering: boolean; growIsFeminized: boolean;
+};
+
+function EditStrainDialog({
+  strain,
+  onClose,
+  navigation,
+}: {
+  strain: EditStrainData;
+  onClose: () => void;
+  navigation: ReturnType<typeof useNavigation>;
+}) {
+  return (
+    <Dialog open onClose={onClose} className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <h3 className="display text-xl">Editar: {strain.name}</h3>
+        <p className="text-xs text-fg-dim mt-1 mono">{strain.slug}</p>
+      </DialogHeader>
+      <Form
+        method="post"
+        onSubmit={onClose}
+        className="space-y-0"
+      >
+        <input type="hidden" name="intent" value="edit" />
+        <input type="hidden" name="strainId" value={strain._id} />
+
+        {/* Básico */}
+        <div className="edit-section space-y-4">
+          <div className="kicker">Básico</div>
+          <div className="grid grid-cols-2 gap-4">
+            <AdminField label="Nombre">
+              <input name="name" defaultValue={strain.name} required className="admin-input" />
+            </AdminField>
+            <AdminField label="Tipo">
+              <select name="type" defaultValue={strain.type} className="admin-input">
+                <option value="sativa">Sativa</option>
+                <option value="indica">Indica</option>
+                <option value="hybrid">Híbrida</option>
+              </select>
+            </AdminField>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <AdminField label="Dificultad">
+              <select name="difficulty" defaultValue={strain.difficulty} className="admin-input">
+                <option value="">—</option>
+                <option value="Baja">Baja</option>
+                <option value="Moderada">Moderada</option>
+                <option value="Alta">Alta</option>
+              </select>
+            </AdminField>
+            <AdminField label="Color hint">
+              <input name="colorHint" defaultValue={strain.colorHint} placeholder="#3a7d44" className="admin-input" />
+            </AdminField>
+            <AdminField label="Terpeno dominante">
+              <input name="dominantTerpene" defaultValue={strain.dominantTerpene} className="admin-input" />
+            </AdminField>
+          </div>
+          <AdminField label="Aliases (uno por línea o coma)">
+            <textarea name="aliases" defaultValue={strain.aliases} rows={2} className="admin-input !h-auto py-2" />
+          </AdminField>
+        </div>
+
+        {/* Descripción */}
+        <div className="edit-section space-y-3">
+          <div className="kicker">Descripción</div>
+          <AdminField label="Principal (ES)">
+            <textarea name="description" defaultValue={strain.description} rows={3} className="admin-input !h-auto py-3" />
+          </AdminField>
+          <div className="grid grid-cols-3 gap-3">
+            <AdminField label="Descripción ES (i18n)">
+              <textarea name="descriptionEs" defaultValue={strain.descriptions?.es ?? strain.descriptionEs} rows={3} className="admin-input !h-auto py-2 text-xs" />
+            </AdminField>
+            <AdminField label="Descripción EN">
+              <textarea name="descriptionEn" defaultValue={strain.descriptions?.en} rows={3} className="admin-input !h-auto py-2 text-xs" />
+            </AdminField>
+            <AdminField label="Descripción PT">
+              <textarea name="descriptionPt" defaultValue={strain.descriptions?.pt} rows={3} className="admin-input !h-auto py-2 text-xs" />
+            </AdminField>
+          </div>
+        </div>
+
+        {/* Cannabinoides */}
+        <div className="edit-section space-y-3">
+          <div className="kicker">Cannabinoides</div>
+          <div className="grid grid-cols-4 gap-3">
+            <AdminField label="THC min %">
+              <input name="thcMin" type="number" step="0.1" defaultValue={strain.thcMin} className="admin-input" />
+            </AdminField>
+            <AdminField label="THC max %">
+              <input name="thcMax" type="number" step="0.1" defaultValue={strain.thcMax} className="admin-input" />
+            </AdminField>
+            <AdminField label="CBD min %">
+              <input name="cbdMin" type="number" step="0.1" defaultValue={strain.cbdMin} className="admin-input" />
+            </AdminField>
+            <AdminField label="CBD max %">
+              <input name="cbdMax" type="number" step="0.1" defaultValue={strain.cbdMax} className="admin-input" />
+            </AdminField>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <AdminField label="CBG %">
+              <input name="cbg" type="number" step="0.1" defaultValue={strain.cbg !== "" ? strain.cbg : ""} className="admin-input" />
+            </AdminField>
+            <AdminField label="CBN %">
+              <input name="cbn" type="number" step="0.1" defaultValue={strain.cbn !== "" ? strain.cbn : ""} className="admin-input" />
+            </AdminField>
+          </div>
+        </div>
+
+        {/* Perfil sensorial */}
+        <div className="edit-section space-y-3">
+          <div className="kicker">Perfil sensorial</div>
+          <AdminField label="Efectos (separados por coma)">
+            <input name="effects" defaultValue={strain.effects} placeholder="Relajación, Euforia, Creatividad" className="admin-input" />
+          </AdminField>
+          <AdminField label="Sabores (separados por coma)">
+            <input name="flavors" defaultValue={strain.flavors} placeholder="Dulce, Cítrico, Terroso" className="admin-input" />
+          </AdminField>
+          <AdminField label="Terpenos (uno por línea: Nombre, porcentaje)">
+            <textarea
+              name="terpenes"
+              defaultValue={strain.terpenes}
+              rows={4}
+              placeholder={"Mirceno, 1.2\nLinaool, 0.8\nLimoneno, 0.5"}
+              className="admin-input !h-auto py-2 font-mono text-xs"
+            />
+          </AdminField>
+        </div>
+
+        {/* Genética */}
+        <div className="edit-section space-y-3">
+          <div className="kicker">Genética y origen</div>
+          <AdminField label="Linaje (texto libre)">
+            <input name="lineage" defaultValue={strain.lineage} placeholder="OG Kush × Durban Poison" className="admin-input" />
+          </AdminField>
+          <div className="grid grid-cols-3 gap-3">
+            <AdminField label="Padre 1">
+              <input name="parent1" defaultValue={strain.parent1} className="admin-input" />
+            </AdminField>
+            <AdminField label="Padre 2">
+              <input name="parent2" defaultValue={strain.parent2} className="admin-input" />
+            </AdminField>
+            <AdminField label="Breeder">
+              <input name="breeder" defaultValue={strain.breeder} className="admin-input" />
+            </AdminField>
+          </div>
+        </div>
+
+        {/* Cultivo */}
+        <div className="edit-section space-y-3">
+          <div className="kicker">Cultivo</div>
+          <div className="grid grid-cols-2 gap-3">
+            <AdminField label="Floración min (sem)">
+              <input name="growFlowerMin" type="number" step="1" defaultValue={strain.growFlowerMin !== "" ? strain.growFlowerMin : ""} placeholder="8" className="admin-input" />
+            </AdminField>
+            <AdminField label="Floración max (sem)">
+              <input name="growFlowerMax" type="number" step="1" defaultValue={strain.growFlowerMax !== "" ? strain.growFlowerMax : ""} placeholder="10" className="admin-input" />
+            </AdminField>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <AdminField label="Rendimiento indoor">
+              <input name="growYieldIndoor" defaultValue={strain.growYieldIndoor} placeholder="400-500 g/m²" className="admin-input" />
+            </AdminField>
+            <AdminField label="Rendimiento outdoor">
+              <input name="growYieldOutdoor" defaultValue={strain.growYieldOutdoor} placeholder="600 g/planta" className="admin-input" />
+            </AdminField>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <AdminField label="Altura min (cm)">
+              <input name="growHeightMin" type="number" defaultValue={strain.growHeightMin !== "" ? strain.growHeightMin : ""} placeholder="80" className="admin-input" />
+            </AdminField>
+            <AdminField label="Altura max (cm)">
+              <input name="growHeightMax" type="number" defaultValue={strain.growHeightMax !== "" ? strain.growHeightMax : ""} placeholder="120" className="admin-input" />
+            </AdminField>
+            <AdminField label="Clima">
+              <select name="growClimate" defaultValue={strain.growClimate} className="admin-input">
+                <option value="">—</option>
+                <option value="tropical">Tropical</option>
+                <option value="mediterráneo">Mediterráneo</option>
+                <option value="continental">Continental</option>
+                <option value="frío">Frío</option>
+              </select>
+            </AdminField>
+          </div>
+          <div className="flex gap-6">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="hidden" name="growIsAutoflowering" value="false" />
+              <input type="checkbox" name="growIsAutoflowering" value="true" defaultChecked={strain.growIsAutoflowering}
+                onChange={(e) => {
+                  const hidden = e.currentTarget.previousElementSibling as HTMLInputElement;
+                  if (hidden) hidden.disabled = e.currentTarget.checked;
+                }}
+                className="rounded" />
+              Autofloreciente
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="hidden" name="growIsFeminized" value="false" />
+              <input type="checkbox" name="growIsFeminized" value="true" defaultChecked={strain.growIsFeminized}
+                onChange={(e) => {
+                  const hidden = e.currentTarget.previousElementSibling as HTMLInputElement;
+                  if (hidden) hidden.disabled = e.currentTarget.checked;
+                }}
+                className="rounded" />
+              Feminizada
+            </label>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={navigation.state === "submitting"}
+          >
+            Guardar cambios
+          </button>
+        </DialogFooter>
+      </Form>
+    </Dialog>
+  );
+}
+
 
 function StrainImageUpload({
   strainId,

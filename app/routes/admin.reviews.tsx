@@ -1,4 +1,4 @@
-import { Form, Link, useActionData } from "react-router";
+import { Form, Link, useActionData, useSearchParams } from "react-router";
 import type { Route } from "./+types/admin.reviews";
 import { connectDB } from "~/lib/db.server";
 import { ReviewModel } from "~/models/review.server";
@@ -7,18 +7,30 @@ import { Icon } from "~/components/ui/icon";
 import { RatingStars } from "~/components/composite/rating-stars";
 import { formatDate } from "~/lib/utils";
 
-export async function loader() {
+export async function loader({ request }: Route.LoaderArgs) {
   await connectDB();
-  const reviews = await ReviewModel.find()
+  const url = new URL(request.url);
+  const entityType = url.searchParams.get("entityType") || "";
+  const status = url.searchParams.get("status") || "";
+
+  const filter: Record<string, unknown> = {};
+  if (entityType && ["strain", "product", "brand", "dispensary"].includes(entityType))
+    filter.entityType = entityType;
+  if (status && ["published", "flagged", "removed"].includes(status))
+    filter.status = status;
+
+  const reviews = await ReviewModel.find(filter)
     .sort({ createdAt: -1 })
-    .limit(50)
+    .limit(100)
     .populate("userId", "username anonymousHandle email")
     .populate("strainId", "name slug")
     .lean();
 
   return {
+    filters: { entityType, status },
     reviews: reviews.map((r) => ({
       _id: String(r._id),
+      entityType: r.entityType,
       ratings: r.ratings,
       comment: r.comment,
       status: r.status,
@@ -43,9 +55,18 @@ export async function loader() {
 export async function action({ request }: Route.ActionArgs) {
   await connectDB();
   const formData = await request.formData();
+  const intent = String(formData.get("intent") || "status");
   const reviewId = String(formData.get("reviewId"));
-  const newStatus = String(formData.get("status"));
 
+  if (intent === "delete") {
+    const review = await ReviewModel.findByIdAndDelete(reviewId);
+    if (!review) return { error: "Reseña no encontrada" };
+    await recalculateStrainRatings(String(review.strainId));
+    await updateUserStats(String(review.userId));
+    return { success: true, message: "Reseña eliminada permanentemente" };
+  }
+
+  const newStatus = String(formData.get("status"));
   const review = await ReviewModel.findById(reviewId);
   if (!review) return { error: "Reseña no encontrada" };
 
@@ -70,12 +91,46 @@ const STATUS_PILL: Record<string, string> = {
 };
 
 export default function AdminReviewsPage({ loaderData }: Route.ComponentProps) {
-  const { reviews } = loaderData;
+  const { reviews, filters } = loaderData;
   const actionData = useActionData<typeof action>();
+  const [, setSearchParams] = useSearchParams();
+
+  function setFilter(key: string, value: string) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) next.set(key, value); else next.delete(key);
+      return next;
+    });
+  }
 
   return (
     <div className="space-y-6">
-      <h2 className="display text-2xl">Reseñas ({reviews.length})</h2>
+      <div className="flex items-center gap-4 flex-wrap">
+        <h2 className="display text-2xl">Reseñas ({reviews.length})</h2>
+        <div className="flex gap-2 ml-auto flex-wrap">
+          <select
+            value={filters.entityType}
+            onChange={(e) => setFilter("entityType", e.target.value)}
+            className="text-xs bg-raised border border-line rounded-md px-2 py-1.5 focus:outline-none focus:border-accent"
+          >
+            <option value="">Todos los tipos</option>
+            <option value="strain">Cepas</option>
+            <option value="product">Productos</option>
+            <option value="brand">Marcas</option>
+            <option value="dispensary">Dispensarios</option>
+          </select>
+          <select
+            value={filters.status}
+            onChange={(e) => setFilter("status", e.target.value)}
+            className="text-xs bg-raised border border-line rounded-md px-2 py-1.5 focus:outline-none focus:border-accent"
+          >
+            <option value="">Todos los estados</option>
+            <option value="published">Publicadas</option>
+            <option value="flagged">Reportadas</option>
+            <option value="removed">Eliminadas</option>
+          </select>
+        </div>
+      </div>
 
       {actionData?.message && (
         <div
@@ -129,7 +184,7 @@ export default function AdminReviewsPage({ loaderData }: Route.ComponentProps) {
                 )}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {review.status !== "published" && (
                   <ModBtn reviewId={review._id} status="published" icon="check" label="Publicar" />
                 )}
@@ -139,6 +194,7 @@ export default function AdminReviewsPage({ loaderData }: Route.ComponentProps) {
                 {review.status !== "removed" && (
                   <ModBtn reviewId={review._id} status="removed" icon="x" label="Eliminar" tone="warm" />
                 )}
+                <DeleteBtn reviewId={review._id} />
               </div>
             </div>
           </article>
@@ -163,6 +219,7 @@ function ModBtn({
 }) {
   return (
     <Form method="post">
+      <input type="hidden" name="intent" value="status" />
       <input type="hidden" name="reviewId" value={reviewId} />
       <input type="hidden" name="status" value={status} />
       <button
@@ -173,6 +230,30 @@ function ModBtn({
       >
         <Icon name={icon} size={14} />
         {label}
+      </button>
+    </Form>
+  );
+}
+
+function DeleteBtn({ reviewId }: { reviewId: string }) {
+  return (
+    <Form
+      method="post"
+      onSubmit={(e) => {
+        if (!confirm("¿Eliminar permanentemente esta reseña? Esta acción no se puede deshacer."))
+          e.preventDefault();
+      }}
+    >
+      <input type="hidden" name="intent" value="delete" />
+      <input type="hidden" name="reviewId" value={reviewId} />
+      <button
+        type="submit"
+        className="btn btn-ghost !py-1.5 !px-3 text-xs"
+        style={{ color: "var(--warm)" }}
+        aria-label="Borrar permanente"
+        title="Borrar permanente"
+      >
+        <Icon name="trash" size={14} />
       </button>
     </Form>
   );

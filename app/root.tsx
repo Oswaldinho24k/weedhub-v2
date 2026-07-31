@@ -29,10 +29,10 @@ export const links: Route.LinksFunction = () => [
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,30..100,0..1;1,9..144,300..900,30..100,0..1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:ital,wght@0,400..700;1,400..700&display=swap",
   },
-  { rel: "icon", type: "image/svg+xml", href: "/brand.svg" },
+  { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
   { rel: "icon", type: "image/x-icon", href: "/favicon.ico", sizes: "any" },
   { rel: "apple-touch-icon", href: "/brand.svg" },
-  { rel: "mask-icon", href: "/brand.svg", color: "oklch(76% 0.17 145)" },
+  { rel: "mask-icon", href: "/favicon.svg", color: "oklch(76% 0.17 145)" },
 ];
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -77,7 +77,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           name="theme-color"
           content={theme === "light" ? "oklch(96% 0.012 95)" : "oklch(16% 0.025 150)"}
         />
-        <Meta />
+<Meta />
         <Links />
       </head>
       <body className="min-h-screen flex flex-col">

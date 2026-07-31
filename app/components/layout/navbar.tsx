@@ -29,6 +29,9 @@ export function Navbar({ user, theme }: NavbarProps) {
 
   const navLinks = [
     { to: href("/strains"), label: t.nav.directory },
+    { to: href("/guias"), label: t.nav.guides },
+    { to: href("/glosario"), label: t.nav.glossary },
+    { to: "/mapa-verde", label: t.nav.greenMap },
     { to: href("/community"), label: t.nav.community },
     { to: href("/editorial"), label: t.nav.editorial },
   ];

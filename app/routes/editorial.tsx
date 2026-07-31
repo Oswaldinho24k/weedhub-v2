@@ -1,14 +1,26 @@
+import type { Route } from "./+types/editorial";
 import { getFeaturedArticles } from "~/content/articles";
 import { useT, useLocale } from "~/lib/i18n-context";
 import { buildMeta, SITE_URL } from "~/lib/seo";
+import { resolveLocale } from "~/lib/locale.server";
+import { getDictionary } from "~/content/locales";
 
-export function meta() {
+export function meta({ data }: Route.MetaArgs) {
+  const locale = data?.locale || "es";
+  const dict = getDictionary(locale);
+  const prefix = locale !== "es" ? `/${locale}` : "";
   return buildMeta({
-    title: "Magazine — WeedHub",
-    description:
-      "Ciencia, cultura y crónica cannábica. Artículos editoriales sobre terpenos, landraces, microdosis y más.",
-    url: `${SITE_URL}/editorial`,
+    title: dict.meta.editorialTitle,
+    description: dict.meta.editorialDescription,
+    url: `${SITE_URL}${prefix}/editorial`,
+    canonicalPath: "/editorial",
+    locale,
   });
+}
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const locale = await resolveLocale(request);
+  return { locale };
 }
 
 export default function EditorialPage() {

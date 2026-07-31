@@ -1,7 +1,10 @@
 import { useOutletContext } from "react-router";
+import type { Route } from "./+types/terminos";
 import { getTermsSections, LEGAL_COMPANY } from "~/content/legal";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 import { LegalPage } from "~/components/layout/legal-page";
+import { resolveLocale } from "~/lib/locale.server";
+import { getDictionary } from "~/content/locales";
 
 const TITLE = {
   es: "Términos de uso",
@@ -10,13 +13,22 @@ const TITLE = {
 };
 const KICKER = { es: "Legal", pt: "Legal", en: "Legal" };
 
-export function meta() {
+export function meta({ data }: Route.MetaArgs) {
+  const locale = data?.locale || "es";
+  const dict = getDictionary(locale);
+  const prefix = locale !== "es" ? `/${locale}` : "";
   return buildMeta({
-    title: "Términos de uso — WeedHub",
-    description:
-      "Términos que rigen el uso de WeedHub: edad mínima, contenido generado por usuarios, moderación y responsabilidades.",
-    url: `${SITE_URL}/terminos`,
+    title: dict.meta.terminosTitle,
+    description: dict.meta.terminosDescription,
+    url: `${SITE_URL}${prefix}/terminos`,
+    canonicalPath: "/terminos",
+    locale,
   });
+}
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const locale = await resolveLocale(request);
+  return { locale };
 }
 
 export default function TerminosPage() {

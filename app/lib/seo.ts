@@ -25,6 +25,7 @@ interface BuildMetaOptions {
   image?: string;
   type?: string;
   locale?: string | null;
+  canonicalPath?: string;
 }
 
 export function buildMeta({
@@ -34,6 +35,7 @@ export function buildMeta({
   image,
   type = "website",
   locale,
+  canonicalPath,
 }: BuildMetaOptions) {
   const ogImage = image || DEFAULT_OG_IMAGE;
   const isDefault = ogImage === DEFAULT_OG_IMAGE;
@@ -65,5 +67,13 @@ export function buildMeta({
     { name: "twitter:description", content: description },
     { name: "twitter:image", content: ogImage },
     { tagName: "link", rel: "canonical", href: url },
+    ...(canonicalPath
+      ? [
+          { tagName: "link", rel: "alternate", hrefLang: "es", href: `${SITE_URL}${canonicalPath}` },
+          { tagName: "link", rel: "alternate", hrefLang: "pt-BR", href: `${SITE_URL}/pt${canonicalPath}` },
+          { tagName: "link", rel: "alternate", hrefLang: "en", href: `${SITE_URL}/en${canonicalPath}` },
+          { tagName: "link", rel: "alternate", hrefLang: "x-default", href: `${SITE_URL}${canonicalPath}` },
+        ]
+      : []),
   ];
 }

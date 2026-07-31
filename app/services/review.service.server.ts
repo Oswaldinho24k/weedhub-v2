@@ -1,7 +1,9 @@
 import { connectDB } from "~/lib/db.server";
-import { ReviewModel } from "~/models/review.server";
+import { ReviewModel, type ReviewEntityType } from "~/models/review.server";
 import { StrainModel } from "~/models/strain.server";
+import { QuickRatingModel } from "~/models/quick-rating.server";
 import { UserModel } from "~/models/user.server";
+import mongoose from "mongoose";
 
 export async function recalculateStrainRatings(strainId: string) {
   await connectDB();
@@ -41,20 +43,36 @@ export async function recalculateStrainRatings(strainId: string) {
     }
   }
 
+  // Merge quick ratings into overall avg (weight 0.5× vs full review 1×)
+  const quickRatings = await QuickRatingModel.find({ strainId }, { rating: 1 }).lean();
+  const qSum = quickRatings.reduce((s, q) => s + q.rating, 0);
+  const qCount = quickRatings.length;
+
   if (result.length > 0) {
     const r = result[0];
+    const totalWeight = r.count * 1.0 + qCount * 0.5;
+    const weightedOverall = totalWeight > 0
+      ? Math.round(((r.avgOverall * r.count + qSum * 0.5) / totalWeight) * 10) / 10
+      : 0;
     await StrainModel.findByIdAndUpdate(strainId, {
       averageRatings: {
-        overall: Math.round(r.avgOverall * 10) / 10,
+        overall: weightedOverall,
         potency: Math.round(r.avgPotency * 10) / 10,
         flavor: Math.round(r.avgFlavor * 10) / 10,
         aroma: Math.round(r.avgAroma * 10) / 10,
         appearance: Math.round(r.avgAppearance * 10) / 10,
         effects: Math.round(r.avgEffects * 10) / 10,
       },
-      reviewCount: r.count,
+      reviewCount: r.count + qCount,
       reviewDistribution: distribution,
       lastReviewedAt: new Date(),
+    });
+  } else if (qCount > 0) {
+    const avg = Math.round((qSum / qCount) * 10) / 10;
+    await StrainModel.findByIdAndUpdate(strainId, {
+      averageRatings: { overall: avg, potency: 0, flavor: 0, aroma: 0, appearance: 0, effects: 0 },
+      reviewCount: qCount,
+      reviewDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
     });
   } else {
     await StrainModel.findByIdAndUpdate(strainId, {
@@ -62,6 +80,72 @@ export async function recalculateStrainRatings(strainId: string) {
       reviewCount: 0,
       reviewDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
     });
+  }
+
+  // Recalculate conditionVotes from all published reviews
+  const conditionReviews = await ReviewModel.find(
+    { strainId, status: "published", conditionsHelped: { $exists: true, $not: { $size: 0 } } },
+    { conditionsHelped: 1 }
+  ).lean();
+  const votes: Record<string, number> = {};
+  for (const rev of conditionReviews) {
+    for (const c of rev.conditionsHelped ?? []) {
+      votes[c] = (votes[c] ?? 0) + 1;
+    }
+  }
+  await StrainModel.findByIdAndUpdate(strainId, { conditionVotes: votes });
+}
+
+// Map entity type to its Mongoose model name
+const ENTITY_MODEL_MAP: Record<ReviewEntityType, string> = {
+  strain: "Strain",
+  product: "Product",
+  brand: "Brand",
+  dispensary: "Dispensary",
+};
+
+export async function recalculateEntityRatings(entityType: ReviewEntityType, entityId: string) {
+  await connectDB();
+
+  const entityObjectId = new mongoose.Types.ObjectId(entityId);
+
+  const result = await ReviewModel.aggregate([
+    { $match: { entityType, entityId: entityObjectId, status: "published" } },
+    {
+      $group: {
+        _id: null,
+        count: { $sum: 1 },
+        avgOverall: { $avg: "$ratings.overall" },
+      },
+    },
+  ]);
+
+  const distResult = await ReviewModel.aggregate([
+    { $match: { entityType, entityId: entityObjectId, status: "published" } },
+    { $group: { _id: "$ratings.overall", count: { $sum: 1 } } },
+  ]);
+
+  const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (const d of distResult) {
+    const rounded = Math.round(d._id);
+    if (rounded >= 1 && rounded <= 5) distribution[rounded] = d.count;
+  }
+
+  const modelName = ENTITY_MODEL_MAP[entityType];
+  const Model = mongoose.model(modelName);
+
+  if (result.length > 0) {
+    const r = result[0];
+    const update: Record<string, unknown> = {
+      averageRating: Math.round(r.avgOverall * 10) / 10,
+      reviewCount: r.count,
+    };
+    if (entityType === "product") update.reviewDistribution = distribution;
+    await Model.findByIdAndUpdate(entityId, update);
+  } else {
+    const update: Record<string, unknown> = { averageRating: 0, reviewCount: 0 };
+    if (entityType === "product") update.reviewDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    await Model.findByIdAndUpdate(entityId, update);
   }
 }
 
