@@ -19,32 +19,68 @@ interface NavbarProps {
   theme: Theme;
 }
 
+type NavSubItem = { to: string; label: string };
+type NavGroup = { label: string; to?: string; items?: NavSubItem[] };
+
 export function Navbar({ user, theme }: NavbarProps) {
   const t = useT();
   const href = useHref();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const [openMobileGroup, setOpenMobileGroup] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
   const navigate = useNavigate();
 
-  const navLinks = [
-    { to: href("/strains"), label: t.nav.directory },
-    { to: href("/guias"), label: t.nav.guides },
-    { to: href("/glosario"), label: t.nav.glossary },
-    { to: "/mapa-verde", label: t.nav.greenMap },
-    { to: href("/community"), label: t.nav.community },
-    { to: href("/editorial"), label: t.nav.editorial },
+  const NAV_GROUPS: NavGroup[] = [
+    {
+      label: t.nav.strains,
+      to: href("/strains"),
+      items: [
+        { to: href("/strains"), label: t.nav.directory },
+        { to: "/top-100", label: t.nav.top100 },
+        { to: "/para", label: t.nav.conditions },
+      ],
+    },
+    {
+      label: t.nav.learn,
+      items: [
+        { to: href("/guias"), label: t.nav.guides },
+        { to: href("/glosario"), label: t.nav.glossary },
+        { to: href("/editorial"), label: t.nav.editorial },
+        { to: "/mapa-verde", label: t.nav.greenMap },
+      ],
+    },
+    {
+      label: t.nav.community,
+      to: href("/community"),
+    },
   ];
 
   useEffect(() => {
-    function onClick(e: MouseEvent) {
+    function onClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
       }
     }
-    if (menuOpen) document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    if (menuOpen) document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
   }, [menuOpen]);
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpenGroup(null);
+      }
+    }
+    if (openGroup) document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [openGroup]);
+
+  function toggleGroup(label: string) {
+    setOpenGroup((prev) => (prev === label ? null : label));
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-[color-mix(in_oklch,var(--bg)_85%,transparent)] backdrop-blur">
@@ -52,16 +88,87 @@ export function Navbar({ user, theme }: NavbarProps) {
         <div className="flex h-16 items-center justify-between gap-6">
           <Logo size={20} />
 
-          <nav className="hidden md:flex items-center gap-7">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className="text-sm text-fg-muted hover:text-fg transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
+          <nav ref={navRef} className="hidden md:flex items-center gap-0.5">
+            {NAV_GROUPS.map((group) => {
+              const isOpen = openGroup === group.label;
+
+              if (!group.items) {
+                return (
+                  <Link
+                    key={group.label}
+                    to={group.to!}
+                    className="text-sm text-fg-muted hover:text-fg transition-colors px-3 py-2 rounded-md hover:bg-elev/60"
+                  >
+                    {group.label}
+                  </Link>
+                );
+              }
+
+              return (
+                <div key={group.label} className="relative flex items-center">
+                  {group.to ? (
+                    <Link
+                      to={group.to}
+                      className="text-sm text-fg-muted hover:text-fg transition-colors pl-3 pr-1 py-2"
+                    >
+                      {group.label}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(group.label)}
+                      className={cn(
+                        "text-sm transition-colors pl-3 pr-1 py-2 rounded-l-md",
+                        isOpen ? "text-fg" : "text-fg-muted hover:text-fg"
+                      )}
+                    >
+                      {group.label}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(group.label)}
+                    className={cn(
+                      "p-2 transition-colors rounded-r-md",
+                      isOpen ? "text-fg" : "text-fg-dim hover:text-fg"
+                    )}
+                    aria-haspopup="menu"
+                    aria-expanded={isOpen}
+                    aria-label={`Expandir ${group.label}`}
+                  >
+                    <Icon
+                      name="chevronDown"
+                      size={11}
+                      className={cn("transition-transform duration-200", isOpen && "rotate-180")}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div
+                      role="menu"
+                      className="fade-up absolute left-0 top-full mt-1 w-48 p-1 z-50"
+                      style={{
+                        background: "var(--bg-elev)",
+                        border: "1px solid var(--line)",
+                        borderRadius: "12px",
+                        boxShadow: "0 8px 24px oklch(0% 0 0 / 0.12)",
+                      }}
+                    >
+                      {group.items.map((item) => (
+                        <Link
+                          key={item.to}
+                          to={item.to}
+                          role="menuitem"
+                          onClick={() => setOpenGroup(null)}
+                          className="flex items-center rounded-lg px-3 py-2 text-sm text-fg-muted hover:text-fg hover:bg-elev transition-colors"
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </nav>
 
           <div className="flex items-center gap-2">
@@ -155,7 +262,7 @@ export function Navbar({ user, theme }: NavbarProps) {
             <button
               type="button"
               className="md:hidden h-9 w-9 grid place-items-center rounded-full border border-line text-fg-muted"
-              aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-label={mobileOpen ? t.nav.closeMenu : t.nav.openMenu}
               onClick={() => setMobileOpen((v) => !v)}
             >
               <Icon name={mobileOpen ? "close" : "menu"} size={16} />
@@ -166,17 +273,57 @@ export function Navbar({ user, theme }: NavbarProps) {
 
       {mobileOpen && (
         <div className="md:hidden border-t border-line bg-bg fade-in">
-          <div className="px-6 py-4 space-y-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setMobileOpen(false)}
-                className="block rounded-md px-3 py-2 text-sm text-fg-muted hover:text-fg hover:bg-elev"
-              >
-                {link.label}
-              </Link>
-            ))}
+          <div className="px-6 py-4 space-y-0.5">
+            {NAV_GROUPS.map((group) => {
+              const isOpen = openMobileGroup === group.label;
+
+              if (!group.items) {
+                return (
+                  <Link
+                    key={group.label}
+                    to={group.to!}
+                    onClick={() => setMobileOpen(false)}
+                    className="block rounded-md px-3 py-2 text-sm text-fg-muted hover:text-fg hover:bg-elev"
+                  >
+                    {group.label}
+                  </Link>
+                );
+              }
+
+              return (
+                <div key={group.label}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenMobileGroup(isOpen ? null : group.label)}
+                    className="w-full flex items-center justify-between rounded-md px-3 py-2 text-sm text-fg-muted hover:text-fg hover:bg-elev"
+                  >
+                    {group.label}
+                    <Icon
+                      name="chevronDown"
+                      size={13}
+                      className={cn("transition-transform duration-200", isOpen && "rotate-180")}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div className="ml-3 mt-0.5 mb-1 border-l border-line pl-3 space-y-0.5">
+                      {group.items.map((item) => (
+                        <Link
+                          key={item.to}
+                          to={item.to}
+                          onClick={() => {
+                            setMobileOpen(false);
+                            setOpenMobileGroup(null);
+                          }}
+                          className="block rounded-md px-2 py-2 text-sm text-fg-muted hover:text-fg hover:bg-elev"
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             {!user && (
               <>
                 <hr className="hrule my-2" />

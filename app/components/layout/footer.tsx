@@ -21,22 +21,25 @@ export function Footer() {
             <NewsletterSignup />
           </div>
 
-          <FooterColumn title={t.footer.productTitle}>
+          <FooterColumn title={t.nav.strains}>
             <FooterLink to={href("/strains")}>{t.nav.directory}</FooterLink>
+            <FooterLink to="/top-100">{t.nav.top100}</FooterLink>
+            <FooterLink to="/para">{t.nav.conditions}</FooterLink>
+            <FooterLink to="/strains/sugerir">Sugerir cepa</FooterLink>
+          </FooterColumn>
+
+          <FooterColumn title={t.nav.learn}>
             <FooterLink to={href("/guias")}>{t.nav.guides}</FooterLink>
             <FooterLink to={href("/glosario")}>{t.nav.glossary}</FooterLink>
-            <FooterLink to="/top-100">Top 100 Cepas</FooterLink>
-            <FooterLink to="/mapa-verde">{t.nav.greenMap}</FooterLink>
-            <FooterLink to={href("/community")}>{t.nav.community}</FooterLink>
             <FooterLink to={href("/editorial")}>{t.nav.editorial}</FooterLink>
+            <FooterLink to="/mapa-verde">{t.nav.greenMap}</FooterLink>
           </FooterColumn>
 
           <FooterColumn title={t.footer.companyTitle}>
             <FooterLink to={href("/editorial")}>{t.footer.about}</FooterLink>
+            <FooterLink to={href("/community")}>{t.nav.community}</FooterLink>
             <FooterLink to="/auth?mode=register">{t.footer.joinUs}</FooterLink>
-          </FooterColumn>
-
-          <FooterColumn title={t.footer.legalTitle}>
+            <hr className="border-line my-1" />
             <FooterLink to={href("/terminos")}>{t.footer.terms}</FooterLink>
             <FooterLink to={href("/privacidad")}>{t.footer.privacy}</FooterLink>
             <span className="block text-sm text-fg-dim">{t.footer.ageGate}</span>
