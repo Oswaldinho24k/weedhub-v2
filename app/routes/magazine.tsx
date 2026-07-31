@@ -1,8 +1,8 @@
 import { Link, useLoaderData, useSearchParams } from "react-router";
-import type { Route } from "./+types/blog";
+import type { Route } from "./+types/magazine";
 import { connectDB } from "~/lib/db.server";
 import { ArticleModel, type ArticleCategory } from "~/models/article.server";
-import { buildMeta } from "~/lib/seo";
+import { buildMeta, SITE_URL } from "~/lib/seo";
 import { resolveLocale } from "~/lib/locale.server";
 
 const CATEGORY_LABELS: Record<ArticleCategory, string> = {
@@ -47,18 +47,18 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export function meta({ data }: Route.MetaArgs) {
-  if (!data) return [{ title: "Blog | WeedHub" }];
+  if (!data) return [{ title: "Magazine | WeedHub" }];
   return buildMeta({
-    title: "Blog — WeedHub | Cannabis en español",
+    title: "Magazine — WeedHub | Cannabis en español",
     description:
       "Artículos sobre cepas, cultivo, métodos de consumo, legislación y cultura cannabis en México y Latinoamérica.",
-    url: "https://www.weedhub.info/blog",
-    canonicalPath: "/blog",
+    url: "https://www.weedhub.info/magazine",
+    canonicalPath: "/magazine",
     locale: data.locale,
   });
 }
 
-export default function BlogPage() {
+export default function MagazinePage() {
   const { articles, activeCategory } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -69,11 +69,25 @@ export default function BlogPage() {
     setSearchParams(next);
   }
 
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "WeedHub Magazine",
+    description: "Artículos sobre cannabis: cepas, cultivo, métodos, ciencia y cultura en español.",
+    url: `${SITE_URL}/magazine`,
+    publisher: { "@type": "Organization", name: "WeedHub", url: SITE_URL },
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+      />
     <div className="mx-auto max-w-[1200px] px-6 py-12">
       <div className="mb-10">
         <div className="kicker mb-2">Magazine</div>
-        <h1 className="display text-4xl mb-3">Blog WeedHub</h1>
+        <h1 className="display text-4xl mb-3">WeedHub Magazine</h1>
         <p className="text-fg-muted max-w-xl">
           Artículos sobre cannabis: cepas, cultivo, métodos, ciencia y cultura en español.
         </p>
@@ -124,7 +138,7 @@ export default function BlogPage() {
 
       <div className="mt-16 pt-8 border-t border-line flex items-center gap-4">
         <a
-          href="/blog.rss"
+          href="/magazine.rss"
           className="flex items-center gap-2 text-sm text-fg-muted hover:text-fg transition-colors"
         >
           <span className="pill warm text-xs">RSS</span>
@@ -132,6 +146,7 @@ export default function BlogPage() {
         </a>
       </div>
     </div>
+    </>
   );
 }
 
@@ -159,7 +174,7 @@ function ArticleCard({
 
   return (
     <Link
-      to={`/blog/${article.slug}`}
+      to={`/magazine/${article.slug}`}
       className="card group flex flex-col overflow-hidden hover:border-line-strong transition-all"
     >
       {article.coverImage ? (

@@ -17,8 +17,12 @@ export interface IDispensary extends Document {
   coverImage?: string;
   brandId?: mongoose.Types.ObjectId;
   status: "active" | "pending" | "suspended";
+  ownerId?: mongoose.Types.ObjectId;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  stripeSubscriptionStatus?: "active" | "past_due" | "canceled" | "trialing" | "incomplete";
   isVerified: boolean;
-  tier: "free" | "premium";
+  tier: "free" | "premium" | "enterprise";
   averageRating: number;
   reviewCount: number;
   createdAt: Date;
@@ -47,8 +51,15 @@ const dispensarySchema = new Schema<IDispensary>(
       enum: ["active", "pending", "suspended"],
       default: "pending",
     },
+    ownerId: { type: Schema.Types.ObjectId, ref: "User" },
+    stripeCustomerId: String,
+    stripeSubscriptionId: String,
+    stripeSubscriptionStatus: {
+      type: String,
+      enum: ["active", "past_due", "canceled", "trialing", "incomplete"],
+    },
     isVerified: { type: Boolean, default: false },
-    tier: { type: String, enum: ["free", "premium"], default: "free" },
+    tier: { type: String, enum: ["free", "premium", "enterprise"], default: "free" },
     averageRating: { type: Number, default: 0 },
     reviewCount: { type: Number, default: 0 },
   },

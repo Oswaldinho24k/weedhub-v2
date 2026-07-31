@@ -7,6 +7,7 @@ import { buildMeta, SITE_URL } from "~/lib/seo";
 import { useT, useHref, useLocale } from "~/lib/i18n-context";
 import { Icon } from "~/components/ui/icon";
 import { NewsletterSignup } from "~/components/layout/newsletter-signup";
+import { ShareButton } from "~/components/ui/share-button";
 
 export function meta({ data }: Route.MetaArgs) {
   const locale = data?.locale || "es";
@@ -90,11 +91,18 @@ export default function GuiaDetailPage({ loaderData }: Route.ComponentProps) {
         {t.guides.backToGuides}
       </Link>
 
-      <div className="flex items-center gap-3 mb-6">
-        <span className="pill lilac">{guide.kicker}</span>
-        <span className="kicker">
-          {t.guides.readTime.replace("{min}", guide.readTime)}
-        </span>
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <span className="pill lilac">{guide.kicker}</span>
+          <span className="kicker">
+            {t.guides.readTime.replace("{min}", guide.readTime)}
+          </span>
+        </div>
+        <ShareButton
+          title={guide.title}
+          text={guide.description}
+          url={`${SITE_URL}${prefix}/guias/${guide.slug}`}
+        />
       </div>
 
       <h1
@@ -135,6 +143,17 @@ export default function GuiaDetailPage({ loaderData }: Route.ComponentProps) {
           {t.guides.backToGuides}
         </Link>
       </div>
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  return (
+    <div className="mx-auto max-w-[760px] px-6 py-24 text-center">
+      <div className="kicker mb-3" style={{ color: "var(--warm)" }}>Error</div>
+      <h1 className="display text-3xl mb-4">Guía no encontrada</h1>
+      <p className="text-fg-muted mb-8">Esta guía no existe.</p>
+      <a href="/guias" className="btn btn-primary">Ver todas las guías</a>
     </div>
   );
 }

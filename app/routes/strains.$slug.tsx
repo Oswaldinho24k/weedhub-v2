@@ -669,3 +669,14 @@ function HeroStat({
     </div>
   );
 }
+
+export function ErrorBoundary() {
+  return (
+    <div className="mx-auto max-w-[760px] px-6 py-24 text-center">
+      <div className="kicker mb-3" style={{ color: "var(--warm)" }}>Error</div>
+      <h1 className="display text-3xl mb-4">Cepa no encontrada</h1>
+      <p className="text-fg-muted mb-8">Esta cepa no existe o fue archivada.</p>
+      <a href="/strains" className="btn btn-primary">Ver todas las cepas</a>
+    </div>
+  );
+}

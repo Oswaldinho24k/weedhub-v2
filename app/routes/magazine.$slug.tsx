@@ -1,12 +1,12 @@
 import { Link, useLoaderData } from "react-router";
 import { marked } from "marked";
-import type { Route } from "./+types/blog.$slug";
+import type { Route } from "./+types/magazine.$slug";
 import { connectDB } from "~/lib/db.server";
 import { ArticleModel } from "~/models/article.server";
-import { StrainModel } from "~/models/strain.server";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 import { resolveLocale } from "~/lib/locale.server";
 import { NewsletterSignup } from "~/components/layout/newsletter-signup";
+import { ShareButton } from "~/components/ui/share-button";
 
 marked.setOptions({ breaks: true });
 
@@ -52,16 +52,16 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 export function meta({ data }: Route.MetaArgs) {
-  if (!data) return [{ title: "Artículo | WeedHub" }];
+  if (!data) return [{ title: "Artículo | WeedHub Magazine" }];
   const { article, locale } = data;
   return buildMeta({
-    title: article.metaTitle || `${article.title} | WeedHub`,
+    title: article.metaTitle || `${article.title} | WeedHub Magazine`,
     description:
-      article.metaDescription || article.excerpt || "Lee este artículo en WeedHub.",
-    url: `${SITE_URL}/blog/${article.slug}`,
+      article.metaDescription || article.excerpt || "Lee este artículo en WeedHub Magazine.",
+    url: `${SITE_URL}/magazine/${article.slug}`,
     image: article.coverImage || undefined,
     type: "article",
-    canonicalPath: `/blog/${article.slug}`,
+    canonicalPath: `/magazine/${article.slug}`,
     locale,
   });
 }
@@ -82,7 +82,7 @@ const TYPE_COLORS: Record<string, string> = {
   hybrid: "warm",
 };
 
-export default function BlogSlugPage() {
+export default function MagazineSlugPage() {
   const { article } = useLoaderData<typeof loader>();
   const date = article.publishedAt
     ? new Date(article.publishedAt).toLocaleDateString("es-MX", {
@@ -99,12 +99,12 @@ export default function BlogSlugPage() {
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "WeedHub", item: SITE_URL },
-          { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
+          { "@type": "ListItem", position: 2, name: "Magazine", item: `${SITE_URL}/magazine` },
           {
             "@type": "ListItem",
             position: 3,
             name: article.title,
-            item: `${SITE_URL}/blog/${article.slug}`,
+            item: `${SITE_URL}/magazine/${article.slug}`,
           },
         ],
       },
@@ -125,7 +125,7 @@ export default function BlogSlugPage() {
         },
         datePublished: article.publishedAt || undefined,
         dateModified: article.updatedAt,
-        url: `${SITE_URL}/blog/${article.slug}`,
+        url: `${SITE_URL}/magazine/${article.slug}`,
         inLanguage: article.locale === "es" ? "es-MX" : article.locale === "pt" ? "pt-BR" : "en",
       },
     ],
@@ -144,8 +144,8 @@ export default function BlogSlugPage() {
             Inicio
           </Link>
           <span>›</span>
-          <Link to="/blog" className="hover:text-fg transition-colors">
-            Blog
+          <Link to="/magazine" className="hover:text-fg transition-colors">
+            Magazine
           </Link>
           <span>›</span>
           <span className="text-fg truncate">{article.title}</span>
@@ -158,10 +158,20 @@ export default function BlogSlugPage() {
               {date && <span className="text-sm text-fg-dim">{date}</span>}
             </div>
 
-            <h1 className="display text-3xl md:text-4xl mb-4 leading-tight">{article.title}</h1>
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <h1 className="display text-3xl md:text-4xl leading-tight flex-1">{article.title}</h1>
+              <ShareButton
+                title={article.title}
+                text={article.excerpt || ""}
+                url={`${SITE_URL}/magazine/${article.slug}`}
+              />
+            </div>
 
             {article.excerpt && (
-              <p className="text-lg text-fg-muted leading-relaxed mb-8 border-l-2 pl-4" style={{ borderColor: "var(--accent)" }}>
+              <p
+                className="text-lg text-fg-muted leading-relaxed mb-8 border-l-2 pl-4"
+                style={{ borderColor: "var(--accent)" }}
+              >
                 {article.excerpt}
               </p>
             )}
@@ -232,9 +242,7 @@ export default function BlogSlugPage() {
                       to={`/strains/${strain.slug}`}
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-elev transition-colors"
                     >
-                      <span
-                        className={`pill text-xs ${TYPE_COLORS[strain.type] || ""}`}
-                      >
+                      <span className={`pill text-xs ${TYPE_COLORS[strain.type] || ""}`}>
                         {strain.type}
                       </span>
                       <span className="text-sm">{strain.name}</span>
@@ -271,5 +279,16 @@ export default function BlogSlugPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export function ErrorBoundary() {
+  return (
+    <div className="mx-auto max-w-[760px] px-6 py-24 text-center">
+      <div className="kicker mb-3" style={{ color: "var(--warm)" }}>Error</div>
+      <h1 className="display text-3xl mb-4">Artículo no encontrado</h1>
+      <p className="text-fg-muted mb-8">Este artículo no existe o fue despublicado.</p>
+      <a href="/magazine" className="btn btn-primary">Ver todos los artículos</a>
+    </div>
   );
 }

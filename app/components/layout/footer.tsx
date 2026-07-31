@@ -29,16 +29,16 @@ export function Footer() {
           </FooterColumn>
 
           <FooterColumn title={t.nav.learn}>
-            <FooterLink to="/blog">{t.nav.blog}</FooterLink>
+            <FooterLink to="/magazine">{t.nav.magazine}</FooterLink>
             <FooterLink to={href("/guias")}>{t.nav.guides}</FooterLink>
             <FooterLink to={href("/glosario")}>{t.nav.glossary}</FooterLink>
-            <FooterLink to={href("/editorial")}>{t.nav.editorial}</FooterLink>
             <FooterLink to="/mapa-verde">{t.nav.greenMap}</FooterLink>
           </FooterColumn>
 
           <FooterColumn title={t.footer.companyTitle}>
+            <FooterLink to="/marcas">Marcas</FooterLink>
+            <FooterLink to="/planes">Planes</FooterLink>
             <FooterLink to={href("/editorial")}>{t.footer.about}</FooterLink>
-            <FooterLink to={href("/community")}>{t.nav.community}</FooterLink>
             <FooterLink to="/auth?mode=register">{t.footer.joinUs}</FooterLink>
             <hr className="border-line my-1" />
             <FooterLink to={href("/terminos")}>{t.footer.terms}</FooterLink>

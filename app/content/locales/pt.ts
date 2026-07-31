@@ -50,7 +50,7 @@ export const pt: Dictionary = {
     top100: "Top 100",
     conditions: "Por Condição",
     findMyStrain: "Recomende-me uma cepa",
-    blog: "Blog",
+    magazine: "Magazine",
     greenMap: "Mapa Verde",
     glossary: "Glossário",
     login: "Entrar",

@@ -48,7 +48,7 @@ export const en: Dictionary = {
     top100: "Top 100",
     conditions: "By Condition",
     findMyStrain: "Find my strain",
-    blog: "Blog",
+    magazine: "Magazine",
     greenMap: "Green Map",
     glossary: "Glossary",
     login: "Log in",

@@ -55,7 +55,7 @@ export const es = {
     top100: "Top 100",
     conditions: "Para condiciones",
     findMyStrain: "Recomiéndame una cepa",
-    blog: "Blog",
+    magazine: "Magazine",
     greenMap: "Mapa Verde",
     glossary: "Glosario",
     login: "Entrar",

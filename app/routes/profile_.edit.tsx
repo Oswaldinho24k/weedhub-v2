@@ -35,6 +35,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       birthYear: user.birthYear,
       acquisitionSource: user.acquisitionSource,
       preferredEffects: user.cannabisProfile?.preferredEffects || [],
+      savedStrainsPublic: !!user.savedStrainsPublic,
     },
   };
 }
@@ -48,6 +49,7 @@ export async function action({ request }: Route.ActionArgs) {
   const preferredEffects = formData.getAll("preferredEffects").map(String);
   const removeAvatar = formData.get("removeAvatar") === "on";
   const publishAsAnonymous = formData.get("publishAsAnonymous") === "on";
+  const savedStrainsPublic = formData.get("savedStrainsPublic") === "on";
 
   const country = String(formData.get("country") || "MX").toUpperCase();
   if (!isValidCountry(country)) {
@@ -73,6 +75,7 @@ export async function action({ request }: Route.ActionArgs) {
     displayName: displayName || user.username,
     "cannabisProfile.preferredEffects": preferredEffects,
     publishAsAnonymous,
+    savedStrainsPublic,
     country,
     city: city || null,
     showCityPublicly,
@@ -158,6 +161,23 @@ export default function EditProfilePage({ loaderData }: Route.ComponentProps) {
             <span className="flex-1">
               <span className="block text-sm text-fg">{t.profileEdit.publishAnonToggle}</span>
               <span className="block text-xs text-fg-dim mt-1">{t.profileEdit.publishAnonHelp}</span>
+            </span>
+          </label>
+
+          <hr className="hrule my-4" />
+
+          <label className="inline-flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              name="savedStrainsPublic"
+              defaultChecked={user.savedStrainsPublic}
+              className="mt-1 accent-[color:var(--accent)]"
+            />
+            <span className="flex-1">
+              <span className="block text-sm text-fg">Mostrar cepas guardadas en mi perfil público</span>
+              <span className="block text-xs text-fg-dim mt-1">
+                Cualquiera que visite tu perfil podrá ver las cepas que guardaste.
+              </span>
             </span>
           </label>
         </section>
@@ -365,6 +385,16 @@ export default function EditProfilePage({ loaderData }: Route.ComponentProps) {
           </Link>
         </div>
       </Form>
+
+      <div className="mt-16 pt-8 border-t border-line">
+        <div className="kicker mb-2" style={{ color: "var(--warm)" }}>Zona peligrosa</div>
+        <p className="text-sm text-fg-muted mb-4">
+          Eliminar tu cuenta es permanente. Tus reseñas quedarán anonimizadas.
+        </p>
+        <Link to="/profile/delete" className="btn btn-ghost text-sm" style={{ color: "var(--warm)", borderColor: "var(--warm)" }}>
+          Eliminar mi cuenta
+        </Link>
+      </div>
     </div>
   );
 }

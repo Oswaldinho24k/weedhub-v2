@@ -15,3 +15,4 @@ seed/*.js
 /strain-cards-sample/
 /social-posts/
 prompts/
+.vercel

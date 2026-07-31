@@ -46,6 +46,7 @@ export default [
   route("profile/:username", "routes/profile.$username.tsx"),
   route("profile/edit", "routes/profile_.edit.tsx"),
   route("profile/saved", "routes/profile_.saved.tsx"),
+  route("profile/delete", "routes/profile_.delete.tsx"),
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.tsx"),
     route("strains", "routes/admin.strains.tsx"),
@@ -60,7 +61,13 @@ export default [
     route("legal-status", "routes/admin.legal-status.tsx"),
     route("glossary", "routes/admin.glossary.tsx"),
     route("articles", "routes/admin.articles.tsx"),
+    route("community", "routes/admin.community.tsx"),
   ]),
+
+  // Comunidad / Foros
+  route("comunidad", "routes/comunidad.tsx"),
+  route("comunidad/nuevo", "routes/comunidad_.nuevo.tsx"),
+  route("comunidad/:slug", "routes/comunidad.$slug.tsx"),
 
   // AI recommender
   route("recomendar", "routes/recomendar.tsx"),
@@ -70,10 +77,10 @@ export default [
   route("mapa-verde", "routes/mapa-verde.tsx"),
   route("mapa-verde/:country", "routes/mapa-verde.$country.tsx"),
 
-  // Blog
-  route("blog", "routes/blog.tsx"),
-  route("blog/:slug", "routes/blog.$slug.tsx"),
-  route("blog.rss", "routes/blog[.]rss.tsx"),
+  // Magazine
+  route("magazine", "routes/magazine.tsx"),
+  route("magazine/:slug", "routes/magazine.$slug.tsx"),
+  route("magazine.rss", "routes/magazine[.]rss.tsx"),
 
   // Rankings y editoriales
   route("top-100", "routes/top-100.tsx"),
@@ -82,15 +89,27 @@ export default [
   route("para", "routes/para.tsx"),
   route("para/:condition", "routes/para.$condition.tsx"),
 
-  // Public stubs — content will be built as the platform grows
+  // Marcas
   route("marcas", "routes/marcas.tsx"),
+  route("marcas/registrar", "routes/marcas_.registrar.tsx"),
+  route("marcas/:slug/reclamar", "routes/marcas.$slug_.reclamar.tsx"),
+  route("marcas/:slug/editar", "routes/marcas.$slug_.editar.tsx"),
   route("marcas/:slug", "routes/marcas.$slug.tsx"),
+  route("planes", "routes/planes.tsx"),
   route("productos", "routes/productos.tsx"),
   route("productos/:slug", "routes/productos.$slug.tsx"),
+  // Dispensarios
   route("dispensarios", "routes/dispensarios.tsx"),
+  route("dispensarios/agregar", "routes/dispensarios_.agregar.tsx"),
   route("dispensarios/:slug", "routes/dispensarios.$slug.tsx"),
 
   // API + sitemap — locale-agnostic
+  route("api/users/:userId/follow", "routes/api/users.$userId.follow.tsx"),
+  route("api/stripe/checkout", "routes/api/stripe.checkout.tsx"),
+  route("api/stripe/webhook", "routes/api/stripe.webhook.tsx"),
+  route("api/stripe/portal", "routes/api/stripe.portal.tsx"),
+  route("api/posts/:postId/vote", "routes/api/posts.$postId.vote.tsx"),
+  route("api/comments/:commentId/vote", "routes/api/comments.$commentId.vote.tsx"),
   route("api/reviews/:reviewId/vote", "routes/api/reviews.$reviewId.vote.tsx"),
   route("api/strains/:strainId/quick-rate", "routes/api/strains.$strainId.quick-rate.tsx"),
   route("api/strains/:strainId/save", "routes/api/strains.$strainId.save.tsx"),

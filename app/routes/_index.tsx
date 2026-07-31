@@ -12,6 +12,7 @@ import { useT, useHref, useLocale } from "~/lib/i18n-context";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 import { resolveLocale } from "~/lib/locale.server";
 import { getDictionary } from "~/content/locales";
+import { NewsletterSignup } from "~/components/layout/newsletter-signup";
 
 export function meta({ data }: Route.MetaArgs) {
   const locale = data?.locale || "es";
@@ -294,6 +295,22 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
               <p className="text-sm text-fg-muted line-clamp-2">{a.dek}</p>
             </Link>
           ))}
+        </div>
+      </section>
+
+      {/* Newsletter */}
+      <section className="bg-sunken border-y border-line">
+        <div className="mx-auto max-w-[1200px] px-6 py-16 flex flex-col md:flex-row items-center gap-8">
+          <div className="flex-1 max-w-lg">
+            <div className="kicker mb-2" style={{ color: "var(--accent)" }}>Newsletter</div>
+            <h2 className="display text-3xl mb-3">Cepas, guías y cultura cannabis — en tu correo</h2>
+            <p className="text-fg-muted text-sm">
+              Dos veces al mes. Sin spam. Recomendaciones personalizadas según tu perfil.
+            </p>
+          </div>
+          <div className="w-full md:w-auto md:min-w-[360px]">
+            <NewsletterSignup />
+          </div>
         </div>
       </section>
 

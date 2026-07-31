@@ -47,16 +47,15 @@ export function Navbar({ user, theme }: NavbarProps) {
     {
       label: t.nav.learn,
       items: [
-        { to: "/blog", label: t.nav.blog },
+        { to: "/magazine", label: t.nav.magazine },
         { to: href("/guias"), label: t.nav.guides },
         { to: href("/glosario"), label: t.nav.glossary },
-        { to: href("/editorial"), label: t.nav.editorial },
         { to: "/mapa-verde", label: t.nav.greenMap },
       ],
     },
     {
       label: t.nav.community,
-      to: href("/community"),
+      to: "/comunidad",
     },
   ];
 

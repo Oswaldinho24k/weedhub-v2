@@ -33,6 +33,8 @@ export interface IUser extends Document {
     badgeId: string;
     earnedAt: Date;
   }>;
+  following: mongoose.Types.ObjectId[];
+  savedStrainsPublic: boolean;
   points: number;
   onboardingCompleted: boolean;
   createdAt: Date;
@@ -118,6 +120,8 @@ const userSchema = new Schema<IUser>(
         earnedAt: { type: Date, default: Date.now },
       },
     ],
+    following: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    savedStrainsPublic: { type: Boolean, default: false },
     points: { type: Number, default: 0 },
     onboardingCompleted: { type: Boolean, default: false },
   },

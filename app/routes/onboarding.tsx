@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Form, Link, redirect, useNavigation } from "react-router";
+import { Form, Link, redirect, useNavigation, useFetcher } from "react-router";
 import type { Route } from "./+types/onboarding";
 import { requireUser } from "~/lib/auth.server";
 import { connectDB } from "~/lib/db.server";
@@ -365,6 +365,9 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
               {t.onboarding.doneBody}
             </p>
 
+            {/* Newsletter capture at peak engagement */}
+            <OnboardingNewsletter />
+
             <div className="grid grid-cols-3 gap-4 text-left mb-10">
               <SummaryCard
                 icon="history"
@@ -679,6 +682,45 @@ function TileCard({
         </div>
       )}
     </button>
+  );
+}
+
+function OnboardingNewsletter() {
+  const fetcher = useFetcher();
+  const isDone = fetcher.data?.ok;
+  const isSubmitting = fetcher.state !== "idle";
+
+  if (isDone) {
+    return (
+      <div
+        className="card p-5 mb-10 max-w-[480px] mx-auto text-center"
+        style={{ borderColor: "var(--accent)" }}
+      >
+        <div className="kicker mb-1" style={{ color: "var(--accent)" }}>Suscrito</div>
+        <p className="text-sm text-fg-muted">Te escribimos pronto. Revisa tu bandeja.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card p-5 mb-10 max-w-[480px] mx-auto text-left">
+      <div className="kicker mb-1" style={{ color: "var(--accent)" }}>Antes de explorar</div>
+      <p className="text-sm text-fg-muted mb-4">
+        Recibe recomendaciones de cepas basadas en tu perfil — dos veces al mes, sin spam.
+      </p>
+      <fetcher.Form method="post" action="/api/newsletter" className="flex gap-2">
+        <input
+          type="email"
+          name="email"
+          placeholder="tu@correo.com"
+          required
+          className="flex-1 h-10 rounded-md border border-line bg-raised px-3 text-sm focus:outline-none focus:border-accent"
+        />
+        <button type="submit" className="btn btn-primary text-sm" disabled={isSubmitting}>
+          {isSubmitting ? "..." : "Suscribirme"}
+        </button>
+      </fetcher.Form>
+    </div>
   );
 }
 

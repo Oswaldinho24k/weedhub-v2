@@ -17,6 +17,10 @@ export interface IBrand extends Document {
   tier: "free" | "premium" | "enterprise";
   isVerified: boolean;
   verifiedAt?: Date;
+  ownerId?: mongoose.Types.ObjectId;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  stripeSubscriptionStatus?: "active" | "past_due" | "canceled" | "trialing" | "incomplete";
   productCount: number;
   averageRating: number;
   reviewCount: number;
@@ -50,6 +54,13 @@ const brandSchema = new Schema<IBrand>(
     },
     isVerified: { type: Boolean, default: false },
     verifiedAt: Date,
+    ownerId: { type: Schema.Types.ObjectId, ref: "User" },
+    stripeCustomerId: String,
+    stripeSubscriptionId: String,
+    stripeSubscriptionStatus: {
+      type: String,
+      enum: ["active", "past_due", "canceled", "trialing", "incomplete"],
+    },
     productCount: { type: Number, default: 0 },
     averageRating: { type: Number, default: 0 },
     reviewCount: { type: Number, default: 0 },

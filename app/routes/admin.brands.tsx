@@ -4,6 +4,7 @@ import type { Route } from "./+types/admin.brands";
 import { requireAdmin } from "~/lib/auth.server";
 import { connectDB } from "~/lib/db.server";
 import { BrandModel } from "~/models/brand.server";
+import { sendBrandVerifiedEmail } from "~/lib/email.server";
 import { Icon } from "~/components/ui/icon";
 import { cn } from "~/lib/utils";
 
@@ -61,12 +62,17 @@ export async function action({ request }: Route.ActionArgs) {
   if (intent === "set-tier") {
     const id = String(form.get("id"));
     const tier = String(form.get("tier")) as "free" | "premium" | "enterprise";
+    const willVerify = tier !== "free";
+    const brand = await BrandModel.findById(id).select("name email isVerified").lean();
     const now = new Date();
     await BrandModel.findByIdAndUpdate(id, {
       tier,
-      isVerified: tier !== "free",
-      verifiedAt: tier !== "free" ? now : undefined,
+      isVerified: willVerify,
+      verifiedAt: willVerify ? now : undefined,
     });
+    if (brand && willVerify && !brand.isVerified && brand.email) {
+      sendBrandVerifiedEmail(brand.email, brand.name);
+    }
     return { success: "Tier actualizado" };
   }
 

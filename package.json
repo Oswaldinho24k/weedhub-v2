@@ -19,7 +19,9 @@
     "seed:glossary": "npx tsx seed/glossary.ts",
     "seed:grow": "npx tsx seed/grow-data.ts",
     "seed:genetics": "npx tsx seed/genetics.ts",
-    "seed:categories": "npx tsx seed/product-categories.ts"
+    "seed:categories": "npx tsx seed/product-categories.ts",
+    "images:pexels": "npx tsx --env-file .env scripts/fill-pexels-images.ts",
+    "images:pexels:dry": "npx tsx --env-file .env scripts/fill-pexels-images.ts --dry-run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
@@ -38,6 +40,7 @@
     "react-dom": "^19.2.4",
     "react-router": "7.12.0",
     "resend": "^6.12.0",
+    "stripe": "^22.4.0",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.3.6"
   },
