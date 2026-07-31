@@ -51,7 +51,7 @@ export function meta({ data }: Route.MetaArgs) {
   return buildMeta({
     title: "Magazine — WeedHub | Cannabis en español",
     description:
-      "Artículos sobre cepas, cultivo, métodos de consumo, legislación y cultura cannabis en México y Latinoamérica.",
+      "Artículos sobre cepas, cultivo, métodos de consumo, legislación y cultura cannabis. En español.",
     url: "https://www.weedhub.info/magazine",
     canonicalPath: "/magazine",
     locale: data.locale,

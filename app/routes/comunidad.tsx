@@ -66,7 +66,7 @@ export function meta(): ReturnType<Route.MetaFunction> {
   return buildMeta({
     title: "Comunidad WeedHub — Foros de Cannabis en Español",
     description:
-      "Discusiones sobre cannabis: experiencias, cepas, cultivo, legislación y comunidad. La conversación hispana más honesta.",
+      "Discusiones sobre cannabis: experiencias, cepas, cultivo, legislación y comunidad. La conversación más honesta en español.",
     url: `${SITE_URL}/comunidad`,
     canonicalPath: "/comunidad",
     locale: "es",

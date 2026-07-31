@@ -160,7 +160,7 @@ export default function AuthPage() {
         <ul className="mt-10 space-y-4 text-sm">
           <Promise>Elige tu username · publica anónimo por default.</Promise>
           <Promise>Datos reales sobre la experiencia, no barras de colores.</Promise>
-          <Promise>Voces hispanohablantes, desde CDMX hasta Medellín.</Promise>
+          <Promise>Voces en español, desde CDMX hasta Madrid.</Promise>
         </ul>
 
         <div className="mt-auto pt-16 grid grid-cols-3 gap-6 max-w-[420px]">

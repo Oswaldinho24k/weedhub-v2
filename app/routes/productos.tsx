@@ -77,7 +77,7 @@ export function meta(): ReturnType<Route.MetaFunction> {
   return buildMeta({
     title: "Catálogo de Productos Cannabis — WeedHub",
     description:
-      "Flores, concentrados, comestibles, semillas y equipo de cultivo. Productos de cannabis verificados en México y LATAM.",
+      "Flores, concentrados, comestibles, semillas y equipo de cultivo. Productos de cannabis verificados.",
     url: `${SITE_URL}/productos`,
     canonicalPath: "/productos",
     locale: "es",

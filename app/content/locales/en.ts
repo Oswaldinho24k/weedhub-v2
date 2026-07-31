@@ -481,9 +481,9 @@ export const en: Dictionary = {
       "The living encyclopedia of cannabis. Reviews with real context — method, moment, experience.",
     savedStrainsTitle: "Saved strains — WeedHub",
     savedStrainsDescription: "Your library of saved strains on WeedHub.",
-    homeTitle: "WeedHub — The living cannabis encyclopedia for Latin America",
+    homeTitle: "WeedHub — The cannabis encyclopedia in Spanish",
     homeDescription:
-      "Inform, connect, cultivate. A Spanish-speaking community of contextual cannabis reviews — method, moment, experience.",
+      "Inform, connect, cultivate. Cannabis reviews with real context — method, moment, experience. In Spanish.",
     strainsTitle: "Strain directory — WeedHub",
     strainsDescription:
       "Explore hundreds of strains with filters by type, effects, and dominant terpene. Every profile is built from real community reviews.",

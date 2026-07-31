@@ -75,7 +75,7 @@ export const es = {
   },
 
   footer: {
-    tagline: "La enciclopedia viva del cannabis hispano. Informa, conecta, cultiva.",
+    tagline: "La enciclopedia de cannabis en español. Informa, conecta, cultiva.",
     productTitle: "Producto",
     companyTitle: "Empresa",
     legalTitle: "Legal",
@@ -85,7 +85,7 @@ export const es = {
     privacy: "Privacidad",
     ageGate: "Solo +18",
     responsibleUse: "USO RESPONSABLE",
-    madeIn: "Hecho en {flag}, para Latinoamérica.",
+    madeIn: "Hecho en {flag}, en español.",
     newsletter: {
       kicker: "Boletín",
       description:
@@ -102,7 +102,7 @@ export const es = {
     heroKickerSuperchip: "Informa · Conecta · Cultiva",
     heroHeadlinePrefix: "La enciclopedia ",
     heroHeadlineAccent: "viva",
-    heroHeadlineSuffix: " del cannabis hispano.",
+    heroHeadlineSuffix: " de cannabis en español.",
     heroBody:
       "No somos un catálogo de dispensarios. Somos la comunidad que cuenta el contexto detrás de cada cepa — método, momento, experiencia.",
     heroCtaPrimary: "Explorar cepas",
@@ -482,12 +482,12 @@ export const es = {
 
   meta: {
     description:
-      "La enciclopedia viva del cannabis hispano. Reseñas con contexto real — método, momento, experiencia.",
+      "La enciclopedia de cannabis en español. Reseñas con contexto real — método, momento, experiencia.",
     savedStrainsTitle: "Cepas guardadas — WeedHub",
     savedStrainsDescription: "Tu biblioteca de cepas guardadas en WeedHub.",
-    homeTitle: "WeedHub — La enciclopedia viva del cannabis hispano",
+    homeTitle: "WeedHub — La enciclopedia de cannabis en español",
     homeDescription:
-      "Informa, conecta, cultiva. Comunidad hispanohablante de reseñas cannábicas con contexto real — método, momento, experiencia.",
+      "Informa, conecta, cultiva. La enciclopedia de cannabis en español con reseñas contextuales reales — método, momento, experiencia.",
     strainsTitle: "Directorio de cepas — WeedHub",
     strainsDescription:
       "Explora cientos de cepas con filtros por tipo, efectos y terpeno dominante. Cada perfil se construye con reseñas contextuales de la comunidad.",
@@ -496,7 +496,7 @@ export const es = {
       "Ciencia, cultura y crónica cannábica. Artículos editoriales sobre terpenos, landraces, microdosis y más.",
     communityTitle: "Comunidad — WeedHub",
     communityDescription:
-      "Voces hispanohablantes del cannabis. Lee las reseñas más recientes y descubre perspectivas desde CDMX, Medellín, Santiago y más.",
+      "Voces reales del cannabis en español. Lee las reseñas más recientes y descubre perspectivas de toda la comunidad.",
     terminosTitle: "Términos de uso — WeedHub",
     terminosDescription:
       "Términos que rigen el uso de WeedHub: edad mínima, contenido generado por usuarios, moderación y responsabilidades.",

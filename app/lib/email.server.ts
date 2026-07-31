@@ -114,7 +114,7 @@ export async function sendWelcomeEmail(email: string, username: string): Promise
           <tr>
             <td style="padding:28px 40px;">
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#a8c4b0;">
-                Ya eres parte de la primera enciclopedia de cannabis construida por y para la comunidad hispana. Aquí, cada reseña cuenta con contexto real: método, momento, setting.
+                Ya eres parte de la enciclopedia de cannabis en español más completa. Aquí, cada reseña cuenta con contexto real: método, momento, setting.
               </p>
               <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#a8c4b0;">
                 Así funciona WeedHub:

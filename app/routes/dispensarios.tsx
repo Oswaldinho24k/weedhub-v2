@@ -48,7 +48,7 @@ export function meta(): ReturnType<Route.MetaFunction> {
   return buildMeta({
     title: "Directorio de Dispensarios — WeedHub",
     description:
-      "Encuentra dispensarios de cannabis verificados en México y Latinoamérica. Puntos de venta legales calificados por la comunidad.",
+      "Encuentra dispensarios de cannabis verificados. Puntos de venta legales calificados por la comunidad.",
     url: `${SITE_URL}/dispensarios`,
     canonicalPath: "/dispensarios",
     locale: "es",
@@ -79,7 +79,7 @@ export default function DispensariosPage() {
         <div className="kicker mb-2">Directorio</div>
         <h1 className="display text-4xl mb-3">Dispensarios</h1>
         <p className="text-fg-muted max-w-xl">
-          Puntos de venta de cannabis verificados en México y LATAM, calificados por la comunidad.
+          Puntos de venta de cannabis verificados, calificados por la comunidad.
         </p>
       </div>
 

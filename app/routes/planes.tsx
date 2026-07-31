@@ -206,7 +206,7 @@ export default function PlanesPage() {
           <div className="kicker mb-2">Entra antes del boom</div>
           <p className="text-sm text-fg-muted leading-relaxed">
             Posicionarse en WeedHub hoy equivale a ser de los primeros en el directorio cuando
-            México y LATAM regularicen el mercado commercial.
+            los países de habla hispana regularicen el mercado comercial.
           </p>
         </div>
       </div>

@@ -19,7 +19,7 @@ export function meta() {
   return buildMeta({
     title: "El Mapa Verde — Estatus Legal del Cannabis en el Mundo | WeedHub",
     description:
-      "¿Es legal el cannabis en tu país? Mapa global del estatus legal del cannabis: México, LATAM, Europa, Norteamérica y más. Información actualizada.",
+      "¿Es legal el cannabis en tu país? Mapa global del estatus legal del cannabis: México, Europa, Norteamérica y más. Información actualizada.",
     url: `${SITE_URL}/mapa-verde`,
     canonicalPath: "/mapa-verde",
   });
@@ -63,7 +63,7 @@ export default function MapaVerdePage() {
         <h1 className="display text-5xl md:text-6xl mb-6">El Mapa Verde</h1>
         <p className="text-lg text-fg-muted leading-relaxed max-w-2xl">
           El estatus legal del cannabis, país por país, en todo el mundo.
-          Con foco en LATAM y el mundo hispanohablante — para que sepas exactamente qué está permitido donde estás.
+          Con foco en el mundo de habla española — para que sepas exactamente qué está permitido donde estás.
         </p>
       </div>
 

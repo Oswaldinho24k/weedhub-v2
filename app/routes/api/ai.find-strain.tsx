@@ -73,7 +73,7 @@ export async function action({ request }: Route.ActionArgs) {
   };
 
   const prompt = [
-    "Eres un sommelier cannábico experto en cannabis hispano.",
+    "Eres un sommelier cannábico experto.",
     "Dado el perfil del usuario y la lista de cepas candidatas, recomienda las 3 MEJORES cepas.",
     "Responde SOLO con JSON válido, sin texto extra.",
     "",

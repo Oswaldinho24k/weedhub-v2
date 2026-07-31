@@ -33,7 +33,7 @@ export function meta(): ReturnType<Route.MetaFunction> {
   return buildMeta({
     title: "Directorio de Marcas Cannábicas — WeedHub",
     description:
-      "Directorio de marcas de cannabis verificadas en México y Latinoamérica. Descubre quiénes producen con transparencia y calidad.",
+      "Directorio de marcas de cannabis verificadas. Descubre quiénes producen con transparencia y calidad.",
     url: `${SITE_URL}/marcas`,
     canonicalPath: "/marcas",
     locale: "es",
@@ -60,7 +60,7 @@ export default function MarcasPage() {
         <div className="kicker mb-2">Directorio</div>
         <h1 className="display text-4xl mb-3">Marcas de Cannabis</h1>
         <p className="text-fg-muted max-w-xl">
-          Marcas verificadas en México y LATAM. Producción transparente, calificadas por la comunidad.
+          Marcas verificadas. Producción transparente, calificadas por la comunidad.
         </p>
       </div>
 
@@ -81,7 +81,7 @@ export default function MarcasPage() {
           <div className="kicker mb-1">Para marcas</div>
           <h2 className="display text-xl mb-2">¿Tienes una marca de cannabis?</h2>
           <p className="text-sm text-fg-muted max-w-md">
-            Crea tu perfil gratuito, obtén verificación y llega a la comunidad cannábica hispana más grande.
+            Crea tu perfil gratuito, obtén verificación y llega a la comunidad cannábica más grande en español.
           </p>
         </div>
         <div className="flex gap-3 shrink-0">
