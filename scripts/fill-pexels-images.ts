@@ -24,18 +24,18 @@ if (!PEXELS_API_KEY) {
   process.exit(1);
 }
 
-// Diverse cannabis search queries to build a varied image pool
+// Cannabis-specific search queries — Pexels has real cannabis photos under "cannabis"
 const SEARCH_QUERIES = [
-  "cannabis flower bud",
-  "marijuana plant green",
-  "hemp flower close up",
-  "cannabis indica plant",
-  "cannabis sativa bud",
+  "cannabis",
+  "cannabis bud",
+  "cannabis macro",
+  "marijuana bud",
   "cannabis trichomes",
-  "cannabis leaves macro",
-  "marijuana kush bud",
-  "cannabis harvest",
-  "cannabis dried flower",
+  "cannabis flower",
+  "cannabis kush",
+  "cannabis plant",
+  "weed bud",
+  "cannabis indica",
 ];
 
 async function pexelsSearch(query: string, page = 1): Promise<string[]> {

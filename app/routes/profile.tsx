@@ -113,11 +113,11 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
           className="h-20 w-20 rounded-full bg-elev border border-line overflow-hidden grid place-items-center display text-2xl"
           style={{ color: "var(--accent)" }}
         >
-          {user.avatar ? (
-            <img src={user.avatar} alt="" className="h-full w-full object-cover" />
-          ) : (
-            (user.displayName || "?").charAt(0).toUpperCase()
-          )}
+          <img
+            src={user.avatar || "/fallback/avatar-default.jpg"}
+            alt={user.displayName}
+            className="h-full w-full object-cover"
+          />
         </div>
         <div>
           <div className="kicker mb-1">{t.profile.kickerPrivate}</div>

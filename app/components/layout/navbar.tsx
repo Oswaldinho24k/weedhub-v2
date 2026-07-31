@@ -199,11 +199,11 @@ export function Navbar({ user, theme }: NavbarProps) {
                     className="h-7 w-7 rounded-full bg-elev overflow-hidden flex items-center justify-center text-xs"
                     style={{ color: "var(--accent)" }}
                   >
-                    {user.avatar ? (
-                      <img src={user.avatar} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      user.displayName.charAt(0).toUpperCase()
-                    )}
+                    <img
+                      src={user.avatar || "/fallback/avatar-default.jpg"}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
                   </span>
                   <Icon name="chevronDown" size={14} className="text-fg-dim" />
                 </button>

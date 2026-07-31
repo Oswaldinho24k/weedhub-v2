@@ -1,5 +1,13 @@
 import { cn } from "~/lib/utils";
 
+// Fallback bud photos (served from /public/fallback/) — cycle by strain name hash
+const FALLBACK_BUDS = [
+  "/fallback/bud-0.jpg",
+  "/fallback/bud-1.jpg",
+  "/fallback/bud-2.jpg",
+  "/fallback/bud-3.jpg",
+];
+
 interface StrainThumbProps {
   name: string;
   type?: "sativa" | "indica" | "hybrid";
@@ -47,10 +55,12 @@ export function StrainThumb({
   imageUrl,
   alt,
 }: StrainThumbProps) {
-  if (imageUrl) {
+  const resolvedUrl = imageUrl || FALLBACK_BUDS[hashCode(name) % FALLBACK_BUDS.length];
+
+  if (resolvedUrl) {
     return (
       <img
-        src={imageUrl}
+        src={resolvedUrl}
         alt={alt || name}
         className={cn("w-full object-cover rounded-lg", ratioClass[ratio], className)}
         loading="lazy"
