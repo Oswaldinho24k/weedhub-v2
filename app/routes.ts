@@ -38,6 +38,10 @@ export default [
 
   // Account / review / admin flows — unlocalized, read locale from cookie
   route("auth", "routes/auth.tsx"),
+  route("auth/forgot-password", "routes/auth_.forgot-password.tsx"),
+  route("auth/reset-password", "routes/auth_.reset-password.tsx"),
+  route("auth/google", "routes/auth_.google.tsx"),
+  route("auth/google/callback", "routes/auth_.google.callback.tsx"),
   route("logout", "routes/logout.tsx"),
   route("onboarding", "routes/onboarding.tsx"),
   route("strains/:slug/review", "routes/strains.$slug.review.tsx"),

@@ -3,6 +3,9 @@ import mongoose, { Schema, type Document } from "mongoose";
 export interface IUser extends Document {
   email: string;
   passwordHash: string;
+  googleId?: string;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
   username: string;
   anonymousHandle: string;
   publishAsAnonymous: boolean;
@@ -51,6 +54,9 @@ const userSchema = new Schema<IUser>(
       trim: true,
     },
     passwordHash: { type: String, required: true },
+    googleId: { type: String, sparse: true },
+    passwordResetToken: { type: String },
+    passwordResetExpires: { type: Date },
     username: {
       type: String,
       required: true,

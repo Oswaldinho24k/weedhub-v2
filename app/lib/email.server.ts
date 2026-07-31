@@ -13,6 +13,74 @@ function getClient() {
 
 const FROM = "WeedHub <hola@weedhub.info>";
 
+export async function sendPasswordResetEmail(email: string, resetUrl: string): Promise<void> {
+  const resend = getClient();
+  if (!resend) return;
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recupera tu contraseña — WeedHub</title>
+</head>
+<body style="margin:0;padding:0;background:#0f1a14;font-family:'Instrument Sans',Arial,sans-serif;color:#e8f0eb;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f1a14;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" style="max-width:560px;background:#141f18;border-radius:16px;border:1px solid #253028;overflow:hidden;">
+          <tr>
+            <td style="padding:32px 40px 24px;border-bottom:1px solid #253028;">
+              <p style="margin:0;font-size:13px;letter-spacing:0.12em;color:#6b9e7a;text-transform:uppercase;font-weight:600;">WeedHub</p>
+              <h1 style="margin:12px 0 0;font-size:26px;font-weight:700;line-height:1.2;color:#e8f0eb;">
+                Recupera tu contraseña
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 40px;">
+              <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#a8c4b0;">
+                Recibimos una solicitud para restablecer la contraseña de tu cuenta. Haz clic en el botón de abajo para elegir una nueva contraseña.
+              </p>
+              <p style="margin:0 0 8px;font-size:13px;color:#6b9e7a;">
+                Este enlace expira en 1 hora.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 40px 32px;">
+              <a href="${resetUrl}" style="display:inline-block;background:#4a9e64;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:10px;letter-spacing:0.01em;">
+                Restablecer contraseña →
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 40px;border-top:1px solid #253028;">
+              <p style="margin:0;font-size:12px;color:#4a6654;line-height:1.5;">
+                Si no solicitaste esto, ignora este correo. Tu contraseña no cambiará.<br>
+                <a href="${SITE_URL}" style="color:#6b9e7a;text-decoration:none;">weedhub.info</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: email,
+      subject: "Recupera tu contraseña — WeedHub",
+      html,
+    });
+  } catch {
+    // Non-fatal
+  }
+}
+
 export async function sendWelcomeEmail(email: string, username: string): Promise<void> {
   const resend = getClient();
   if (!resend) return;
