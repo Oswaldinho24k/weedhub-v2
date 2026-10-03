@@ -1,0 +1,38 @@
+{
+  "firewall": {
+    "rules": [
+      {
+        "name": "Rate limit auth",
+        "description": "10 req/min per IP on login/register",
+        "conditionGroup": [
+          { "conditions": [{ "type": "path", "op": "pre", "value": "/auth" }] }
+        ],
+        "action": { "type": "rate_limit", "rateLimit": { "requests": 10, "window": "1m" } }
+      },
+      {
+        "name": "Rate limit newsletter",
+        "description": "5 req/min per IP on newsletter signup",
+        "conditionGroup": [
+          { "conditions": [{ "type": "path", "op": "eq", "value": "/api/newsletter" }] }
+        ],
+        "action": { "type": "rate_limit", "rateLimit": { "requests": 5, "window": "1m" } }
+      },
+      {
+        "name": "Rate limit AI recommender",
+        "description": "10 req/min per IP on AI strain finder to cap Claude costs",
+        "conditionGroup": [
+          { "conditions": [{ "type": "path", "op": "pre", "value": "/api/ai" }] }
+        ],
+        "action": { "type": "rate_limit", "rateLimit": { "requests": 10, "window": "1m" } }
+      },
+      {
+        "name": "Rate limit strain search",
+        "description": "60 req/min per IP on typeahead search",
+        "conditionGroup": [
+          { "conditions": [{ "type": "path", "op": "eq", "value": "/api/strain-search" }] }
+        ],
+        "action": { "type": "rate_limit", "rateLimit": { "requests": 60, "window": "1m" } }
+      }
+    ]
+  }
+}

@@ -190,6 +190,7 @@ strainSchema.index({ "averageRatings.overall": -1 });
 strainSchema.index({ reviewCount: -1 });
 strainSchema.index({ lastReviewedAt: -1 });
 strainSchema.index({ aliasSlugs: 1 });
+strainSchema.index({ "terpenes.name": 1 });
 
 // Keep aliasSlugs in sync with aliases on save. Callers using updateOne/findByIdAndUpdate
 // must compute aliasSlugs themselves (see admin strain edit and seed helpers).
