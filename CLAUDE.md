@@ -1,7 +1,7 @@
 # WeedHub — CLAUDE.md
 
 > Single source of truth for AI assistants working on this project.
-> Updated: July 2026 (session 6 — post-audit improvements)
+> Updated: October 2026 (session 7 — post-audit improvements)
 
 ## What is WeedHub?
 
@@ -237,6 +237,11 @@ Users can follow other users. `profile.$username.tsx` shows follower/following c
 - Condiciones médicas (`/para`) — browse strains by health goal
 - AI strain recommender (`/recomendar`) — Claude-powered
 - Community forums (`/comunidad`) — posts, categories, voting, comments
+- Quick ratings (`/api/strains/:strainId/quick-rate`) — 1-5 stars without full review
+- Top 100 strains (`/top-100`) — ranked by community rating
+- Cannabis glossary (`/glosario`) — definitions, admin CRUD
+- Mapa Verde (`/mapa-verde`) — legal status tracker by country, admin CRUD
+- Condiciones médicas (`/para`) — browse strains by health goal, `helpsWithConditions` index
 
 **UX / Conversion:**
 - Newsletter section on homepage (above CTA)
@@ -255,12 +260,14 @@ Users can follow other users. `profile.$username.tsx` shows follower/following c
 
 ### Pending 🔧
 - **Plausible setup:** Script deployed, needs plausible.io account for `weedhub.info`
-- **Resend domain verification:** `hola@weedhub.info` needs DNS verification
+- **Resend domain verification:** `hola@weedhub.info` needs DNS verification (emails land in spam without it)
 - **Google Search Console:** Submit sitemap, verify hreflang indexing
 - **Stripe live mode:** Currently set up for test mode, needs production price IDs
 - **Pexels images:** Run `npm run images:pexels` against production DB to populate strain images
-- **Rate limiting:** Auth, newsletter, search, AI endpoints have no rate limiting (critical before scale)
+- **Rate limiting:** `/auth`, `/api/newsletter`, `/api/ai/find-strain` have no throttling — bot-vulnerable and AI cost risk. Vercel Firewall rules (no code needed).
 - **Sentry / error logging:** No production error tracking yet
+- **SESSION_SECRET fallback:** `app/sessions.server.ts` has `|| "dev-secret-change-me"` — must throw instead (being fixed)
+- **Terpene name index:** Missing `{ "terpenes.name": 1 }` on Strain model — terpene filter in `/strains` does full collection scan
 
 ### Not Yet Built ❌
 - **Review forms for brands/dispensaries/products** — models exist, no submission UI
