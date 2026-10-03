@@ -25,6 +25,8 @@ export async function connectDB() {
   if (!global.__mongoose.promise) {
     global.__mongoose.promise = mongoose.connect(MONGODB_URI, {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000,
     });
   }
 
