@@ -1,9 +1,26 @@
 import { type HTMLAttributes, forwardRef } from "react";
+import { type VariantProps, cva } from "class-variance-authority";
 import { cn } from "~/lib/utils";
 
-const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("card p-5", className)} {...props} />
+const cardVariants = cva("rounded-[var(--radius-lg)] border border-line", {
+  variants: {
+    variant: {
+      default:     "bg-raised p-5",
+      sunken:      "bg-sunken p-5",
+      interactive: "bg-raised p-5 transition-colors hover:bg-elev cursor-pointer",
+      flat:        "bg-transparent border-line p-5",
+    },
+  },
+  defaultVariants: { variant: "default" },
+});
+
+interface CardProps
+  extends HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof cardVariants> {}
+
+const Card = forwardRef<HTMLDivElement, CardProps>(
+  ({ className, variant, ...props }, ref) => (
+    <div ref={ref} className={cn(cardVariants({ variant }), className)} {...props} />
   )
 );
 Card.displayName = "Card";
@@ -29,4 +46,4 @@ const CardFooter = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
 );
 CardFooter.displayName = "CardFooter";
 
-export { Card, CardHeader, CardContent, CardFooter };
+export { Card, CardHeader, CardContent, CardFooter, cardVariants };

@@ -11,6 +11,7 @@ const buttonVariants = cva("btn", {
       destructive: "btn-warm",
       link: "btn-link",
       warm: "btn-warm",
+      "warm-outline": "border border-[var(--warm)] text-[var(--warm)] bg-transparent hover:bg-[var(--warm-soft)] transition-colors",
     },
     size: {
       sm: "text-xs py-2 px-3",
