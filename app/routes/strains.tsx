@@ -6,9 +6,9 @@ import { StrainModel } from "~/models/strain.server";
 import { EffectModel } from "~/models/effect.server";
 import { resolveLocale } from "~/lib/locale.server";
 import { getDictionary } from "~/content/locales";
-import { STRAIN_TYPES } from "~/constants/cannabis";
 import { CONDITIONS } from "~/constants/conditions";
 import { StrainCard } from "~/components/composite/strain-card";
+import { FilterSheet } from "~/components/composite/filter-sheet";
 import { Icon } from "~/components/ui/icon";
 import { cn } from "~/lib/utils";
 import { useT } from "~/lib/i18n-context";
@@ -20,9 +20,23 @@ export function meta({ data }: Route.MetaArgs) {
   const locale = data?.locale || "es";
   const dict = getDictionary(locale);
   const prefix = locale !== "es" ? `/${locale}` : "";
+  const filters = data?.filters;
+  const total = data?.total ?? 0;
+
+  let description = dict.meta.strainsDescription;
+  if (filters) {
+    const parts: string[] = [];
+    if (filters.type) parts.push(filters.type.charAt(0).toUpperCase() + filters.type.slice(1));
+    if (filters.terpene) parts.push(`terpeno ${filters.terpene}`);
+    if (filters.search) parts.push(`"${filters.search}"`);
+    if (parts.length > 0) {
+      description = `${total.toLocaleString()} cepas ${parts.join(", ")} en WeedHub — enciclopedia cannabis LATAM.`;
+    }
+  }
+
   return buildMeta({
     title: dict.meta.strainsTitle,
-    description: dict.meta.strainsDescription,
+    description,
     url: `${SITE_URL}${prefix}/strains`,
     canonicalPath: "/strains",
     locale,
@@ -35,6 +49,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const search = url.searchParams.get("search") || "";
   const type = url.searchParams.get("type") || "";
   const effectsParam = url.searchParams.get("effects") || "";
+  const terpene = url.searchParams.get("terpene") || "";
   const difficulty = url.searchParams.get("difficulty") || "";
   const condition = url.searchParams.get("condition") || "";
   const autoflowering = url.searchParams.get("autoflowering") || "";
@@ -48,6 +63,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   if (search) filter.$text = { $search: search };
   if (type && ["sativa", "indica", "hybrid"].includes(type)) filter.type = type;
   if (effectsParam) filter.effects = { $all: effectsParam.split(",") };
+  if (terpene) filter["terpenes.name"] = terpene;
   if (difficulty && ["Baja", "Moderada", "Alta"].includes(difficulty)) filter.difficulty = difficulty;
   if (condition) filter.helpsWithConditions = condition;
   if (autoflowering === "1") filter["grow.isAutoflowering"] = true;
@@ -69,8 +85,9 @@ export async function loader({ request }: Route.LoaderArgs) {
   const locale = await resolveLocale(request);
   const labelKey = locale === "pt" ? "labelPt" : locale === "en" ? "labelEn" : "labelEs";
 
-  const [strains, total, topEffects] = await Promise.all([
+  const [strains, total, topEffects, topTerpenes] = await Promise.all([
     StrainModel.find(filter)
+      .select("name slug type imageUrl colorHint dominantTerpene effects averageRatings reviewCount")
       .sort(sortQuery)
       .skip((page - 1) * PER_PAGE)
       .limit(PER_PAGE)
@@ -80,26 +97,34 @@ export async function loader({ request }: Route.LoaderArgs) {
       .sort({ usageCount: -1 })
       .limit(8)
       .lean(),
+    StrainModel.aggregate([
+      { $match: { isArchived: false } },
+      { $unwind: "$terpenes" },
+      { $group: { _id: "$terpenes.name", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 6 },
+    ]),
   ]);
 
   return {
     locale,
-    strains: strains.map((s) => ({
+    strains: strains.map((s: any) => ({
       ...s,
       _id: String(s._id),
-      createdAt: s.createdAt.toISOString(),
-      updatedAt: s.updatedAt.toISOString(),
+      createdAt: s.createdAt?.toISOString?.() ?? new Date().toISOString(),
+      updatedAt: s.updatedAt?.toISOString?.() ?? new Date().toISOString(),
     })),
     total,
     page,
     totalPages: Math.ceil(total / PER_PAGE),
-    filters: { search, type, effects: effectsParam, difficulty, condition, autoflowering, feminized, climate, sort },
+    filters: { search, type, effects: effectsParam, terpene, difficulty, condition, autoflowering, feminized, climate, sort },
     effectFilters: topEffects.map((e) => ({ key: e.key, label: (e as any)[labelKey] || e.labelEn })),
+    terpeneFilters: topTerpenes.map((t: any) => t._id as string),
   };
 }
 
 export default function StrainsPage({ loaderData }: Route.ComponentProps) {
-  const { strains, total, page, totalPages, filters, effectFilters } = loaderData;
+  const { strains, total, page, totalPages, filters, effectFilters, terpeneFilters } = loaderData;
   const [showGrowFilters, setShowGrowFilters] = useState(
     !!(filters.autoflowering || filters.feminized || filters.climate || filters.condition)
   );
@@ -126,8 +151,6 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
     if (searchDebounce.current) clearTimeout(searchDebounce.current);
     searchDebounce.current = setTimeout(() => updateFilter("search", value), 300);
   }
-
-  const currentEffects = filters.effects ? filters.effects.split(",") : [];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -188,65 +211,13 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
       {/* Sticky filter bar */}
       <section className="sticky top-16 z-30 bg-[color-mix(in_oklch,var(--bg)_90%,transparent)] backdrop-blur border-y border-line">
         <div className="mx-auto max-w-[1200px] px-6 py-3 flex items-center gap-4 flex-wrap">
-          <div className="flex gap-2">
-            <FilterChip active={!filters.type} onClick={() => updateFilter("type", "")}>
-              {t.strainTypes.all}
-            </FilterChip>
-            {STRAIN_TYPES.map((type) => {
-              const label =
-                type.value === "sativa"
-                  ? t.strainTypes.sativa
-                  : type.value === "indica"
-                    ? t.strainTypes.indica
-                    : t.strainTypes.hybrid;
-              return (
-                <FilterChip
-                  key={type.value}
-                  active={filters.type === type.value}
-                  onClick={() => updateFilter("type", type.value)}
-                >
-                  {label}
-                </FilterChip>
-              );
-            })}
-          </div>
-
-          <div className="hidden md:block w-px h-5 bg-line" />
-
-          <div className="flex gap-2">
-            {(["Baja", "Moderada", "Alta"] as const).map((d) => (
-              <FilterChip
-                key={d}
-                active={filters.difficulty === d}
-                onClick={() => updateFilter("difficulty", filters.difficulty === d ? "" : d)}
-              >
-                {d}
-              </FilterChip>
-            ))}
-          </div>
-
-          <div className="hidden md:block w-px h-5 bg-line" />
-
-          <div className="flex gap-2 flex-wrap">
-            {effectFilters.map((effect) => {
-              const isActive = currentEffects.includes(effect.key);
-              return (
-                <FilterChip
-                  key={effect.key}
-                  active={isActive}
-                  tone="accent"
-                  onClick={() => {
-                    const next = isActive
-                      ? currentEffects.filter((e) => e !== effect.key)
-                      : [...currentEffects, effect.key];
-                    updateFilter("effects", next.filter(Boolean).join(","));
-                  }}
-                >
-                  {effect.label}
-                </FilterChip>
-              );
-            })}
-          </div>
+          <FilterSheet
+            filters={filters}
+            effectFilters={effectFilters}
+            terpeneFilters={terpeneFilters}
+            updateFilter={updateFilter}
+            total={total}
+          />
 
           {/* Grow filters toggle */}
           <button
@@ -297,29 +268,35 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
             <div className="flex items-center gap-2">
               <span className="kicker text-xs">Clima</span>
               {(["tropical", "mediterráneo", "continental", "frío"] as const).map((c) => (
-                <FilterChip
+                <button
                   key={c}
-                  active={filters.climate === c}
+                  type="button"
+                  className={cn("chip", filters.climate === c && "on")}
+                  aria-pressed={filters.climate === c}
                   onClick={() => updateFilter("climate", filters.climate === c ? "" : c)}
                 >
                   {c.charAt(0).toUpperCase() + c.slice(1)}
-                </FilterChip>
+                </button>
               ))}
             </div>
             <div className="w-px h-5 bg-line" />
             <div className="flex items-center gap-2">
-              <FilterChip
-                active={filters.autoflowering === "1"}
+              <button
+                type="button"
+                className={cn("chip", filters.autoflowering === "1" && "on")}
+                aria-pressed={filters.autoflowering === "1"}
                 onClick={() => updateFilter("autoflowering", filters.autoflowering === "1" ? "" : "1")}
               >
                 Autofloreciente
-              </FilterChip>
-              <FilterChip
-                active={filters.feminized === "1"}
+              </button>
+              <button
+                type="button"
+                className={cn("chip", filters.feminized === "1" && "on")}
+                aria-pressed={filters.feminized === "1"}
                 onClick={() => updateFilter("feminized", filters.feminized === "1" ? "" : "1")}
               >
                 Feminizada
-              </FilterChip>
+              </button>
             </div>
             <div className="w-px h-5 bg-line" />
             <div className="flex items-center gap-2">
@@ -330,7 +307,7 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
                 className="mono text-xs bg-raised border border-line rounded-md px-2 py-1.5 focus:outline-none focus:border-accent"
               >
                 <option value="">Todas</option>
-                {CONDITIONS.map((c) => (
+                {CONDITIONS.map((c: any) => (
                   <option key={c.slug} value={c.slug}>{c.emoji} {c.labelEs}</option>
                 ))}
               </select>
@@ -397,30 +374,6 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
         )}
       </section>
     </div>
-  );
-}
-
-function FilterChip({
-  active,
-  tone = "neutral",
-  onClick,
-  children,
-}: {
-  active?: boolean;
-  tone?: "neutral" | "accent";
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  const onClass = tone === "accent" ? "on-accent" : "on";
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn("chip", active && onClass)}
-      aria-pressed={!!active}
-    >
-      {children}
-    </button>
   );
 }
 

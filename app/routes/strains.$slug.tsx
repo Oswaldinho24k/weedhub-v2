@@ -1,4 +1,5 @@
-import { Link, useFetcher, useOutletContext } from "react-router";
+import { Link, useFetcher, useOutletContext, Await } from "react-router";
+import { Suspense } from "react";
 import type { Route } from "./+types/strains.$slug";
 import { connectDB } from "~/lib/db.server";
 import { StrainModel } from "~/models/strain.server";
@@ -47,15 +48,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const strain = await StrainModel.findOne({ slug: params.slug, isArchived: false }).lean();
   if (!strain) throw new Response("Cepa no encontrada", { status: 404 });
 
-  const reviews = await ReviewModel.find({ strainId: strain._id, status: "published" })
-    .sort({ helpfulCount: -1, createdAt: -1 })
-    .limit(10)
-    .populate(
-      "userId",
-      "username anonymousHandle avatar earnedBadges publishAsAnonymous country city showCityPublicly"
-    )
-    .lean();
-
+  // Synchronous: affects initial render state (save button, star widget)
   const user = await getUserFromSession(request);
   let isSaved = false;
   let existingQuickRating: number | undefined;
@@ -72,12 +65,49 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const strainFlavors = strain.flavors || [];
   const strainTerpeneNames = (strain.terpenes || []).map((t: any) => t.name);
 
-  const similarStrains = await StrainModel.aggregate([
+  // Deferred: slow queries that stream after initial HTML is sent
+  const reviewsPromise = ReviewModel.find({ strainId: strain._id, status: "published" })
+    .sort({ helpfulCount: -1, createdAt: -1 })
+    .limit(10)
+    .populate(
+      "userId",
+      "username anonymousHandle avatar earnedBadges publishAsAnonymous country city showCityPublicly"
+    )
+    .lean()
+    .then((reviews) =>
+      reviews.map((r) => {
+        const u = r.userId as any;
+        return {
+          _id: String(r._id),
+          ratings: r.ratings,
+          comment: r.comment,
+          context: r.context,
+          effectsExperienced: r.effectsExperienced,
+          helpfulVotes: (r.helpfulVotes || []).map(String),
+          helpfulCount: r.helpfulCount,
+          createdAt: r.createdAt.toISOString(),
+          publishedAs: r.publishedAs,
+          user: u
+            ? {
+                username: u.username,
+                anonymousHandle: u.anonymousHandle,
+                avatar: u.avatar,
+                earnedBadges: u.earnedBadges,
+                publishAsAnonymous: u.publishAsAnonymous,
+                country: u.country,
+                city: u.city,
+                showCityPublicly: u.showCityPublicly,
+              }
+            : undefined,
+        };
+      })
+    );
+
+  const similarStrainsPromise = StrainModel.aggregate([
     {
       $match: {
         isArchived: false,
         _id: { $ne: strain._id },
-        // Must share at least one effect to be relevant
         effects: { $elemMatch: { $in: strainEffects } },
       },
     },
@@ -101,13 +131,23 @@ export async function loader({ params, request }: Route.LoaderArgs) {
           $add: [
             { $multiply: ["$sharedEffects", 3] },
             { $multiply: ["$sharedFlavors", 2] },
+            { $multiply: [{ $size: "$sharedTerpeneNames" }, 2] },
           ],
         },
       },
     },
     { $sort: { similarityScore: -1, "averageRatings.overall": -1 } },
     { $limit: 4 },
-  ]);
+  ]).then((results) =>
+    results.map((s: any) => ({
+      ...s,
+      _id: String(s._id),
+      createdAt: s.createdAt?.toISOString?.() || new Date().toISOString(),
+      updatedAt: s.updatedAt?.toISOString?.() || new Date().toISOString(),
+      sharedEffects: s.sharedEffects ?? 0,
+      sharedFlavors: s.sharedFlavors ?? 0,
+    }))
+  );
 
   return {
     strain: {
@@ -116,48 +156,15 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       createdAt: strain.createdAt.toISOString(),
       updatedAt: strain.updatedAt.toISOString(),
     },
-    reviews: reviews.map((r) => {
-      const u = r.userId as any;
-      return {
-        _id: String(r._id),
-        ratings: r.ratings,
-        comment: r.comment,
-        context: r.context,
-        effectsExperienced: r.effectsExperienced,
-        helpfulVotes: r.helpfulVotes.map(String),
-        helpfulCount: r.helpfulCount,
-        createdAt: r.createdAt.toISOString(),
-        publishedAs: r.publishedAs,
-        user: u
-          ? {
-              username: u.username,
-              anonymousHandle: u.anonymousHandle,
-              avatar: u.avatar,
-              earnedBadges: u.earnedBadges,
-              publishAsAnonymous: u.publishAsAnonymous,
-              country: u.country,
-              city: u.city,
-              showCityPublicly: u.showCityPublicly,
-            }
-          : undefined,
-      };
-    }),
+    reviews: reviewsPromise,
     isSaved,
     existingQuickRating,
-    similarStrains: similarStrains.map((s: any) => ({
-      ...s,
-      _id: String(s._id),
-      createdAt: s.createdAt?.toISOString?.() || new Date().toISOString(),
-      updatedAt: s.updatedAt?.toISOString?.() || new Date().toISOString(),
-      // Keep similarity metadata for UI
-      sharedEffects: s.sharedEffects ?? 0,
-      sharedFlavors: s.sharedFlavors ?? 0,
-    })),
+    similarStrains: similarStrainsPromise,
   };
 }
 
 export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
-  const { strain, reviews, isSaved, similarStrains, existingQuickRating } = loaderData;
+  const { strain, isSaved, existingQuickRating } = loaderData;
   const context = useOutletContext<{ user?: any; locale?: "es" | "pt" | "en" }>();
   const currentUser = context?.user;
   const locale = context?.locale || "es";
@@ -409,7 +416,12 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
                     key={terp.name}
                     className="flex items-baseline justify-between border-b border-line pb-2"
                   >
-                    <span className="text-sm text-fg">{terp.name}</span>
+                    <Link
+                      to={`${prefix}/strains?terpene=${encodeURIComponent(terp.name)}`}
+                      className="text-sm text-fg hover:text-accent transition-colors"
+                    >
+                      {terp.name}
+                    </Link>
                     <span className="mono text-xs text-fg-muted tnum">
                       {terp.percentage.toFixed(2)}%
                     </span>
@@ -448,10 +460,10 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
       </section>
 
       {/* Grow info */}
-      {strain.grow && (strain.grow.floweringWeeks || strain.grow.yieldIndoor || strain.grow.yieldOutdoor) && (
-        <section className="mx-auto max-w-[1200px] px-6 py-10 border-t border-line">
-          <div className="kicker mb-3">Para cultivadores</div>
-          <h2 className="display text-2xl md:text-3xl mb-6">Datos de cultivo</h2>
+      <section className="mx-auto max-w-[1200px] px-6 py-10 border-t border-line">
+        <div className="kicker mb-3">Para cultivadores</div>
+        <h2 className="display text-2xl md:text-3xl mb-6">Datos de cultivo</h2>
+        {strain.grow && (strain.grow.floweringWeeks || strain.grow.yieldIndoor || strain.grow.yieldOutdoor || strain.grow.climate || strain.grow.isAutoflowering || strain.grow.isFeminized) ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {strain.grow.floweringWeeks && (
               <GrowStat
@@ -480,8 +492,10 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
             {strain.grow.isAutoflowering && <GrowStat label="Tipo" value="Autofloreciente" />}
             {strain.grow.isFeminized && <GrowStat label="Semillas" value="Feminizadas" />}
           </div>
-        </section>
-      )}
+        ) : (
+          <p className="text-sm text-fg-muted">Datos de cultivo no disponibles aún para esta cepa.</p>
+        )}
+      </section>
 
       {/* Reviews */}
       <section className="mx-auto max-w-[1200px] px-6 py-14">
@@ -542,29 +556,35 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
             </div>
           </aside>
 
-          <div>
-            {reviews.length === 0 ? (
-              <div className="card p-10 text-center">
-                <p className="text-fg-muted mb-4">{t.strain.noReviewsYet}</p>
-                <Link
-                  to={`/strains/${strain.slug}/review`}
-                  className="btn btn-primary inline-flex"
-                >
-                  {t.strain.beFirst}
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-5">
-                {reviews.map((review: any) => (
-                  <ReviewCard
-                    key={review._id}
-                    review={review}
-                    currentUserId={currentUser?._id}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          <Suspense fallback={<ReviewsSkeleton />}>
+            <Await resolve={loaderData.reviews}>
+              {(reviews: any[]) => (
+                <div>
+                  {reviews.length === 0 ? (
+                    <div className="card p-10 text-center">
+                      <p className="text-fg-muted mb-4">{t.strain.noReviewsYet}</p>
+                      <Link
+                        to={`/strains/${strain.slug}/review`}
+                        className="btn btn-primary inline-flex"
+                      >
+                        {t.strain.beFirst}
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-5">
+                      {reviews.map((review: any) => (
+                        <ReviewCard
+                          key={review._id}
+                          review={review}
+                          currentUserId={currentUser?._id}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </Await>
+          </Suspense>
         </div>
       </section>
 
@@ -606,32 +626,75 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
       )}
 
       {/* Similar */}
-      {similarStrains.length > 0 && (
-        <section className="mx-auto max-w-[1200px] px-6 py-14 border-t border-line">
-          <div className="kicker mb-3">{t.strain.similarKicker}</div>
-          <h2 className="display text-3xl md:text-4xl mb-8">{t.strain.similarTitle}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {similarStrains.map((s: any) => (
-              <div key={s._id} className="flex flex-col gap-2">
-                <StrainCard strain={s} />
-                <div className="flex flex-wrap gap-1.5 px-1">
-                  {s.sharedEffects > 0 && (
-                    <span className="pill accent text-xs">
-                      {s.sharedEffects} efecto{s.sharedEffects !== 1 ? "s" : ""} comunes
-                    </span>
-                  )}
-                  {s.sharedFlavors > 0 && (
-                    <span className="pill text-xs">
-                      {s.sharedFlavors} sabor{s.sharedFlavors !== 1 ? "es" : ""} similares
-                    </span>
-                  )}
+      <Suspense fallback={<SimilarStrainsSkeleton />}>
+        <Await resolve={loaderData.similarStrains}>
+          {(similarStrains: any[]) =>
+            similarStrains.length > 0 ? (
+              <section className="mx-auto max-w-[1200px] px-6 py-14 border-t border-line">
+                <div className="kicker mb-3">{t.strain.similarKicker}</div>
+                <h2 className="display text-3xl md:text-4xl mb-8">{t.strain.similarTitle}</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                  {similarStrains.map((s: any) => (
+                    <div key={s._id} className="flex flex-col gap-2">
+                      <StrainCard strain={s} />
+                      <div className="flex flex-wrap gap-1.5 px-1">
+                        {s.sharedEffects > 0 && (
+                          <span className="pill accent text-xs">
+                            {s.sharedEffects} efecto{s.sharedEffects !== 1 ? "s" : ""} comunes
+                          </span>
+                        )}
+                        {s.sharedFlavors > 0 && (
+                          <span className="pill text-xs">
+                            {s.sharedFlavors} sabor{s.sharedFlavors !== 1 ? "es" : ""} similares
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+              </section>
+            ) : null
+          }
+        </Await>
+      </Suspense>
     </div>
+  );
+}
+
+function ReviewsSkeleton() {
+  return (
+    <div className="space-y-5">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="card p-6 animate-pulse">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-full bg-elev" />
+            <div className="h-3 w-32 rounded bg-elev" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 w-full rounded bg-elev" />
+            <div className="h-3 w-4/5 rounded bg-elev" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SimilarStrainsSkeleton() {
+  return (
+    <section className="mx-auto max-w-[1200px] px-6 py-14 border-t border-line">
+      <div className="h-3 w-24 rounded bg-elev mb-3 animate-pulse" />
+      <div className="h-8 w-64 rounded bg-elev mb-8 animate-pulse" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="card p-4 animate-pulse">
+            <div className="aspect-[4/3] rounded bg-elev mb-3" />
+            <div className="h-4 w-3/4 rounded bg-elev mb-2" />
+            <div className="h-3 w-1/2 rounded bg-elev" />
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
