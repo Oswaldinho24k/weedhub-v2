@@ -22,6 +22,7 @@ export interface BadgeDefinition {
   name: string;
   description: string;
   icon: string;
+  emoji?: string;
   requirement: number;
   type: "reviews" | "helpful" | "strains" | "special";
 }

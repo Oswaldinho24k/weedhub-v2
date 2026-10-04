@@ -10,6 +10,7 @@ export const BADGES: BadgeWithPriority[] = [
     name: "Primera Reseña",
     description: "Escribiste tu primera reseña",
     icon: "edit_note",
+    emoji: "✏️",
     requirement: 1,
     type: "reviews",
     displayPriority: 10,
@@ -19,6 +20,7 @@ export const BADGES: BadgeWithPriority[] = [
     name: "Reseñador Activo",
     description: "Escribiste 5 reseñas",
     icon: "rate_review",
+    emoji: "⭐",
     requirement: 5,
     type: "reviews",
     displayPriority: 50,
@@ -28,6 +30,7 @@ export const BADGES: BadgeWithPriority[] = [
     name: "Crítico Experto",
     description: "Escribiste 25 reseñas",
     icon: "military_tech",
+    emoji: "🏅",
     requirement: 25,
     type: "reviews",
     displayPriority: 80,
@@ -37,6 +40,7 @@ export const BADGES: BadgeWithPriority[] = [
     name: "Leyenda Cannábica",
     description: "Escribiste 100 reseñas",
     icon: "emoji_events",
+    emoji: "🏆",
     requirement: 100,
     type: "reviews",
     displayPriority: 100,
@@ -46,6 +50,7 @@ export const BADGES: BadgeWithPriority[] = [
     name: "Útil",
     description: "Recibiste 10 votos útiles",
     icon: "thumb_up",
+    emoji: "👍",
     requirement: 10,
     type: "helpful",
     displayPriority: 40,
@@ -55,6 +60,7 @@ export const BADGES: BadgeWithPriority[] = [
     name: "Muy Útil",
     description: "Recibiste 50 votos útiles",
     icon: "volunteer_activism",
+    emoji: "💎",
     requirement: 50,
     type: "helpful",
     displayPriority: 70,
@@ -64,6 +70,7 @@ export const BADGES: BadgeWithPriority[] = [
     name: "Explorador",
     description: "Reseñaste 10 cepas diferentes",
     icon: "explore",
+    emoji: "🧭",
     requirement: 10,
     type: "strains",
     displayPriority: 45,
@@ -73,6 +80,7 @@ export const BADGES: BadgeWithPriority[] = [
     name: "Catador",
     description: "Reseñaste 50 cepas diferentes",
     icon: "local_florist",
+    emoji: "🌿",
     requirement: 50,
     type: "strains",
     displayPriority: 75,
@@ -118,6 +126,30 @@ export const LEVELS: Level[] = [
   { name: "Árbol", icon: "park", minPoints: 400 },
   { name: "Bosque", icon: "forest", minPoints: 1000 },
 ];
+
+export const LEVEL_EMOJI: Record<string, string> = {
+  "Semilla": "🌱",
+  "Brote": "🌿",
+  "Planta": "🪴",
+  "Árbol": "🌳",
+  "Bosque": "🏕️",
+};
+
+export const LEVEL_COLOR: Record<string, string> = {
+  "Semilla": "oklch(65% 0.15 145)",
+  "Brote": "oklch(70% 0.18 145)",
+  "Planta": "oklch(60% 0.20 155)",
+  "Árbol": "oklch(55% 0.18 170)",
+  "Bosque": "oklch(50% 0.22 160)",
+};
+
+export const LEVEL_COLOR_DARK: Record<string, string> = {
+  "Semilla": "oklch(52% 0.14 145)",
+  "Brote": "oklch(57% 0.16 145)",
+  "Planta": "oklch(47% 0.18 155)",
+  "Árbol": "oklch(42% 0.16 170)",
+  "Bosque": "oklch(37% 0.20 160)",
+};
 
 export function getCurrentLevel(points: number): Level {
   let current = LEVELS[0];

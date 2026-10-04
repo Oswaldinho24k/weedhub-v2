@@ -1,10 +1,11 @@
+import { useState } from "react";
 import { Link, useOutletContext } from "react-router";
 import type { Route } from "./+types/profile";
 import { requireUser } from "~/lib/auth.server";
 import { connectDB } from "~/lib/db.server";
 import { ReviewModel } from "~/models/review.server";
 import { StrainSubmissionModel } from "~/models/strain-submission.server";
-import { BADGES, getCurrentLevel, getNextLevel } from "~/constants/gamification";
+import { BADGES, getCurrentLevel, getNextLevel, getShowcaseBadge, LEVEL_EMOJI, LEVEL_COLOR, LEVEL_COLOR_DARK } from "~/constants/gamification";
 import { countryLabel, countryFlag } from "~/constants/locations";
 import { Icon } from "~/components/ui/icon";
 import { RatingStars } from "~/components/composite/rating-stars";
@@ -25,20 +26,28 @@ export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request);
   await connectDB();
 
-  const [recentReviews, mySubmissions] = await Promise.all([
+  const [recentReviews, mySubmissions, typeAgg] = await Promise.all([
     ReviewModel.find({
       userId: user._id,
       status: "published",
     })
       .sort({ createdAt: -1 })
-      .limit(5)
-      .populate("strainId", "name slug type colorHint")
+      .limit(20)
+      .populate("strainId", "name slug type colorHint imageUrl")
       .lean(),
     StrainSubmissionModel.find({ submittedBy: user._id })
       .sort({ createdAt: -1 })
       .limit(10)
       .populate("linkedStrainId", "name slug")
       .lean(),
+    ReviewModel.aggregate([
+      { $match: { userId: user._id, status: "published" } },
+      { $lookup: { from: "strains", localField: "strainId", foreignField: "_id", as: "strain" } },
+      { $unwind: { path: "$strain", preserveNullAndEmptyArrays: true } },
+      { $group: { _id: "$strain.type", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 1 },
+    ]),
   ]);
 
   return {
@@ -61,6 +70,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       onboardingCompleted: user.onboardingCompleted,
       createdAt: user.createdAt?.toISOString(),
     },
+    favoriteType: (typeAgg[0]?._id as string | null) ?? null,
     recentReviews: recentReviews.map((r) => ({
       _id: String(r._id),
       ratings: r.ratings,
@@ -72,6 +82,7 @@ export async function loader({ request }: Route.LoaderArgs) {
             slug: (r.strainId as any).slug,
             type: (r.strainId as any).type,
             colorHint: (r.strainId as any).colorHint,
+            imageUrl: (r.strainId as any).imageUrl,
           }
         : null,
     })),
@@ -91,264 +102,270 @@ export async function loader({ request }: Route.LoaderArgs) {
   };
 }
 
+type Tab = "reviews" | "badges" | "saved";
+
 export default function ProfilePage({ loaderData }: Route.ComponentProps) {
-  const { user, recentReviews, mySubmissions } = loaderData;
+  const { user, recentReviews, mySubmissions, favoriteType } = loaderData;
   const t = useT();
   const context = useOutletContext<{ locale?: "es" | "pt" | "en" }>();
   const locale = context?.locale || "es";
+  const [activeTab, setActiveTab] = useState<Tab>("reviews");
+
   const points = user.points || 0;
   const currentLevel = getCurrentLevel(points);
   const nextLevel = getNextLevel(points);
   const progress = nextLevel
-    ? ((points - currentLevel.minPoints) /
-        (nextLevel.minPoints - currentLevel.minPoints)) *
-      100
+    ? ((points - currentLevel.minPoints) / (nextLevel.minPoints - currentLevel.minPoints)) * 100
     : 100;
+  const showcaseBadge = getShowcaseBadge(user.earnedBadges as any);
+  const levelColor = LEVEL_COLOR[currentLevel.name] || "var(--accent)";
+  const levelColorDark = LEVEL_COLOR_DARK[currentLevel.name] || "var(--accent)";
+  const levelEmoji = LEVEL_EMOJI[currentLevel.name] || "🌱";
+  const earnedCount = user.earnedBadges?.length || 0;
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-10">
-      {/* Header */}
-      <section className="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-start gap-6 mb-10">
-        <div
-          className="h-20 w-20 rounded-full bg-elev border border-line overflow-hidden grid place-items-center display text-2xl"
-          style={{ color: "var(--accent)" }}
-        >
-          <img
-            src={user.avatar || "/fallback/avatar-default.jpg"}
-            alt={user.displayName}
-            className="h-full w-full object-cover"
-          />
-        </div>
-        <div>
-          <div className="kicker mb-1">{t.profile.kickerPrivate}</div>
-          <h1 className="display text-4xl md:text-5xl">{user.displayName}</h1>
-          <div className="flex items-center gap-2 mt-2 flex-wrap text-sm text-fg-muted">
-            <span className="font-medium">@{user.username}</span>
-            <span>·</span>
-            <span className="mono text-xs">{user.anonymousHandle}</span>
-            <span>·</span>
-            <span>
-              {countryFlag(user.country)} {user.showCityPublicly && user.city
-                ? `${user.city}, ${countryLabel(user.country)}`
-                : countryLabel(user.country)}
-            </span>
+    <div>
+      {/* Hero banner */}
+      <div
+        className="relative h-32 md:h-44"
+        style={{ background: `linear-gradient(135deg, ${levelColor} 0%, ${levelColorDark} 100%)` }}
+      />
+
+      <div className="mx-auto max-w-[1200px] px-6">
+        {/* Avatar + identity row */}
+        <div className="relative -mt-14 md:-mt-16 flex items-end justify-between gap-4 pb-6 border-b border-line flex-wrap">
+          <div className="flex items-end gap-4">
+            <div className="relative shrink-0">
+              <div className="h-24 w-24 md:h-28 md:w-28 rounded-full bg-elev border-4 overflow-hidden"
+                style={{ borderColor: "var(--bg)" }}>
+                <img
+                  src={user.avatar || "/fallback/avatar-default.jpg"}
+                  alt={user.displayName}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              {showcaseBadge && (
+                <div
+                  className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full border-2 grid place-items-center text-base leading-none"
+                  style={{ borderColor: "var(--bg)", background: "var(--gold)" }}
+                  title={showcaseBadge.name}
+                >
+                  {showcaseBadge.emoji || "⭐"}
+                </div>
+              )}
+            </div>
+            <div className="pb-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="display text-2xl md:text-3xl">{user.displayName}</h1>
+                <span
+                  className="pill text-xs"
+                  style={{ background: levelColor, color: "white", borderColor: "transparent" }}
+                >
+                  {levelEmoji} {currentLevel.name}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 mt-1 text-sm text-fg-muted flex-wrap">
+                <span>@{user.username}</span>
+                <span>·</span>
+                <span className="mono text-xs">{user.anonymousHandle}</span>
+                <span>·</span>
+                <span>
+                  {countryFlag(user.country)}{" "}
+                  {user.showCityPublicly && user.city
+                    ? `${user.city}, ${countryLabel(user.country)}`
+                    : countryLabel(user.country)}
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="mt-3 kicker" style={{ color: user.publishAsAnonymous ? "var(--lilac)" : "var(--accent)" }}>
-            {t.profile.publishingAs} {user.publishAsAnonymous ? t.profile.asAnonymous : t.profile.asReal}
-          </div>
-        </div>
-        <div className="flex flex-col gap-2 items-end">
-          <Link to="/profile/edit" className="btn btn-ghost">
-            <Icon name="edit" size={14} />
-            {t.profile.editButton}
-          </Link>
-          {!user.publishAsAnonymous && (
-            <Link
-              to={`/profile/${user.username}`}
-              className="text-xs text-fg-muted hover:text-fg inline-flex items-center gap-1"
-            >
-              <Icon name="eye" size={12} />
-              {t.profile.seePublic}
+
+          <div className="flex items-center gap-2 pb-1">
+            <Link to="/profile/edit" className="btn btn-ghost">
+              <Icon name="edit" size={14} />
+              {t.profile.editButton}
             </Link>
+            {!user.publishAsAnonymous && (
+              <Link to={`/profile/${user.username}`} className="btn btn-ghost">
+                <Icon name="eye" size={14} />
+                {t.profile.seePublic}
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-6 border-b border-line">
+          <StatCard value={user.stats?.reviewCount || 0} label={t.profile.stats.reviews} />
+          <StatCard value={user.stats?.strainsReviewed || 0} label={t.profile.stats.strains} />
+          <StatCard value={user.stats?.helpfulVotesReceived || 0} label={t.profile.stats.helpful} />
+          <StatCard value={`${earnedCount}/${BADGES.length}`} label="Insignias" />
+        </div>
+
+        {/* Level progress */}
+        <div className="py-5 border-b border-line">
+          <div className="flex items-center justify-between mb-2 text-sm">
+            <span className="text-fg-muted">{t.profile.level}: <strong style={{ color: levelColor }}>{currentLevel.name}</strong></span>
+            <span className="mono text-xs text-fg-dim tnum">{points} pts{nextLevel ? ` · faltan ${nextLevel.minPoints - points} para ${nextLevel.name}` : " · nivel máximo"}</span>
+          </div>
+          <div className="h-1.5 bg-sunken rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-[width] duration-700"
+              style={{ width: `${Math.min(100, progress)}%`, background: levelColor }}
+            />
+          </div>
+          {favoriteType && (
+            <p className="text-xs text-fg-dim mt-2">
+              Tipo favorito: <span className="capitalize font-medium" style={{ color: "var(--fg)" }}>{favoriteType}</span>
+            </p>
           )}
         </div>
-      </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8">
-        <aside className="space-y-6">
-          <div className="card p-5">
-            <div className="kicker mb-3">{t.profile.level}</div>
-            <div className="flex items-baseline justify-between">
-              <span className="display text-2xl">{currentLevel.name}</span>
-              <span className="mono text-sm text-fg-muted tnum">
-                {points} pts
-              </span>
-            </div>
-            <div className="h-1.5 bg-sunken rounded-full mt-3 overflow-hidden">
-              <div
-                className="h-full rounded-full transition-[width] duration-500"
-                style={{ width: `${progress}%`, background: "var(--accent)" }}
-              />
-            </div>
-            {nextLevel && (
-              <p className="text-xs text-fg-dim mt-2">
-                {nextLevel.minPoints - points} {t.profile.pointsTo} {nextLevel.name}
-              </p>
-            )}
-          </div>
+        {/* Tabs */}
+        <div className="flex border-b border-line mt-0">
+          {(["reviews", "badges", "saved"] as Tab[]).map((tab) => {
+            const labels: Record<Tab, string> = {
+              reviews: t.profile.recentReviews,
+              badges: t.profile.badgesTitle,
+              saved: t.profile.savedStrains,
+            };
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className="px-5 py-3 text-sm font-medium transition-colors relative"
+                style={{
+                  color: activeTab === tab ? "var(--fg)" : "var(--fg-muted)",
+                  borderBottom: activeTab === tab ? `2px solid ${levelColor}` : "2px solid transparent",
+                }}
+              >
+                {labels[tab]}
+                {tab === "reviews" && recentReviews.length > 0 && (
+                  <span className="ml-1.5 mono text-[10px] text-fg-dim">{recentReviews.length}</span>
+                )}
+                {tab === "badges" && (
+                  <span className="ml-1.5 mono text-[10px] text-fg-dim">{earnedCount}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
 
-          <div className="card p-5 grid grid-cols-3 gap-3 text-center">
-            <StatPill
-              kicker={t.profile.stats.reviews}
-              value={user.stats?.reviewCount || 0}
-            />
-            <StatPill
-              kicker={t.profile.stats.helpful}
-              value={user.stats?.helpfulVotesReceived || 0}
-            />
-            <StatPill kicker={t.profile.stats.strains} value={user.stats?.strainsReviewed || 0} />
-          </div>
-
-          <Link to="/profile/saved" className="card p-5 flex items-center justify-between hover:bg-elev transition-colors">
+        <div className="py-8">
+          {/* Reviews tab */}
+          {activeTab === "reviews" && (
             <div>
-              <div className="kicker mb-1">{t.profile.libraryKicker}</div>
-              <div className="text-sm text-fg">{t.profile.savedStrains}</div>
-            </div>
-            <Icon name="arrowRight" size={16} className="text-fg-dim" />
-          </Link>
+              {recentReviews.length === 0 ? (
+                <div className="card p-12 text-center">
+                  <p className="text-fg-muted mb-4">{t.profile.noReviews}</p>
+                  <Link to="/strains" className="btn btn-primary inline-flex">
+                    {t.profile.writeFirst}
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {recentReviews.map((review: any) => (
+                    <ReviewMiniCard key={review._id} review={review} locale={locale} />
+                  ))}
+                </div>
+              )}
 
-          {user.cannabisProfile?.preferredEffects?.length ? (
-            <div className="card p-5">
-              <div className="kicker mb-3">{t.profile.preferredEffects}</div>
-              <div className="flex flex-wrap gap-2">
-                {user.cannabisProfile.preferredEffects.map((e: string) => (
-                  <span key={e} className="pill accent">
-                    {e}
-                  </span>
-                ))}
+              {mySubmissions && mySubmissions.length > 0 && (
+                <div className="mt-10">
+                  <div className="flex items-baseline justify-between mb-5">
+                    <h2 className="display text-xl">Mis sugerencias de cepas</h2>
+                    <Link
+                      to="/strains/sugerir"
+                      className="text-sm text-fg-muted hover:text-fg inline-flex items-center gap-1"
+                    >
+                      Sugerir otra <Icon name="plus" size={12} />
+                    </Link>
+                  </div>
+                  <ul className="space-y-3">
+                    {mySubmissions.map((s) => (
+                      <li key={s._id} className="card p-4 flex items-center justify-between gap-3 flex-wrap">
+                        <div className="min-w-0">
+                          <div className="font-medium">{s.name}</div>
+                          <div className="text-xs text-fg-dim">
+                            {formatDate(s.createdAt, locale)}
+                            {s.linkedStrain && (
+                              <>
+                                {" · "}
+                                <Link to={`/strains/${s.linkedStrain.slug}`} className="underline hover:text-fg">
+                                  {s.linkedStrain.name}
+                                </Link>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <SubmissionStatusPill status={s.status} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Badges tab */}
+          {activeTab === "badges" && (
+            <div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {BADGES.map((badge) => {
+                  const earned = user.earnedBadges?.find((eb: any) => eb.badgeId === badge.id);
+                  const isEarned = !!earned;
+                  return (
+                    <div
+                      key={badge.id}
+                      className={`card p-5 text-center transition-all ${isEarned ? "" : "opacity-40 grayscale"}`}
+                    >
+                      <div
+                        className="text-3xl mb-3 leading-none"
+                        title={badge.description}
+                      >
+                        {badge.emoji || "🏅"}
+                      </div>
+                      <div className="font-medium text-sm">{badge.name}</div>
+                      <div className="text-[11px] text-fg-dim mt-1 leading-snug">{badge.description}</div>
+                      {isEarned && earned?.earnedAt && typeof earned.earnedAt === "string" && (
+                        <div className="text-[10px] text-fg-dim mt-2 mono">
+                          {formatDate(earned.earnedAt, locale)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          ) : null}
-        </aside>
+          )}
 
-        <div className="space-y-10">
-          {/* Badges */}
-          <section>
-            <div className="flex items-baseline justify-between mb-5">
-              <h2 className="display text-2xl">{t.profile.badgesTitle}</h2>
-              <span className="kicker">
-                {user.earnedBadges?.length || 0} / {BADGES.length}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {BADGES.map((badge) => {
-                const earned = user.earnedBadges?.find(
-                  (eb: any) => eb.badgeId === badge.id
-                );
-                const isEarned = !!earned;
-                return (
-                  <div
-                    key={badge.id}
-                    className={`card p-4 text-center transition-opacity ${
-                      isEarned ? "" : "opacity-55"
-                    }`}
-                    title={badge.description}
-                  >
-                    <div
-                      className="h-9 w-9 mx-auto rounded-full grid place-items-center mb-2"
-                      style={{
-                        background: isEarned ? "var(--gold)" : "var(--bg-elev)",
-                        color: isEarned ? "oklch(22% 0.05 85)" : "var(--fg-dim)",
-                      }}
-                    >
-                      <Icon name="crown" size={16} />
-                    </div>
-                    <div className="text-sm font-medium">{badge.name}</div>
-                    <div className="text-[10px] text-fg-dim mt-1 line-clamp-1">
-                      {badge.description}
-                    </div>
+          {/* Saved tab */}
+          {activeTab === "saved" && (
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <p className="text-sm text-fg-muted">Tus cepas guardadas.</p>
+                <Link to="/profile/saved" className="btn btn-ghost text-sm">
+                  Ver todas <Icon name="arrowRight" size={13} />
+                </Link>
+              </div>
+              {user.cannabisProfile?.preferredEffects?.length ? (
+                <div className="card p-5 mb-5">
+                  <div className="kicker mb-3">{t.profile.preferredEffects}</div>
+                  <div className="flex flex-wrap gap-2">
+                    {user.cannabisProfile.preferredEffects.map((e: string) => (
+                      <span key={e} className="pill accent">{e}</span>
+                    ))}
                   </div>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* Recent Reviews */}
-          <section>
-            <div className="flex items-baseline justify-between mb-5">
-              <h2 className="display text-2xl">{t.profile.recentReviews}</h2>
-              <Link to="/strains" className="text-sm text-fg-muted hover:text-fg">
-                {t.profile.exploreStrains}
+                </div>
+              ) : null}
+              <Link
+                to="/profile/saved"
+                className="card p-10 text-center hover:bg-elev transition-colors block"
+              >
+                <Icon name="bookmark" size={24} className="mx-auto mb-3 text-fg-dim" />
+                <p className="text-fg-muted text-sm">Ver biblioteca completa de cepas guardadas</p>
               </Link>
             </div>
-            {recentReviews.length === 0 ? (
-              <div className="card p-10 text-center">
-                <p className="text-fg-muted mb-4">{t.profile.noReviews}</p>
-                <Link to="/strains" className="btn btn-primary inline-flex">
-                  {t.profile.writeFirst}
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {recentReviews.map((review: any) => (
-                  <article key={review._id} className="card p-5">
-                    <header className="flex items-center justify-between mb-3">
-                      {review.strain && (
-                        <Link
-                          to={`/strains/${review.strain.slug}`}
-                          className="flex items-center gap-3 hover:text-accent transition-colors"
-                        >
-                          <span
-                            className="h-8 w-8 rounded-md shrink-0"
-                            style={{
-                              background:
-                                review.strain.colorHint || "var(--bg-elev)",
-                            }}
-                          />
-                          <span className="font-medium">
-                            {review.strain.name}
-                          </span>
-                        </Link>
-                      )}
-                      <RatingStars rating={review.ratings.overall} size="sm" />
-                    </header>
-                    {review.comment && (
-                      <p className="text-sm text-fg-muted line-clamp-3">
-                        {review.comment}
-                      </p>
-                    )}
-                    <footer className="mt-3 text-xs text-fg-dim">
-                      {formatDate(review.createdAt, locale)}
-                    </footer>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* My strain suggestions */}
-          {mySubmissions && mySubmissions.length > 0 && (
-            <section>
-              <div className="flex items-baseline justify-between mb-5">
-                <h2 className="display text-2xl">Mis sugerencias</h2>
-                <Link
-                  to="/strains/sugerir"
-                  className="text-sm text-fg-muted hover:text-fg inline-flex items-center gap-1"
-                >
-                  Sugerir otra <Icon name="plus" size={12} />
-                </Link>
-              </div>
-              <ul className="space-y-3">
-                {mySubmissions.map((s) => (
-                  <li key={s._id} className="card p-4 flex items-center justify-between gap-3 flex-wrap">
-                    <div className="min-w-0">
-                      <div className="font-medium">{s.name}</div>
-                      <div className="text-xs text-fg-dim">
-                        {formatDate(s.createdAt, locale)}
-                        {s.linkedStrain && (
-                          <>
-                            {" · "}
-                            <Link
-                              to={`/strains/${s.linkedStrain.slug}`}
-                              className="underline hover:text-fg"
-                            >
-                              {s.linkedStrain.name}
-                            </Link>
-                          </>
-                        )}
-                        {s.rejectionReason && s.status === "rejected" && (
-                          <>
-                            {" · "}
-                            <span className="text-warm">{s.rejectionReason}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <SubmissionStatusPill status={s.status} />
-                  </li>
-                ))}
-              </ul>
-            </section>
           )}
         </div>
       </div>
@@ -369,11 +386,50 @@ function SubmissionStatusPill({ status }: { status: string }) {
   return <span className={`pill ${m.variant}`}>{m.label}</span>;
 }
 
-function StatPill({ kicker, value }: { kicker: string; value: number }) {
+function StatCard({ value, label }: { value: number | string; label: string }) {
   return (
-    <div>
+    <div className="card p-4 text-center">
       <div className="display text-2xl tnum">{value}</div>
-      <div className="kicker mt-1">{kicker}</div>
+      <div className="kicker mt-1">{label}</div>
     </div>
+  );
+}
+
+function ReviewMiniCard({ review, locale }: { review: any; locale: string }) {
+  return (
+    <article className="card p-5">
+      <header className="flex items-start justify-between gap-3 mb-3">
+        {review.strain ? (
+          <Link
+            to={`/strains/${review.strain.slug}`}
+            className="flex items-center gap-3 hover:text-accent transition-colors min-w-0"
+          >
+            {review.strain.imageUrl ? (
+              <img
+                src={review.strain.imageUrl}
+                alt={review.strain.name}
+                className="h-10 w-10 rounded-lg object-cover shrink-0"
+              />
+            ) : (
+              <div
+                className="h-10 w-10 rounded-lg shrink-0"
+                style={{ background: review.strain.colorHint || "var(--bg-elev)" }}
+              />
+            )}
+            <div className="min-w-0">
+              <div className="font-medium truncate">{review.strain.name}</div>
+              <div className="text-xs text-fg-dim capitalize">{review.strain.type}</div>
+            </div>
+          </Link>
+        ) : (
+          <div />
+        )}
+        <RatingStars rating={review.ratings?.overall} size="sm" />
+      </header>
+      {review.comment && (
+        <p className="text-sm text-fg-muted line-clamp-2">{review.comment}</p>
+      )}
+      <footer className="mt-3 text-xs text-fg-dim">{formatDate(review.createdAt, locale)}</footer>
+    </article>
   );
 }
