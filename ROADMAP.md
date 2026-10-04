@@ -72,6 +72,9 @@ Las marcas y dispensarios vendrán cuando tengamos la audiencia.
 - [x] **Sesión I** — Magazine/Blog (`/magazine`, `/magazine/:slug`, admin, RSS)
 - [x] **Sesión J** — Brand Verification + Stripe (checkout, webhook, portal, claim flow, `/planes`)
 - [x] **Sesión L** — Comunidad/Foros (`/comunidad`, posts, comments, voting, dual-identity)
+- [x] **Sesión C (parcial)** — Grow info: schema, índices, sección en cepa detail (datos aún sin seed)
+- [x] **Sesión D** — Cepas similares: aggregation, SimilarityScore (effects×3 + flavors×2 + terpenes×2), sección en cepa detail
+- [x] **Strains refactor** — Terpene filter, select() limiting, deferred loading (Suspense/Await), FilterSheet mobile, terpene links, dynamic SEO meta, grow empty state
 
 ---
 
@@ -163,16 +166,232 @@ Las páginas de producto son el puente entre el directorio de marcas y las rese�
 
 ---
 
+## Refactor / Redesign — features existentes que merecen una segunda pasada
+
+Estos ya funcionan pero su UX o arquitectura tiene deuda. Ordenados por impacto en retención y primera impresión.
+
+---
+
+### REFACTOR-1 — Perfil de usuario: de funcional a "algo de presumir"
+**Impacto: comunidad alto | Esfuerzo: medio | Prioridad: 🔴 Alta**
+
+El perfil propio (`/profile`) y el público (`/profile/:username`) son los más visibles para la comunidad. Hoy son listas planas sin jerarquía visual.
+
+**Problemas actuales:**
+- No hay "hero" del perfil — el nivel/puntos/badge principal no tienen protagonismo
+- Las insignias son una lista sin showcase del más valioso
+- El progreso de nivel (barra, % al siguiente) está enterrado
+- No hay tabs para separar Reseñas / Guardadas / Sobre mí
+- No hay "cepa favorita" o "efectos más usados" derivados del historial
+- El perfil público no tiene diferenciación: igual si tienes 1 reseña o 200
+- No se puede compartir el perfil con link visible (aunque existe la URL)
+
+**Qué construir:**
+- Hero card: avatar prominente + username + handle anónimo + país + nivel badge grande
+- Barra de progreso de nivel animada con puntos restantes
+- "Insignia destacada" — la de mayor rango, con tooltip de cómo se ganó
+- Tabs: Reseñas | Guardadas | Sobre mí
+- Resumen estadístico: cepas reseñadas, tipo favorito, efecto más reportado (derivado de reviews)
+- Botón de share nativo en perfil público
+- "Experto en X terpeno/efecto" — auto-calculado del historial de reseñas
+
+---
+
+### REFACTOR-2 — Formulario de reseña: completar lo que falta
+**Impacto: datos + retención | Esfuerzo: bajo-medio | Prioridad: 🔴 Alta**
+
+El wizard de 6 pasos (`/strains/:slug/review`) recopila flavors, frecuencia y "recomendarías" pero **no los guarda en la base de datos**.
+
+**Problemas actuales:**
+- `flavor[]`, `frequency`, `wouldRecommend` — estado en React pero sin campo en el action/modelo
+- No hay modo "editar reseña" claro: si ya tienes una, el formulario la sobrescribe silenciosamente
+- No hay validación visible de campos requeridos antes de intentar submit
+- No hay indicador de progreso de pasos con labels (solo números)
+
+**Qué construir:**
+- Agregar `flavor[]`, `frequency`, `wouldRecommend` al Review model y al action
+- Indicar claramente "Editando tu reseña del DD/MM" cuando ya existe
+- Barra de progreso con labels de pasos (Valoración · Contexto · Efectos · Sabores · Extras · Resumen)
+- Validación inline antes del submit final (al menos: 1 rating + 1 efecto)
+
+---
+
+### REFACTOR-3 — Comunidad: de lista estática a foro vivo
+**Impacto: retención + contenido generado | Esfuerzo: alto | Prioridad: 🟡 Media**
+
+`/comunidad` tiene cap duro de 40 posts, sin paginación, y el post detail tiene plain text sin markdown.
+
+**Problemas actuales:**
+- Cap de 40 posts sin paginación ni infinite scroll — los posts viejos desaparecen
+- Post body en plain text — no soporta markdown, code, listas, imágenes
+- No hay comentarios anidados (solo planos), sin threading
+- No hay búsqueda de posts
+- Las categorías no muestran conteo de posts
+- No hay posts "pinned" o "destacados"
+- No hay notificaciones cuando alguien responde tu post/comentario
+
+**Qué construir (por fases):**
+- Fase A: paginación cursor-based + búsqueda de posts (sin cap)
+- Fase B: markdown en body del post (SimpleMDE en admin, preview en público)
+- Fase C: conteo por categoría en tabs
+- Fase D: notificaciones in-app (requiere Sesión O)
+
+---
+
+### REFACTOR-4 — Top 100: de ranking plano a showcase
+**Impacto: SEO + primera impresión | Esfuerzo: bajo | Prioridad: 🟡 Media**
+
+`/top-100` es una lista rankeada básica. Potencial editorial enorme con mínimo esfuerzo.
+
+**Problemas actuales:**
+- No hay filtros (por tipo: sativa/indica/hybrid, por efecto, por terpeno)
+- No hay diferenciación visual para el podio (1-2-3)
+- No hay selector de periodo (todo el tiempo vs. últimos 30 días)
+- La posición de rank (#1, #2...) no es prominente visualmente
+- No hay meta descripción dinámica por filtro para SEO
+
+**Qué construir:**
+- Podio visual para top 3 (card más grande, corona, diferente fondo)
+- Filtros por tipo inline (sativa / indica / hybrid)
+- Rank badge prominent (#N) en cada fila
+- Meta descripción dinámica: "Top 10 cepas Indica más valoradas en WeedHub"
+- (Futuro) selector de periodo: Semana / Mes / Todo
+
+---
+
+### REFACTOR-5 — AI Recommender: de wizard desechable a herramienta
+**Impacto: conversión + retención | Esfuerzo: medio | Prioridad: 🟡 Media**
+
+`/recomendar` funciona pero los resultados desaparecen al recargar y no hay "¿por qué esta cepa?".
+
+**Problemas actuales:**
+- Resultados no se guardan — cada vez que recarga la página se pierden
+- No hay explicación por cepa (¿por qué te recomendamos Blue Dream?)
+- No hay seguimiento de preguntas ("¿quieres algo más energético?")
+- Sin auth, no se puede personalizar con historial real del usuario
+- No hay CTA a guardar/reseñar la cepa recomendada
+
+**Qué construir:**
+- "Guardar mis recomendaciones" (para usuarios autenticados)
+- Snippets de explicación por cepa: "Porque buscas relajación y tiene alto Mirceno"
+- CTA inline: "Guardar cepa" / "Escribir reseña" por cada resultado
+- Si el usuario tiene historial, alimentarlo al prompt para mejores recomendaciones
+
+---
+
+### REFACTOR-6 — Magazine: de blog a publicación editorial
+**Impacto: SEO + autoridad editorial | Esfuerzo: bajo | Prioridad: 🟢 Baja**
+
+`/magazine` y `/magazine/:slug` son funcionales pero sin diferenciación editorial.
+
+**Problemas actuales:**
+- No hay estimated reading time en artículos
+- No hay search de artículos
+- No hay agrupación por series/colecciones
+- Los artículos relacionados se muestran pero sin diseño destacado
+- No hay autor bio con foto/link al perfil
+
+**Qué construir:**
+- Reading time estimado ("5 min de lectura") — calcular de words count
+- Barra de búsqueda en `/magazine`
+- "Serie:" label en artículos que pertenecen a una colección
+- Autor bio card al final de cada artículo (si tiene perfil en WeedHub)
+
+---
+
+## Nuevas features — ideas para el mercado LATAM
+
+---
+
+### NEW-A — Comparador de cepas
+**Impacto: SEO alto + retención | Esfuerzo: medio | Prioridad: 🔴 Alta**
+
+"Blue Dream vs. OG Kush" genera millones de búsquedas. Ningún competidor lo hace bien en español.
+
+- Ruta `/comparar?a=blue-dream&b=og-kush`
+- Comparación lado a lado: cannabinoids, terpenos, efectos, ratings, grow info
+- Gráfico radar de perfiles de terpenos superpuestos
+- CTA: "¿Cuál es mejor para ti?" → link al AI recommender
+- Compartible: URL con slugs es shareable en redes sociales
+- Indexable: meta title "Blue Dream vs OG Kush — Comparación en WeedHub"
+
+---
+
+### NEW-B — Diario de consumo (privado)
+**Impacto: retención altísima + datos de usuario | Esfuerzo: alto | Prioridad: 🟡 Media**
+
+Zero competidores en español. Alta retención porque crea hábito diario. Los datos de mood + cepa son oro para recomendaciones.
+
+- Botón "Registrar consumo" desde cepa detail o navbar
+- Formulario rápido: cepa + dosis estimada + método + mood antes/después + notas
+- Dashboard personal: cepas más consumidas, efectos promedio por cepa, mood trend
+- Completamente privado (no visible en perfil público)
+- (Futuro) exportar a CSV para el usuario
+
+---
+
+### NEW-C — Notificaciones in-app
+**Impacto: retención + comunidad | Esfuerzo: medio | Prioridad: 🟡 Media**
+
+Sin notificaciones, los usuarios no vuelven a ver respuestas a sus posts o comentarios en sus reseñas.
+
+- Bell icon en navbar con contador
+- Triggers: alguien vota tu reseña · alguien responde tu post · alguien te sigue · tu sugerencia de cepa fue aprobada
+- Modelo `Notification` — userId, type, relatedId, read, createdAt
+- API `/api/notifications` — GET (lista) + PATCH (marcar leído)
+- Email digest opcional (1 email/semana con resumen de actividad)
+
+---
+
+### NEW-D — Calculadora de edibles
+**Impacto: SEO + utilidad | Esfuerzo: bajo | Prioridad: 🟢 Baja**
+
+"Cuánto THC tiene un brownie de 3g" — búsqueda muy frecuente, respuesta simple, sin competencia en español.
+
+- Ruta `/calculadora` (o widget embebido en artículos de guías)
+- Inputs: gramos de cannabis · % THC de la cepa · dividir entre N porciones
+- Output: mg THC por porción + recomendación de dosis según experiencia del usuario
+- No requiere auth
+- Rich result schema para calculadoras
+
+---
+
+### NEW-E — Mapa de dispensarios con reviews integradas
+**Impacto: SEO local + monetización futura | Esfuerzo: alto | Prioridad: 🟡 Media**
+
+El directorio de dispensarios existe (`/dispensarios`) pero sin mapa y sin reviews. El mapa es el diferenciador vs. una lista.
+
+*(Ya registrado como Sesión K — este item amplía el scope con reviews)*
+
+- Mapa interactivo Leaflet/OSM (gratis, sin API key)
+- Pin por dispensario con mini-card en hover
+- Reviews de dispensarios usando el modelo polimórfico ya existente
+- Filtros: ciudad, estado, verificado, tipo
+
+---
+
+### NEW-F — Feed de actividad de la comunidad
+**Impacto: social + retención | Esfuerzo: medio | Prioridad: 🟢 Baja**
+
+Un feed global de actividad reciente — qué están reseñando los usuarios ahora mismo.
+
+- Ruta `/actividad` o widget en homepage
+- Items: nueva reseña destacada · cepa guardada por 5+ usuarios esta semana · post trending en comunidad
+- Filtrable por following (solo actividad de usuarios que sigues)
+- Actualizable sin reload (polling ligero cada 60s o SSE)
+
+---
+
 ## Infraestructura pendiente (quick wins)
 
 Estos no son features — son gaps de producción que hay que cerrar antes de que llegue tráfico real.
 
 | Prioridad | Item | Esfuerzo | Notas |
 |---|---|---|---|
-| 🔴 Alta | **Rate limiting** en `/auth`, `/api/newsletter`, `/api/ai/find-strain` | ~30 min | Vercel Firewall rules, sin código |
-| 🔴 Alta | **SESSION_SECRET fallback** — `app/sessions.server.ts` tiene `\|\| "dev-secret-change-me"` | 5 min | Cambiar a `throw new Error(...)` |
+| ~~🔴 Alta~~ ✅ | ~~**Rate limiting**~~ — vercel.json con Firewall rules | ✅ Hecho | auth 10/min, newsletter 5/min, ai 10/min, search 60/min |
+| ~~🔴 Alta~~ ✅ | ~~**SESSION_SECRET fallback**~~ — ahora lanza `throw new Error(...)` | ✅ Hecho | — |
 | 🔴 Alta | **Sentry** — cero visibilidad de errores en producción | ~1h | `@sentry/react`, tier gratuito |
-| 🟡 Media | **Terpene index** — falta `{ "terpenes.name": 1 }` en Strain model | 5 min | Full scan en filtro de terpenos |
+| ~~🟡 Media~~ ✅ | ~~**Terpene index**~~ — `{ "terpenes.name": 1 }` en Strain model | ✅ Hecho | — |
 | 🟡 Media | **Resend domain verification** — `hola@weedhub.info` va a spam | ~15 min | DNS TXT record |
 | 🟡 Media | **Google Search Console** — sin visibilidad de hreflang indexing | ~10 min | Crítico para LATAM SEO |
 | 🟡 Media | **Stripe live mode** — precio IDs de test en producción | ~30 min | Swap keys + price IDs |
@@ -211,14 +430,27 @@ Estos no son features — son gaps de producción que hay que cerrar antes de qu
 ## Orden recomendado (actualizado Octubre 2026)
 
 ```
-[Infra]  SESSION_SECRET + Rate limiting + Sentry  → seguridad/visibilidad antes de tráfico
-[Infra]  Terpene index + Resend DNS + GSC          → SEO + deliverability
-D (Cepas similares)    → mayor impacto incompleto: retención, linking interno, bajo esfuerzo
-C (Grow info)          → audiencia cultivadores, data existe, falta UI
-G (Árbol genética)     → componente existe, seed existe, falta integración en detalle
-K (Dispensarios mapa)  → directorio funciona, mapa es el diferenciador real
-M (Productos reviews)  → rutas existen, reviews de producto completan el modelo polimórfico
-N (Perfiles mejorados) → activity feed + "Experto en X" después de comunidad activa
+[✅ Hecho] SESSION_SECRET throw + Rate limiting vercel.json + Terpene index
+[✅ Hecho] Strains refactor — terpene filter, deferred loading, FilterSheet, SimilarityScore
+[✅ Hecho] Sesión D — Cepas similares
+
+[Infra]    Sentry + Resend DNS + GSC + Stripe live mode  → antes de tráfico real
+
+[Refactor] REFACTOR-2 — Review: guardar flavors/frecuencia  → datos incompletos desde el día 1
+[Refactor] REFACTOR-1 — Perfil: hero card + tabs + progreso → primera impresión comunitaria
+[Refactor] REFACTOR-4 — Top 100: podio + filtros            → bajo esfuerzo, alto impacto editorial
+[Refactor] REFACTOR-3 — Comunidad: paginación + markdown    → escala de contenido (fase A primero)
+[Refactor] REFACTOR-5 — AI Recommender: guardar + explicar  → conversión + retención
+
+[Sesión C] Grow info seed      → componente existe, datos sin poblar
+[Sesión G] Árbol genética      → componente existe, seed existe, falta integración
+[Sesión K] Dispensarios mapa   → directorio funciona, mapa es el diferenciador
+
+[Nueva A]  Comparador de cepas → SEO viral "X vs Y", ningún competidor en español
+[Nueva B]  Diario de consumo   → retención máxima, hábito diario, zero competidores
+[Nueva C]  Notificaciones      → usuarios vuelven cuando hay actividad
+[Sesión M] Productos reviews   → completa el modelo polimórfico
+[Nueva D]  Calculadora edibles → quick win SEO, bajo esfuerzo
 ```
 
 ### Por qué el Mapa Verde va primero
