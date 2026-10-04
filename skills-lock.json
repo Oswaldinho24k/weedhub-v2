@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "domain-modeling": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/domain-modeling/SKILL.md",
+      "computedHash": "b3eb40152b81f0c98fd2095a023c019452dbdce56f7540cc67fece2972db8369"
+    },
+    "implement-specs": {
+      "source": "warpdotdev/common-skills",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/implement-specs/SKILL.md",
+      "computedHash": "bd2787a63cfdc917275769ef2d9c7adc701cfaf1a74344b3a6248d4116a8923e"
+    }
+  }
+}
