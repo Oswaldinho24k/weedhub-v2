@@ -8,8 +8,14 @@ import { EffectModel } from "~/models/effect.server";
 import { resolveLocale } from "~/lib/locale.server";
 import { POINTS } from "~/constants/gamification";
 import { ACQUISITION_SOURCES, isValidAcquisitionSource } from "~/constants/locations";
-import { Icon, type IconName } from "~/components/ui/icon";
+import { type IconName } from "~/components/ui/icon";
 import { useT } from "~/lib/i18n-context";
+import { SelectionCard } from "~/components/ui/selection-card";
+import { Chip } from "~/components/ui/chip";
+import { Button } from "~/components/ui/button";
+import { Card } from "~/components/ui/card";
+import { Field } from "~/components/ui/field";
+import { Icon } from "~/components/ui/icon";
 
 export function meta() {
   return [{ title: "Personaliza tu perfil — WeedHub" }];
@@ -37,7 +43,6 @@ export async function action({ request }: Route.ActionArgs) {
   const preferredTime = formData.getAll("preferredTime").map(String);
   const avoidEffects = formData.getAll("avoidEffects").map(String);
 
-  // Optional metadata from the last-step card
   const birthYearRaw = String(formData.get("birthYear") || "").trim();
   const birthYear = birthYearRaw ? parseInt(birthYearRaw, 10) : undefined;
   const validBirthYear =
@@ -46,9 +51,7 @@ export async function action({ request }: Route.ActionArgs) {
       : undefined;
 
   const acquisitionRaw = String(formData.get("acquisitionSource") || "").trim();
-  const acquisitionSource = isValidAcquisitionSource(acquisitionRaw)
-    ? acquisitionRaw
-    : undefined;
+  const acquisitionSource = isValidAcquisitionSource(acquisitionRaw) ? acquisitionRaw : undefined;
 
   const update: Record<string, unknown> = {
     cannabisProfile: {
@@ -71,46 +74,38 @@ export async function action({ request }: Route.ActionArgs) {
   return redirect("/strains");
 }
 
-interface RadioOpt {
+interface StepOption {
   value: string;
   title: string;
-  desc: string;
+  description: string;
   icon: IconName;
 }
 
-interface TileOpt {
-  value: string;
-  title: string;
-  desc: string;
-  icon: IconName;
-}
-
-const EXPERIENCE: RadioOpt[] = [
-  { value: "curioso", title: "Curioso", desc: "Recién empezando a explorar la planta.", icon: "sprout" },
-  { value: "novato", title: "Novato", desc: "He probado algunas veces y conozco lo básico.", icon: "leaf" },
-  { value: "ocasional", title: "Ocasional", desc: "Consumo de vez en cuando, en eventos sociales.", icon: "smile" },
-  { value: "regular", title: "Regular", desc: "Consumidor habitual con preferencias claras.", icon: "flame" },
-  { value: "experto", title: "Experto", desc: "Conocedor profundo de cepas, terpenos y métodos.", icon: "target" },
+const EXPERIENCE: StepOption[] = [
+  { value: "curioso",   title: "Curioso",   description: "Recién empezando a explorar la planta.",       icon: "sprout" },
+  { value: "novato",    title: "Novato",    description: "He probado algunas veces y conozco lo básico.", icon: "leaf" },
+  { value: "ocasional", title: "Ocasional", description: "Consumo de vez en cuando, en eventos sociales.",icon: "smile" },
+  { value: "regular",   title: "Regular",   description: "Consumidor habitual con preferencias claras.",  icon: "flame" },
+  { value: "experto",   title: "Experto",   description: "Conocedor profundo de cepas, terpenos y métodos.", icon: "target" },
 ];
 
-const GOALS: TileOpt[] = [
-  { value: "relax", title: "Relajarme", desc: "Descanso, sueño", icon: "moon" },
-  { value: "create", title: "Ser creativo", desc: "Escribir, arte, música", icon: "sparkle" },
-  { value: "social", title: "Socializar", desc: "Amigos, fiestas", icon: "users" },
-  { value: "focus", title: "Concentrarme", desc: "Trabajo, estudio", icon: "target" },
-  { value: "learn", title: "Aprender", desc: "Entender la planta", icon: "book" },
-  { value: "medical", title: "Uso terapéutico", desc: "Dolor, ansiedad", icon: "droplet" },
+const GOALS: StepOption[] = [
+  { value: "relax",   title: "Relajarme",        description: "Descanso, sueño",      icon: "moon" },
+  { value: "create",  title: "Ser creativo",      description: "Escribir, arte, música", icon: "sparkle" },
+  { value: "social",  title: "Socializar",        description: "Amigos, fiestas",      icon: "users" },
+  { value: "focus",   title: "Concentrarme",      description: "Trabajo, estudio",     icon: "target" },
+  { value: "learn",   title: "Aprender",          description: "Entender la planta",   icon: "book" },
+  { value: "medical", title: "Uso terapéutico",   description: "Dolor, ansiedad",      icon: "droplet" },
 ];
 
-const METHODS: TileOpt[] = [
-  { value: "smoke", title: "Fumado", desc: "Cigarro, pipa", icon: "flame" },
-  { value: "vape", title: "Vaporizado", desc: "Flor o concentrado", icon: "vape" },
-  { value: "edible", title: "Comestibles", desc: "Brownies, gomitas", icon: "cookie" },
-  { value: "concent", title: "Concentrados", desc: "Hash, rosin, BHO", icon: "diamond" },
-  { value: "topical", title: "Tópicos", desc: "Cremas, aceites", icon: "droplet" },
-  { value: "unsure", title: "Aún no sé", desc: "Quiero explorar", icon: "question" },
+const METHODS: StepOption[] = [
+  { value: "smoke",   title: "Fumado",       description: "Cigarro, pipa",        icon: "flame" },
+  { value: "vape",    title: "Vaporizado",   description: "Flor o concentrado",   icon: "vape" },
+  { value: "edible",  title: "Comestibles",  description: "Brownies, gomitas",    icon: "cookie" },
+  { value: "concent", title: "Concentrados", description: "Hash, rosin, BHO",     icon: "diamond" },
+  { value: "topical", title: "Tópicos",      description: "Cremas, aceites",      icon: "droplet" },
+  { value: "unsure",  title: "Aún no sé",    description: "Quiero explorar",      icon: "question" },
 ];
-
 
 const STEP_LABELS = [
   "Perfil de consumidor",
@@ -138,7 +133,7 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
   const [experience, setExperience] = useState("");
   const [goals, setGoals] = useState<string[]>([]);
   const [methods, setMethods] = useState<string[]>([]);
-  const [effects, setEffects] = useState<string[]>([]); // `+${label}` for seek, `-${label}` for avoid
+  const [effects, setEffects] = useState<string[]>([]);
 
   const toggleArr = (list: string[], v: string, set: (n: string[]) => void) =>
     set(list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
@@ -147,15 +142,11 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
   const avoidEffects = effects.filter((e) => e.startsWith("-")).map((e) => e.slice(1));
 
   const canContinue =
-    step === 0
-      ? !!experience
-      : step === 1
-        ? goals.length > 0
-        : step === 2
-          ? methods.length > 0
-          : step === 3
-            ? effects.length > 0
-            : true;
+    step === 0 ? !!experience :
+    step === 1 ? goals.length > 0 :
+    step === 2 ? methods.length > 0 :
+    step === 3 ? effects.length > 0 :
+    true;
 
   const progress = Math.round(((step + 1) / total) * 100);
 
@@ -170,10 +161,7 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
               .replace("{total}", String(total))}{" "}
             · {stepLabelsLocalized[step]}
           </div>
-          <div
-            className="mono tnum text-xs"
-            style={{ color: "var(--accent)" }}
-          >
+          <div className="mono tnum text-xs" style={{ color: "var(--accent)" }}>
             {progress}%
           </div>
         </div>
@@ -182,9 +170,7 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
             <div
               key={i}
               className="flex-1 h-[3px] rounded-sm transition-colors"
-              style={{
-                background: i <= step ? "var(--accent)" : "var(--bg-elev)",
-              }}
+              style={{ background: i <= step ? "var(--accent)" : "var(--bg-elev)" }}
             />
           ))}
         </div>
@@ -192,32 +178,33 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
 
       {/* Main */}
       <main className="flex-1 max-w-[900px] w-full mx-auto px-6 md:px-10 py-16">
+
+        {/* Step 0 — Experiencia */}
         {step === 0 && (
           <div>
             <StepTitle accent={t.onboarding.familiarityAccent}>
               {t.onboarding.familiarityTitle}
             </StepTitle>
-            <p
-              className="text-[17px] mb-10 max-w-[560px]"
-              style={{ color: "var(--fg-muted)" }}
-            >
+            <p className="text-[17px] mb-10 max-w-[560px]" style={{ color: "var(--fg-muted)" }}>
               {t.onboarding.familiarityBody}
             </p>
             <div className="flex flex-col gap-2.5">
               {EXPERIENCE.map((o) => (
-                <RadioCard
+                <SelectionCard
                   key={o.value}
+                  layout="horizontal"
                   active={experience === o.value}
                   onClick={() => setExperience(o.value)}
                   icon={o.icon}
                   title={o.title}
-                  desc={o.desc}
+                  description={o.description}
                 />
               ))}
             </div>
           </div>
         )}
 
+        {/* Step 1 — Objetivos */}
         {step === 1 && (
           <div>
             <StepTitle accent={t.onboarding.goalsAccent}>
@@ -228,19 +215,22 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5">
               {GOALS.map((g) => (
-                <TileCard
+                <SelectionCard
                   key={g.value}
+                  layout="vertical"
+                  multiSelect
                   active={goals.includes(g.value)}
                   onClick={() => toggleArr(goals, g.value, setGoals)}
                   icon={g.icon}
                   title={g.title}
-                  desc={g.desc}
+                  description={g.description}
                 />
               ))}
             </div>
           </div>
         )}
 
+        {/* Step 2 — Métodos */}
         {step === 2 && (
           <div>
             <StepTitle accent={t.onboarding.methodsAccent}>
@@ -251,19 +241,22 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5">
               {METHODS.map((m) => (
-                <TileCard
+                <SelectionCard
                   key={m.value}
+                  layout="vertical"
+                  multiSelect
                   active={methods.includes(m.value)}
                   onClick={() => toggleArr(methods, m.value, setMethods)}
                   icon={m.icon}
                   title={m.title}
-                  desc={m.desc}
+                  description={m.description}
                 />
               ))}
             </div>
           </div>
         )}
 
+        {/* Step 3 — Efectos */}
         {step === 3 && (
           <div>
             <StepTitle accent={t.onboarding.effectsAccent}>
@@ -281,27 +274,17 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
                 </h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                {positiveEffects.map((e) => {
-                  const on = effects.includes("+" + e.key);
-                  return (
-                    <button
-                      key={e.key}
-                      type="button"
-                      onClick={() => toggleArr(effects, "+" + e.key, setEffects)}
-                      className="chip"
-                      style={{
-                        padding: "10px 16px",
-                        fontSize: 14,
-                        background: on ? "var(--accent)" : "transparent",
-                        color: on ? "var(--accent-ink)" : "var(--fg)",
-                        borderColor: on ? "var(--accent)" : "var(--line)",
-                      }}
-                    >
-                      {e.label}
-                      {on && <Icon name="check" size={12} strokeWidth={3} />}
-                    </button>
-                  );
-                })}
+                {positiveEffects.map((e) => (
+                  <Chip
+                    key={e.key}
+                    colorScheme="accent"
+                    active={effects.includes("+" + e.key)}
+                    onClick={() => toggleArr(effects, "+" + e.key, setEffects)}
+                    className="px-4 py-2.5 text-sm"
+                  >
+                    {e.label}
+                  </Chip>
+                ))}
               </div>
             </div>
 
@@ -313,32 +296,23 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
                 </h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                {negativeEffects.map((e) => {
-                  const on = effects.includes("-" + e.key);
-                  return (
-                    <button
-                      key={e.key}
-                      type="button"
-                      onClick={() => toggleArr(effects, "-" + e.key, setEffects)}
-                      className="chip"
-                      style={{
-                        padding: "10px 16px",
-                        fontSize: 14,
-                        background: on ? "var(--warm)" : "transparent",
-                        color: on ? "oklch(20% 0.04 55)" : "var(--fg)",
-                        borderColor: on ? "var(--warm)" : "var(--line)",
-                      }}
-                    >
-                      {e.label}
-                      {on && <Icon name="check" size={12} strokeWidth={3} />}
-                    </button>
-                  );
-                })}
+                {negativeEffects.map((e) => (
+                  <Chip
+                    key={e.key}
+                    colorScheme="warm"
+                    active={effects.includes("-" + e.key)}
+                    onClick={() => toggleArr(effects, "-" + e.key, setEffects)}
+                    className="px-4 py-2.5 text-sm"
+                  >
+                    {e.label}
+                  </Chip>
+                ))}
               </div>
             </div>
           </div>
         )}
 
+        {/* Step 4 — Done */}
         {step === 4 && (
           <div className="text-center pt-5">
             <div
@@ -365,41 +339,27 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
               {t.onboarding.doneBody}
             </p>
 
-            {/* Newsletter capture at peak engagement */}
             <OnboardingNewsletter />
 
             <div className="grid grid-cols-3 gap-4 text-left mb-10">
               <SummaryCard
                 icon="history"
                 kicker={t.onboarding.summaryFrequency}
-                value={
-                  experience
-                    ? experience[0].toUpperCase() + experience.slice(1)
-                    : "—"
-                }
+                value={experience ? experience[0].toUpperCase() + experience.slice(1) : "—"}
               />
               <SummaryCard
                 icon="target"
                 kicker={t.onboarding.summaryGoals}
-                value={t.onboarding.summaryGoalsSelected.replace(
-                  "{count}",
-                  String(goals.length)
-                )}
+                value={t.onboarding.summaryGoalsSelected.replace("{count}", String(goals.length))}
               />
               <SummaryCard
                 icon="cookie"
                 kicker={t.onboarding.summaryMethod}
-                value={t.onboarding.summaryMethodPreferred.replace(
-                  "{count}",
-                  String(methods.length)
-                )}
+                value={t.onboarding.summaryMethodPreferred.replace("{count}", String(methods.length))}
               />
             </div>
 
-            <Form
-              method="post"
-              className="flex flex-col items-center gap-6"
-            >
+            <Form method="post" className="flex flex-col items-center gap-6">
               <input type="hidden" name="experienceLevel" value={experience} />
               {goals.map((g) => (
                 <input key={g} type="hidden" name="preferredEffects" value={g} />
@@ -414,21 +374,11 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
                 <input key={a} type="hidden" name="avoidEffects" value={a} />
               ))}
 
-              {/* Growth metadata — optional */}
-              <div
-                className="card p-5 w-full max-w-[520px] text-left"
-                style={{ background: "var(--bg-sunken)" }}
-              >
+              <Card variant="sunken" className="w-full max-w-[520px] text-left">
                 <div className="kicker mb-1">{t.onboarding.growKicker}</div>
                 <p className="text-xs text-fg-dim mb-4">{t.onboarding.growHint}</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label
-                      className="kicker block mb-2"
-                      htmlFor="birthYear"
-                    >
-                      {t.onboarding.birthYearLabel}
-                    </label>
+                  <Field label={t.onboarding.birthYearLabel} htmlFor="birthYear">
                     <input
                       id="birthYear"
                       name="birthYear"
@@ -436,21 +386,15 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
                       min={1900}
                       max={new Date().getFullYear() - 18}
                       placeholder="1995"
-                      className="w-full h-10 rounded-md border border-line bg-raised px-3 text-sm focus:outline-none focus:border-accent"
+                      className="w-full h-10 rounded-[var(--radius)] border border-line bg-raised px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                     />
-                  </div>
-                  <div>
-                    <label
-                      className="kicker block mb-2"
-                      htmlFor="acquisitionSource"
-                    >
-                      {t.onboarding.acquisitionLabel}
-                    </label>
+                  </Field>
+                  <Field label={t.onboarding.acquisitionLabel} htmlFor="acquisitionSource">
                     <select
                       id="acquisitionSource"
                       name="acquisitionSource"
                       defaultValue=""
-                      className="w-full h-10 rounded-md border border-line bg-raised px-3 text-sm focus:outline-none focus:border-accent"
+                      className="w-full h-10 rounded-[var(--radius)] border border-line bg-raised px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                     >
                       <option value="">—</option>
                       {ACQUISITION_SOURCES.map((s) => (
@@ -459,63 +403,56 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </Field>
                 </div>
-              </div>
+              </Card>
 
               <div className="flex gap-3 flex-wrap justify-center">
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{ padding: "16px 32px" }}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? t.common.saving : t.onboarding.primaryCta}
-                <Icon name="arrowRight" size={15} />
-              </button>
-              <Link
-                to="/profile/edit"
-                className="btn btn-ghost"
-                style={{ padding: "16px 24px" }}
-              >
-                {t.onboarding.editProfile}
-              </Link>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? t.common.saving : t.onboarding.primaryCta}
+                  <Icon name="arrowRight" size={15} />
+                </Button>
+                <Link to="/profile/edit" className="btn btn-ghost" style={{ padding: "14px 24px" }}>
+                  {t.onboarding.editProfile}
+                </Link>
               </div>
             </Form>
           </div>
         )}
       </main>
 
-      {/* Footer */}
+      {/* Footer navigation */}
       {step < total - 1 && (
         <footer
           className="sticky bottom-0"
-          style={{
-            borderTop: "1px solid var(--line)",
-            background: "var(--bg)",
-          }}
+          style={{ borderTop: "1px solid var(--line)", background: "var(--bg)" }}
         >
           <div className="max-w-[900px] w-full mx-auto px-6 md:px-10 py-6 flex items-center justify-between">
-            <button
+            <Button
               type="button"
-              className="btn btn-ghost"
+              variant="ghost"
               disabled={step === 0}
               onClick={() => setStep((s) => Math.max(0, s - 1))}
               style={{ opacity: step === 0 ? 0.3 : 1 }}
             >
               <Icon name="arrowLeft" size={14} />
               {t.onboarding.previous}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn btn-primary"
+              variant="primary"
               disabled={!canContinue}
               onClick={() => setStep((s) => Math.min(total - 1, s + 1))}
               style={{ opacity: canContinue ? 1 : 0.4 }}
             >
               {t.common.continue}
               <Icon name="arrowRight" size={14} />
-            </button>
+            </Button>
           </div>
         </footer>
       )}
@@ -523,13 +460,7 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
   );
 }
 
-function StepTitle({
-  accent,
-  children,
-}: {
-  accent: string;
-  children: string;
-}) {
+function StepTitle({ accent, children }: { accent: string; children: string }) {
   const parts = children.split(accent);
   return (
     <h1
@@ -537,10 +468,7 @@ function StepTitle({
       style={{ fontSize: "clamp(40px, 6vw, 72px)", lineHeight: 1 }}
     >
       {parts[0]}
-      <em
-        style={{ color: "var(--accent)", fontStyle: "italic" }}
-        className="display-wonk"
-      >
+      <em style={{ color: "var(--accent)", fontStyle: "italic" }} className="display-wonk">
         {accent}
       </em>
       {parts[1]}
@@ -548,140 +476,13 @@ function StepTitle({
   );
 }
 
-function RadioCard({
-  active,
-  onClick,
-  icon,
-  title,
-  desc,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: IconName;
-  title: string;
-  desc: string;
-}) {
+function SummaryCard({ icon, kicker, value }: { icon: IconName; kicker: string; value: string }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      style={{
-        padding: "20px 24px",
-        textAlign: "left",
-        border: `1px solid ${active ? "var(--accent)" : "var(--line)"}`,
-        borderRadius: "var(--radius-lg)",
-        background: active ? "var(--accent-soft)" : "var(--bg-raised)",
-        display: "flex",
-        alignItems: "center",
-        gap: 20,
-        transition: "all .15s",
-      }}
-    >
-      <div
-        style={{
-          width: 48,
-          height: 48,
-          borderRadius: 12,
-          display: "grid",
-          placeItems: "center",
-          background: active ? "var(--accent)" : "var(--bg-elev)",
-          color: active ? "var(--accent-ink)" : "var(--fg-muted)",
-          flexShrink: 0,
-        }}
-      >
-        <Icon name={icon} size={22} />
-      </div>
-      <div style={{ flex: 1 }}>
-        <div className="display" style={{ fontSize: 24 }}>
-          {title}
-        </div>
-        <p style={{ fontSize: 13, color: "var(--fg-muted)", marginTop: 2 }}>
-          {desc}
-        </p>
-      </div>
-      <div
-        style={{
-          width: 20,
-          height: 20,
-          borderRadius: "50%",
-          border: `1.5px solid ${
-            active ? "var(--accent)" : "var(--line-strong)"
-          }`,
-          background: active ? "var(--accent)" : "transparent",
-          display: "grid",
-          placeItems: "center",
-          color: "var(--accent-ink)",
-          flexShrink: 0,
-        }}
-        aria-hidden
-      >
-        {active && <Icon name="check" size={11} strokeWidth={3} />}
-      </div>
-    </button>
-  );
-}
-
-function TileCard({
-  active,
-  onClick,
-  icon,
-  title,
-  desc,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: IconName;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      style={{
-        padding: 24,
-        textAlign: "left",
-        borderRadius: "var(--radius-lg)",
-        border: `1px solid ${active ? "var(--accent)" : "var(--line)"}`,
-        background: active ? "var(--accent-soft)" : "var(--bg-raised)",
-        transition: "all .15s",
-        position: "relative",
-      }}
-    >
-      <Icon
-        name={icon}
-        size={22}
-        style={{
-          color: active ? "var(--accent)" : "var(--fg-muted)",
-          marginBottom: 14,
-        }}
-      />
-      <div className="display" style={{ fontSize: 22, marginBottom: 2 }}>
-        {title}
-      </div>
-      <p style={{ fontSize: 12, color: "var(--fg-muted)" }}>{desc}</p>
-      {active && (
-        <div
-          style={{
-            position: "absolute",
-            top: 14,
-            right: 14,
-            width: 20,
-            height: 20,
-            borderRadius: "50%",
-            background: "var(--accent)",
-            color: "var(--accent-ink)",
-            display: "grid",
-            placeItems: "center",
-          }}
-          aria-hidden
-        >
-          <Icon name="check" size={11} strokeWidth={3} />
-        </div>
-      )}
-    </button>
+    <Card variant="sunken" className="p-[22px]">
+      <Icon name={icon} size={18} style={{ color: "var(--accent)", marginBottom: 14 }} />
+      <div className="kicker" style={{ marginBottom: 6 }}>{kicker}</div>
+      <div style={{ fontSize: 16 }}>{value}</div>
+    </Card>
   );
 }
 
@@ -692,18 +493,15 @@ function OnboardingNewsletter() {
 
   if (isDone) {
     return (
-      <div
-        className="card p-5 mb-10 max-w-[480px] mx-auto text-center"
-        style={{ borderColor: "var(--accent)" }}
-      >
+      <Card className="mb-10 max-w-[480px] mx-auto text-center" style={{ borderColor: "var(--accent)" }}>
         <div className="kicker mb-1" style={{ color: "var(--accent)" }}>Suscrito</div>
         <p className="text-sm text-fg-muted">Te escribimos pronto. Revisa tu bandeja.</p>
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className="card p-5 mb-10 max-w-[480px] mx-auto text-left">
+    <Card className="mb-10 max-w-[480px] mx-auto text-left">
       <div className="kicker mb-1" style={{ color: "var(--accent)" }}>Antes de explorar</div>
       <p className="text-sm text-fg-muted mb-4">
         Recibe recomendaciones de cepas basadas en tu perfil — dos veces al mes, sin spam.
@@ -714,36 +512,12 @@ function OnboardingNewsletter() {
           name="email"
           placeholder="tu@correo.com"
           required
-          className="flex-1 h-10 rounded-md border border-line bg-raised px-3 text-sm focus:outline-none focus:border-accent"
+          className="flex-1 h-10 rounded-[var(--radius)] border border-line bg-raised px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
         />
-        <button type="submit" className="btn btn-primary text-sm" disabled={isSubmitting}>
+        <Button type="submit" variant="primary" size="sm" disabled={isSubmitting}>
           {isSubmitting ? "..." : "Suscribirme"}
-        </button>
+        </Button>
       </fetcher.Form>
-    </div>
-  );
-}
-
-function SummaryCard({
-  icon,
-  kicker,
-  value,
-}: {
-  icon: IconName;
-  kicker: string;
-  value: string;
-}) {
-  return (
-    <div className="card" style={{ padding: 22 }}>
-      <Icon
-        name={icon}
-        size={18}
-        style={{ color: "var(--accent)", marginBottom: 14 }}
-      />
-      <div className="kicker" style={{ marginBottom: 6 }}>
-        {kicker}
-      </div>
-      <div style={{ fontSize: 16 }}>{value}</div>
-    </div>
+    </Card>
   );
 }

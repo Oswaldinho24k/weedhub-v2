@@ -4,10 +4,20 @@ import { cn } from "~/lib/utils";
 export interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   active?: boolean;
   count?: number;
+  colorScheme?: "accent" | "warm";
 }
 
+const ACTIVE_STYLES: Record<NonNullable<ChipProps["colorScheme"]>, React.CSSProperties> = {
+  accent: { background: "var(--accent-soft)", borderColor: "var(--accent)", color: "var(--accent)" },
+  warm:   { background: "var(--warm-soft)",   borderColor: "var(--warm)",   color: "var(--warm)" },
+};
+
+const INACTIVE_STYLE: React.CSSProperties = {
+  background: "var(--bg-elev)", borderColor: "var(--line)", color: "var(--fg-muted)",
+};
+
 const Chip = forwardRef<HTMLButtonElement, ChipProps>(
-  ({ className, active = false, count, children, ...props }, ref) => (
+  ({ className, active = false, count, colorScheme = "accent", children, ...props }, ref) => (
     <button
       ref={ref}
       type="button"
@@ -18,26 +28,14 @@ const Chip = forwardRef<HTMLButtonElement, ChipProps>(
         "disabled:pointer-events-none disabled:opacity-50",
         className
       )}
-      style={
-        active
-          ? {
-              background: "var(--accent-soft)",
-              borderColor: "var(--accent)",
-              color: "var(--accent)",
-            }
-          : {
-              background: "var(--bg-elev)",
-              borderColor: "var(--line)",
-              color: "var(--fg-muted)",
-            }
-      }
+      style={active ? ACTIVE_STYLES[colorScheme] : INACTIVE_STYLE}
       {...props}
     >
       {children}
       {count !== undefined && (
         <span
           className="mono text-[10px] leading-none"
-          style={{ color: active ? "var(--accent)" : "var(--fg-dim)" }}
+          style={{ color: active ? ACTIVE_STYLES[colorScheme].color : "var(--fg-dim)" }}
         >
           {count}
         </span>
