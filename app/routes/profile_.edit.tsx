@@ -14,7 +14,11 @@ import {
   isValidAcquisitionSource,
 } from "~/constants/locations";
 import { Icon } from "~/components/ui/icon";
+import { Button, buttonVariants } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Select } from "~/components/ui/select";
 import { useT } from "~/lib/i18n-context";
+import { cn } from "~/lib/utils";
 
 export function meta() {
   return [{ title: "Editar perfil — WeedHub" }];
@@ -203,7 +207,7 @@ export default function EditProfilePage({ loaderData }: Route.ComponentProps) {
             <div className="flex-1">
               <label
                 htmlFor="avatarFile"
-                className="btn btn-ghost !py-2 !px-3 text-xs inline-flex cursor-pointer"
+                className={cn(buttonVariants({ variant: "ghost" }), "!py-2 !px-3 text-xs cursor-pointer")}
               >
                 <Icon name="camera" size={14} />
                 {t.profileEdit.avatarUpload}
@@ -240,13 +244,12 @@ export default function EditProfilePage({ loaderData }: Route.ComponentProps) {
             <label className="kicker block mb-2" htmlFor="displayName">
               {t.profileEdit.displayNameLabel}
             </label>
-            <input
+            <Input
               id="displayName"
               name="displayName"
               defaultValue={user.displayName}
               placeholder={user.username}
               maxLength={40}
-              className="w-full h-11 rounded-md border border-line bg-raised px-3.5 text-sm focus:outline-none focus:border-accent"
             />
             <p className="text-xs text-fg-dim mt-2">{t.profileEdit.displayNameHelp}</p>
           </div>
@@ -260,30 +263,23 @@ export default function EditProfilePage({ loaderData }: Route.ComponentProps) {
               <label className="kicker block mb-2" htmlFor="country">
                 {t.profileEdit.countryLabel}
               </label>
-              <select
+              <Select
                 id="country"
                 name="country"
                 defaultValue={user.country}
-                className="w-full h-11 rounded-md border border-line bg-raised px-3 text-sm focus:outline-none focus:border-accent"
-              >
-                {LATIN_COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.flag} {c.label}
-                  </option>
-                ))}
-              </select>
+                options={LATIN_COUNTRIES.map((c) => ({ value: c.code, label: `${c.flag} ${c.label}` }))}
+              />
             </div>
             <div>
               <label className="kicker block mb-2" htmlFor="city">
                 {t.profileEdit.cityLabel}
               </label>
-              <input
+              <Input
                 id="city"
                 name="city"
                 defaultValue={user.city}
                 placeholder="CDMX"
                 maxLength={60}
-                className="w-full h-11 rounded-md border border-line bg-raised px-3.5 text-sm focus:outline-none focus:border-accent"
               />
             </div>
           </div>
@@ -307,7 +303,7 @@ export default function EditProfilePage({ loaderData }: Route.ComponentProps) {
               <label className="kicker block mb-2" htmlFor="birthYear">
                 {t.profileEdit.birthYearLabel}
               </label>
-              <input
+              <Input
                 id="birthYear"
                 name="birthYear"
                 type="number"
@@ -315,7 +311,6 @@ export default function EditProfilePage({ loaderData }: Route.ComponentProps) {
                 max={new Date().getFullYear() - 18}
                 defaultValue={user.birthYear || ""}
                 placeholder="1995"
-                className="w-full h-11 rounded-md border border-line bg-raised px-3.5 text-sm focus:outline-none focus:border-accent"
               />
             </div>
             <div>
@@ -325,19 +320,12 @@ export default function EditProfilePage({ loaderData }: Route.ComponentProps) {
               >
                 {t.profileEdit.acquisitionLabel}
               </label>
-              <select
+              <Select
                 id="acquisitionSource"
                 name="acquisitionSource"
                 defaultValue={user.acquisitionSource || ""}
-                className="w-full h-11 rounded-md border border-line bg-raised px-3 text-sm focus:outline-none focus:border-accent"
-              >
-                <option value="">—</option>
-                {ACQUISITION_SOURCES.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
+                options={[{ value: "", label: "—" }, ...ACQUISITION_SOURCES.map((s) => ({ value: s.value, label: s.label }))]}
+              />
             </div>
           </div>
         </section>
@@ -377,10 +365,10 @@ export default function EditProfilePage({ loaderData }: Route.ComponentProps) {
         )}
 
         <div className="flex gap-3">
-          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+          <Button type="submit" variant="primary" disabled={isSubmitting}>
             {isSubmitting ? t.common.saving : t.common.save}
-          </button>
-          <Link to="/profile" className="btn btn-ghost">
+          </Button>
+          <Link to="/profile" className={buttonVariants({ variant: "ghost" })}>
             {t.common.cancel}
           </Link>
         </div>
@@ -391,7 +379,7 @@ export default function EditProfilePage({ loaderData }: Route.ComponentProps) {
         <p className="text-sm text-fg-muted mb-4">
           Eliminar tu cuenta es permanente. Tus reseñas quedarán anonimizadas.
         </p>
-        <Link to="/profile/delete" className="btn btn-ghost text-sm" style={{ color: "var(--warm)", borderColor: "var(--warm)" }}>
+        <Link to="/profile/delete" className={cn(buttonVariants({ variant: "warm-outline" }), "text-sm")}>
           Eliminar mi cuenta
         </Link>
       </div>

@@ -8,9 +8,12 @@ import { StrainSubmissionModel } from "~/models/strain-submission.server";
 import { BADGES, getCurrentLevel, getNextLevel, getShowcaseBadge, LEVEL_EMOJI, LEVEL_COLOR, LEVEL_COLOR_DARK } from "~/constants/gamification";
 import { countryLabel, countryFlag } from "~/constants/locations";
 import { Icon } from "~/components/ui/icon";
+import { buttonVariants } from "~/components/ui/button";
+import { StatusPill } from "~/components/ui/status-pill";
+import { Tag } from "~/components/ui/tag";
 import { RatingStars } from "~/components/composite/rating-stars";
 import { useT } from "~/lib/i18n-context";
-import { formatDate } from "~/lib/utils";
+import { formatDate, cn } from "~/lib/utils";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
 export function meta() {
@@ -180,12 +183,12 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
           </div>
 
           <div className="flex items-center gap-2 pb-1">
-            <Link to="/profile/edit" className="btn btn-ghost">
+            <Link to="/profile/edit" className={buttonVariants({ variant: "ghost" })}>
               <Icon name="edit" size={14} />
               {t.profile.editButton}
             </Link>
             {!user.publishAsAnonymous && (
-              <Link to={`/profile/${user.username}`} className="btn btn-ghost">
+              <Link to={`/profile/${user.username}`} className={buttonVariants({ variant: "ghost" })}>
                 <Icon name="eye" size={14} />
                 {t.profile.seePublic}
               </Link>
@@ -258,7 +261,7 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
               {recentReviews.length === 0 ? (
                 <div className="card p-12 text-center">
                   <p className="text-fg-muted mb-4">{t.profile.noReviews}</p>
-                  <Link to="/strains" className="btn btn-primary inline-flex">
+                  <Link to="/strains" className={buttonVariants({ variant: "primary" })}>
                     {t.profile.writeFirst}
                   </Link>
                 </div>
@@ -298,7 +301,7 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
                             )}
                           </div>
                         </div>
-                        <SubmissionStatusPill status={s.status} />
+                        <StatusPill status={s.status} />
                       </li>
                     ))}
                   </ul>
@@ -344,7 +347,7 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
             <div>
               <div className="flex items-center justify-between mb-5">
                 <p className="text-sm text-fg-muted">Tus cepas guardadas.</p>
-                <Link to="/profile/saved" className="btn btn-ghost text-sm">
+                <Link to="/profile/saved" className={cn(buttonVariants({ variant: "ghost" }), "text-sm")}>
                   Ver todas <Icon name="arrowRight" size={13} />
                 </Link>
               </div>
@@ -353,7 +356,7 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
                   <div className="kicker mb-3">{t.profile.preferredEffects}</div>
                   <div className="flex flex-wrap gap-2">
                     {user.cannabisProfile.preferredEffects.map((e: string) => (
-                      <span key={e} className="pill accent">{e}</span>
+                      <Tag key={e} variant="effect">{e}</Tag>
                     ))}
                   </div>
                 </div>
@@ -373,18 +376,6 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
   );
 }
 
-function SubmissionStatusPill({ status }: { status: string }) {
-  const map: Record<string, { label: string; variant: string }> = {
-    pending: { label: "En revisión", variant: "" },
-    approved: { label: "Aprobada", variant: "accent" },
-    merged_as_alias: { label: "Agregada como alias", variant: "accent" },
-    rejected: { label: "Rechazada", variant: "warm" },
-    rejected_auto: { label: "Bloqueada", variant: "warm" },
-    duplicate: { label: "Duplicada", variant: "warm" },
-  };
-  const m = map[status] || { label: status, variant: "" };
-  return <span className={`pill ${m.variant}`}>{m.label}</span>;
-}
 
 function StatCard({ value, label }: { value: number | string; label: string }) {
   return (
