@@ -10,8 +10,9 @@ import { awardPoints, checkAndAwardBadges } from "~/services/gamification.servic
 import { POINTS } from "~/constants/gamification";
 import { RatingStars } from "~/components/composite/rating-stars";
 import { Icon } from "~/components/ui/icon";
+import { Button } from "~/components/ui/button";
+import { Chip } from "~/components/ui/chip";
 import { useT } from "~/lib/i18n-context";
-import { cn } from "~/lib/utils";
 import { EffectModel } from "~/models/effect.server";
 import { resolveLocale } from "~/lib/locale.server";
 import { getDictionary } from "~/content/locales";
@@ -289,21 +290,21 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
               options={METHODS}
               selected={method ? [method] : []}
               onToggle={(v) => setMethod(method === v ? "" : v)}
-              tone="accent"
+              colorScheme="accent"
             />
             <ChipSection
               label={t.review.contextTime}
               options={TIMES}
               selected={timeOfDay ? [timeOfDay] : []}
               onToggle={(v) => setTimeOfDay(timeOfDay === v ? "" : v)}
-              tone="accent"
+              colorScheme="accent"
             />
             <ChipSection
               label={t.review.contextSetting}
               options={SITUATIONS}
               selected={setting ? [setting] : []}
               onToggle={(v) => setSetting(setting === v ? "" : v)}
-              tone="accent"
+              colorScheme="accent"
             />
           </div>
         )}
@@ -327,13 +328,13 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
             </p>
             <div className="flex flex-wrap gap-2 justify-center max-w-[560px] mx-auto">
               {CONDITIONS.map((c) => (
-                <ChipButton
+                <Chip
                   key={c.slug}
                   active={conditions.includes(c.slug)}
                   onClick={() => toggle(conditions, c.slug, setConditions)}
                 >
                   {c.labelEs}
-                </ChipButton>
+                </Chip>
               ))}
             </div>
             {conditions.length > 0 && (
@@ -350,13 +351,13 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
             <p className="text-fg-muted mb-8">{t.review.flavorsBody}</p>
             <div className="flex flex-wrap gap-2 justify-center max-w-[560px] mx-auto">
               {FLAVORS.map((f) => (
-                <ChipButton
+                <Chip
                   key={f}
                   active={flavors.includes(f)}
                   onClick={() => toggle(flavors, f, setFlavors)}
                 >
                   {f}
-                </ChipButton>
+                </Chip>
               ))}
             </div>
           </div>
@@ -371,13 +372,13 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
               <div className="kicker mb-3">{t.review.frequencyQuestion}</div>
               <div className="flex flex-wrap gap-2">
                 {FREQUENCIES.map((f) => (
-                  <ChipButton
+                  <Chip
                     key={f}
                     active={frequency === f}
                     onClick={() => setFrequency(frequency === f ? "" : f)}
                   >
                     {f}
-                  </ChipButton>
+                  </Chip>
                 ))}
               </div>
             </div>
@@ -385,26 +386,20 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
             <div className="mb-6">
               <div className="kicker mb-3">{t.review.recommendQuestion}</div>
               <div className="grid grid-cols-2 gap-3">
-                <button
+                <Button
                   type="button"
+                  variant={recommend === "up" ? "primary" : "ghost"}
                   onClick={() => setRecommend("up")}
-                  className={cn(
-                    "btn",
-                    recommend === "up" ? "btn-primary" : "btn-ghost"
-                  )}
                 >
                   <Icon name="thumbUp" size={14} /> {t.review.recommendYes}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant={recommend === "down" ? "warm" : "ghost"}
                   onClick={() => setRecommend("down")}
-                  className={cn(
-                    "btn",
-                    recommend === "down" ? "btn-warm" : "btn-ghost"
-                  )}
                 >
                   <Icon name="thumbDown" size={14} /> {t.review.recommendNo}
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -434,28 +429,28 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
 
       <div className="border-t border-line bg-bg sticky bottom-0">
         <div className="mx-auto max-w-[760px] px-6 py-4 flex items-center justify-between">
-          <button
+          <Button
             type="button"
-            className="btn btn-ghost"
+            variant="ghost"
             disabled={step === 0}
             onClick={() => setStep((s) => Math.max(0, s - 1))}
           >
             <Icon name="arrowLeft" size={14} />
             {t.review.previousStep}
-          </button>
+          </Button>
           <div className="mono text-xs text-fg-dim tnum">
             {step + 1} / {total}
           </div>
           {step < total - 1 ? (
-            <button
+            <Button
               type="button"
-              className="btn btn-primary"
+              variant="primary"
               disabled={!canAdvance}
               onClick={() => setStep((s) => Math.min(total - 1, s + 1))}
             >
               {t.review.nextStep}
               <Icon name="arrowRight" size={14} />
-            </button>
+            </Button>
           ) : (
             <Form method="post">
               <input type="hidden" name="rating_overall" value={overall} />
@@ -474,18 +469,15 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
               {conditions.map((c) => (
                 <input key={c} type="hidden" name="conditionsHelped" value={c} />
               ))}
-              <button
+              <Button
                 type="submit"
-                className="btn"
-                style={{
-                  background: "var(--gold)",
-                  color: "oklch(22% 0.05 85)",
-                }}
+                variant="ghost"
+                style={{ background: "var(--gold)", color: "oklch(22% 0.05 85)" }}
                 disabled={isSubmitting || overall === 0}
               >
                 {isSubmitting ? t.common.sending : t.review.publish}
                 <Icon name="send" size={14} />
-              </button>
+              </Button>
             </Form>
           )}
         </div>
@@ -523,14 +515,14 @@ function EffectsStep({
         </div>
         <div className="flex flex-wrap gap-2">
           {positiveEffects.map((e) => (
-            <ChipButton
+            <Chip
               key={e.key}
               active={selected.includes(e.key)}
-              tone="accent"
+              colorScheme="accent"
               onClick={() => onToggle(e.key)}
             >
               {e.label}
-            </ChipButton>
+            </Chip>
           ))}
         </div>
       </div>
@@ -541,14 +533,14 @@ function EffectsStep({
         </div>
         <div className="flex flex-wrap gap-2">
           {negativeEffects.map((e) => (
-            <ChipButton
+            <Chip
               key={e.key}
               active={selected.includes(e.key)}
-              tone="warm"
+              colorScheme="warm"
               onClick={() => onToggle(e.key)}
             >
               {e.label}
-            </ChipButton>
+            </Chip>
           ))}
         </div>
       </div>
@@ -566,13 +558,14 @@ function EffectsStep({
               placeholder="Ej: eufórico, sociable..."
               className="input text-sm flex-1 max-w-[220px]"
             />
-            <button
+            <Button
               type="submit"
+              variant="ghost"
+              size="sm"
               disabled={!suggestion.trim() || fetcher.state !== "idle"}
-              className="btn btn-ghost text-sm"
             >
               Sugerir
-            </button>
+            </Button>
           </fetcher.Form>
         )}
       </div>
@@ -602,53 +595,29 @@ function ChipSection({
   options,
   selected,
   onToggle,
-  tone = "neutral",
+  colorScheme = "accent",
 }: {
   label: string;
   options: readonly string[];
   selected: string[];
   onToggle: (v: string) => void;
-  tone?: "neutral" | "accent";
+  colorScheme?: "accent" | "warm";
 }) {
   return (
     <div className="mb-8">
       <div className="kicker mb-3">{label}</div>
       <div className="flex flex-wrap gap-2">
         {options.map((o) => (
-          <ChipButton
+          <Chip
             key={o}
             active={selected.includes(o)}
+            colorScheme={colorScheme}
             onClick={() => onToggle(o)}
-            tone={tone}
           >
             {o}
-          </ChipButton>
+          </Chip>
         ))}
       </div>
     </div>
-  );
-}
-
-function ChipButton({
-  active,
-  tone = "neutral",
-  onClick,
-  children,
-}: {
-  active?: boolean;
-  tone?: "neutral" | "accent" | "warm";
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  const onClass = tone === "accent" ? "on-accent" : tone === "warm" ? "on-warm" : "on";
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn("chip", active && onClass)}
-      aria-pressed={!!active}
-    >
-      {children}
-    </button>
   );
 }
