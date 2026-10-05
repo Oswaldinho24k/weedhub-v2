@@ -9,6 +9,9 @@ import { isUsernameAvailable } from "~/lib/username.server";
 import { generateAnonymousHandle } from "~/lib/anon-handle.server";
 import { LATIN_COUNTRIES, isValidCountry } from "~/constants/locations";
 import { Icon } from "~/components/ui/icon";
+import { Button, buttonVariants } from "~/components/ui/button";
+import { Field } from "~/components/ui/field";
+import { Select } from "~/components/ui/select";
 import { useT } from "~/lib/i18n-context";
 import { cn } from "~/lib/utils";
 import { buildMeta, SITE_URL } from "~/lib/seo";
@@ -201,8 +204,12 @@ export default function AuthPage() {
             <input type="hidden" name="intent" value={mode} />
 
             {mode === "register" && (
-              <div>
-                <Field label={t.auth.usernameLabel} icon="user">
+              <Field
+                label={t.auth.usernameLabel}
+                error={usernameValidation?.ok === false ? usernameValidation.error : undefined}
+                hint={usernameValidation?.ok !== false ? t.auth.usernameHint : undefined}
+              >
+                <AuthInputField icon="user">
                   <input
                     name="username"
                     type="text"
@@ -213,34 +220,26 @@ export default function AuthPage() {
                     autoComplete="username"
                     className="w-full bg-transparent text-sm outline-none"
                   />
-                </Field>
-                <p className="mt-2 text-xs" style={{
-                  color: usernameValidation?.ok === false
-                    ? "var(--warm)"
-                    : "var(--fg-dim)",
-                }}>
-                  {usernameValidation?.ok === false
-                    ? usernameValidation.error
-                    : t.auth.usernameHint}
-                </p>
-              </div>
+                </AuthInputField>
+              </Field>
             )}
 
-            <Field label={t.auth.emailLabel} icon="mail">
-              <input
-                name="email"
-                type="email"
-                placeholder={t.auth.emailPlaceholder}
-                required
-                defaultValue={actionData?.email || ""}
-                autoComplete="email"
-                className="w-full bg-transparent text-sm outline-none"
-              />
+            <Field label={t.auth.emailLabel}>
+              <AuthInputField icon="mail">
+                <input
+                  name="email"
+                  type="email"
+                  placeholder={t.auth.emailPlaceholder}
+                  required
+                  defaultValue={actionData?.email || ""}
+                  autoComplete="email"
+                  className="w-full bg-transparent text-sm outline-none"
+                />
+              </AuthInputField>
             </Field>
 
-            <div>
-              <Field
-                label={t.auth.passwordLabel}
+            <Field label={t.auth.passwordLabel}>
+              <AuthInputField
                 icon="lock"
                 trailing={
                   <button
@@ -264,7 +263,7 @@ export default function AuthPage() {
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
                   className="w-full bg-transparent text-sm outline-none"
                 />
-              </Field>
+              </AuthInputField>
               {mode === "register" && password.length > 0 && (
                 <div className="flex gap-1 mt-2">
                   {[0, 1, 2, 3].map((i) => (
@@ -283,24 +282,17 @@ export default function AuthPage() {
                   ))}
                 </div>
               )}
-            </div>
+            </Field>
 
             {mode === "register" && (
-              <div>
-                <div className="kicker mb-2">{t.auth.countryLabel}</div>
-                <select
+              <Field label={t.auth.countryLabel}>
+                <Select
                   name="country"
                   defaultValue="MX"
-                  className="w-full h-11 rounded-md border border-line bg-raised px-3 text-sm focus:outline-none focus:border-accent"
                   required
-                >
-                  {LATIN_COUNTRIES.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.flag} {c.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  options={LATIN_COUNTRIES.map((c) => ({ value: c.code, label: `${c.flag} ${c.label}` }))}
+                />
+              </Field>
             )}
 
             {mode === "login" && (
@@ -359,14 +351,14 @@ export default function AuthPage() {
               </div>
             )}
 
-            <button type="submit" className="btn btn-primary w-full" disabled={isSubmitting}>
+            <Button type="submit" variant="primary" size="lg" className="w-full" disabled={isSubmitting}>
               {isSubmitting
                 ? t.auth.submitting
                 : mode === "login"
                   ? t.auth.submitLogin
                   : t.auth.submitRegister}
               <Icon name="arrowRight" size={14} />
-            </button>
+            </Button>
           </Form>
 
           {oauthError && (
@@ -387,7 +379,7 @@ export default function AuthPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <a href="/auth/google" className="btn btn-ghost">
+            <a href="/auth/google" className={cn(buttonVariants({ variant: "ghost" }), "justify-center")}>
               <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -396,14 +388,9 @@ export default function AuthPage() {
               </svg>
               Google
             </a>
-            <button
-              type="button"
-              className="btn btn-ghost opacity-50 cursor-not-allowed"
-              title="Próximamente"
-              disabled
-            >
+            <Button variant="ghost" disabled title="Próximamente">
               Apple
-            </button>
+            </Button>
           </div>
 
           <p className="text-xs text-fg-dim text-center mt-8">
@@ -446,25 +433,20 @@ function TabButton({
   );
 }
 
-function Field({
-  label,
+function AuthInputField({
   icon,
   trailing,
   children,
 }: {
-  label: string;
   icon?: React.ComponentProps<typeof Icon>["name"];
   trailing?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <div className="kicker mb-2">{label}</div>
-      <div className="flex items-center gap-3 rounded-md border border-line bg-raised px-3.5 h-11 focus-within:border-accent focus-within:shadow-[0_0_0_3px_color-mix(in_oklch,var(--accent)_20%,transparent)] transition-[border-color,box-shadow]">
-        {icon && <Icon name={icon} size={16} className="text-fg-dim" />}
-        <div className="flex-1">{children}</div>
-        {trailing}
-      </div>
+    <div className="flex items-center gap-3 rounded-md border border-line bg-raised px-3.5 h-11 focus-within:border-accent focus-within:shadow-[0_0_0_3px_color-mix(in_oklch,var(--accent)_20%,transparent)] transition-[border-color,box-shadow]">
+      {icon && <Icon name={icon} size={16} className="text-fg-dim" />}
+      <div className="flex-1">{children}</div>
+      {trailing}
     </div>
   );
 }
