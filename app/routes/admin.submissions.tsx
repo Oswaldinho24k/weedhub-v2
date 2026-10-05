@@ -13,6 +13,7 @@ import { normalizeStrainSlug } from "~/lib/strain-name";
 import { awardPoints } from "~/services/gamification.service.server";
 import { slugify } from "~/lib/utils";
 import { Icon } from "~/components/ui/icon";
+import { Button } from "~/components/ui/button";
 import { formatDate } from "~/lib/utils";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -326,31 +327,34 @@ function SubmissionCard({ submission: s }: { submission: SubmissionRow }) {
       )}
 
       <div className="flex gap-2 flex-wrap pt-2 border-t border-line">
-        <button
+        <Button
           type="button"
           onClick={() => setMode(mode === "approve" ? "" : "approve")}
-          className="btn btn-primary !py-1.5 !px-3 text-xs"
+          variant="primary"
+          size="sm"
         >
           <Icon name="check" size={12} />
           Aprobar → crear cepa
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={() => setMode(mode === "merge" ? "" : "merge")}
-          className="btn btn-ghost !py-1.5 !px-3 text-xs"
+          variant="ghost"
+          size="sm"
         >
           <Icon name="plus" size={12} />
           Es alias de…
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={() => setMode(mode === "reject" ? "" : "reject")}
-          className="btn btn-ghost !py-1.5 !px-3 text-xs"
+          variant="ghost"
+          size="sm"
           style={{ color: "var(--warm)" }}
         >
           <Icon name="x" size={12} />
           Rechazar
-        </button>
+        </Button>
       </div>
 
       {mode === "approve" && (
@@ -384,13 +388,14 @@ function SubmissionCard({ submission: s }: { submission: SubmissionRow }) {
             desde <Link to="/admin/strains" className="underline">Cepas</Link> para
             llenar terpenos, efectos, timeCurve, etc.
           </p>
-          <button
+          <Button
             type="submit"
-            className="btn btn-primary !py-1.5 !px-3 text-xs"
+            variant="primary"
+            size="sm"
             disabled={busy}
           >
             {busy ? "Creando…" : "Crear y aprobar"}
-          </button>
+          </Button>
         </Form>
       )}
 
@@ -408,13 +413,14 @@ function SubmissionCard({ submission: s }: { submission: SubmissionRow }) {
               className="w-full rounded-md border border-line bg-raised px-3 py-2 text-sm resize-y"
             />
           </label>
-          <button
+          <Button
             type="submit"
-            className="btn btn-warm !py-1.5 !px-3 text-xs"
+            variant="warm"
+            size="sm"
             disabled={busy}
           >
             {busy ? "…" : "Confirmar rechazo"}
-          </button>
+          </Button>
         </Form>
       )}
 
@@ -464,13 +470,14 @@ function MergeAliasForm({
           ))}
         </p>
       )}
-      <button
+      <Button
         type="submit"
-        className="btn btn-primary !py-1.5 !px-3 text-xs"
+        variant="primary"
+        size="sm"
         disabled={busy || !strainIdInput}
       >
         {busy ? "…" : "Agregar como alias"}
-      </button>
+      </Button>
     </Form>
   );
 }

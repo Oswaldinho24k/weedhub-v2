@@ -8,6 +8,7 @@ import { UploadError, uploadImage, validateImage } from "~/lib/cloudinary.server
 import { MAX_IMAGE_MB } from "~/lib/upload-config";
 import { Dialog, DialogHeader, DialogFooter } from "~/components/ui/dialog";
 import { Icon } from "~/components/ui/icon";
+import { Button } from "~/components/ui/button";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await connectDB();
@@ -314,10 +315,10 @@ export default function AdminStrainsPage({ loaderData }: Route.ComponentProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="display text-2xl">Cepas ({strains.length})</h2>
-        <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+        <Button variant="primary" onClick={() => setShowCreate(true)}>
           <Icon name="plus" size={14} />
           Nueva cepa
-        </button>
+        </Button>
       </div>
 
       {actionData?.message && (
@@ -365,23 +366,25 @@ export default function AdminStrainsPage({ loaderData }: Route.ComponentProps) {
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <button
+              <Button
                 type="button"
                 onClick={() => openEdit(strain._id)}
-                className="btn btn-ghost !py-1.5 !px-3 text-xs"
+                variant="ghost"
+                size="sm"
               >
                 Editar
-              </button>
+              </Button>
               <Form method="post">
                 <input type="hidden" name="strainId" value={strain._id} />
-                <button
+                <Button
                   type="submit"
                   name="intent"
                   value={strain.isArchived ? "unarchive" : "archive"}
-                  className="btn btn-ghost !py-1.5 !px-3 text-xs"
+                  variant="ghost"
+                  size="sm"
                 >
                   {strain.isArchived ? "Restaurar" : "Archivar"}
-                </button>
+                </Button>
               </Form>
             </div>
           </div>
@@ -468,20 +471,20 @@ export default function AdminStrainsPage({ loaderData }: Route.ComponentProps) {
             />
           </AdminField>
           <DialogFooter>
-            <button
+            <Button
               type="button"
-              className="btn btn-ghost"
+              variant="ghost"
               onClick={() => setShowCreate(false)}
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="btn btn-primary"
+              variant="primary"
               disabled={navigation.state === "submitting"}
             >
               Crear cepa
-            </button>
+            </Button>
           </DialogFooter>
         </Form>
       </Dialog>
@@ -748,16 +751,16 @@ function EditStrainDialog({
         </div>
 
         <DialogFooter>
-          <button type="button" className="btn btn-ghost" onClick={onClose}>
+          <Button type="button" variant="ghost" onClick={onClose}>
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="btn btn-primary"
+            variant="primary"
             disabled={navigation.state === "submitting"}
           >
             Guardar cambios
-          </button>
+          </Button>
         </DialogFooter>
       </Form>
     </Dialog>

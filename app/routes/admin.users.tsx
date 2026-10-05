@@ -7,6 +7,7 @@ import { UserModel } from "~/models/user.server";
 import { countryFlag, countryLabel } from "~/constants/locations";
 import { formatDate, cn } from "~/lib/utils";
 import { Icon } from "~/components/ui/icon";
+import { Button } from "~/components/ui/button";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAdmin(request);
@@ -96,9 +97,9 @@ export default function AdminUsersPage({ loaderData }: Route.ComponentProps) {
             placeholder="Buscar por username…"
             className="admin-input !w-56"
           />
-          <button type="submit" className="btn btn-ghost">
+          <Button type="submit" variant="ghost">
             <Icon name="search" size={14} />
-          </button>
+          </Button>
         </form>
       </div>
 
@@ -207,14 +208,15 @@ function UserRow({
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        <button
+        <Button
           type="button"
           onClick={() => setShowActions((v) => !v)}
-          className="btn btn-ghost text-xs"
+          variant="ghost"
+          size="sm"
         >
           <Icon name="settings" size={13} />
           {showActions ? "Cerrar" : "Acciones"}
-        </button>
+        </Button>
 
         {showActions && (
           <div className="flex gap-2 flex-wrap">
@@ -226,13 +228,14 @@ function UserRow({
                 name="role"
                 value={isAdmin ? "user" : "admin"}
               />
-              <button
+              <Button
                 type="submit"
                 disabled={busy}
-                className={cn("btn text-xs", isAdmin ? "btn-warm" : "btn-ghost")}
+                variant={isAdmin ? "warm" : "ghost"}
+                size="sm"
               >
                 {isAdmin ? "Quitar admin" : "Hacer admin"}
-              </button>
+              </Button>
             </Form>
 
             <Form
@@ -244,9 +247,9 @@ function UserRow({
             >
               <input type="hidden" name="userId" value={user._id} />
               <input type="hidden" name="intent" value="reset-points" />
-              <button type="submit" disabled={busy} className="btn btn-ghost text-xs text-fg-muted">
+              <Button type="submit" disabled={busy} variant="ghost" size="sm" className="text-fg-muted">
                 Reset puntos
-              </button>
+              </Button>
             </Form>
           </div>
         )}

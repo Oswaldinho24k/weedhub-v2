@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import type { Route } from "./+types/admin";
 import { requireAdmin } from "~/lib/auth.server";
 import { Icon, type IconName } from "~/components/ui/icon";
+import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
 export function meta() {
@@ -44,17 +45,15 @@ export default function AdminLayout() {
             Administración
           </h1>
         </div>
-        <button
+        <Button
           onClick={() => setChatOpen((v) => !v)}
-          className={cn(
-            "btn text-sm flex items-center gap-2 mt-2",
-            chatOpen ? "btn-primary" : "btn-ghost"
-          )}
+          variant={chatOpen ? "primary" : "ghost"}
+          className="text-sm flex items-center gap-2 mt-2"
           title="Asistente AI"
         >
           <Icon name="sparkle" size={15} />
           AI
-        </button>
+        </Button>
       </div>
 
       <nav className="flex gap-2 mb-10 border-b border-line overflow-x-auto">
@@ -143,9 +142,9 @@ function AdminChat({ onClose }: { onClose: () => void }) {
           <Icon name="sparkle" size={14} className="text-accent" />
           Asistente AI
         </div>
-        <button onClick={onClose} className="btn btn-ghost !p-1">
+        <Button onClick={onClose} variant="ghost" className="!p-1">
           <Icon name="x" size={14} />
-        </button>
+        </Button>
       </div>
 
       {/* Messages */}
@@ -210,13 +209,14 @@ function AdminChat({ onClose }: { onClose: () => void }) {
           className="flex-1 text-sm px-3 py-2 rounded-md border border-line bg-bg-raised focus:outline-none focus:border-accent"
           style={{ color: "var(--fg)" }}
         />
-        <button
+        <Button
           onClick={send}
           disabled={loading || !input.trim()}
-          className="btn btn-primary !py-2 !px-3 text-xs"
+          variant="primary"
+          size="sm"
         >
           <Icon name="arrowRight" size={14} />
-        </button>
+        </Button>
       </div>
     </div>
   );

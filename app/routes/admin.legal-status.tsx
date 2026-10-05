@@ -6,6 +6,7 @@ import { connectDB } from "~/lib/db.server";
 import { LegalStatusModel, type LegalStatusType } from "~/models/legal-status.server";
 import { STATUS_LABEL, STATUS_PILL, STATUS_PILL_STYLE } from "~/lib/legal-status-ui";
 import { Icon } from "~/components/ui/icon";
+import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -95,9 +96,9 @@ export default function AdminLegalStatus() {
           </h2>
           <p className="text-sm text-fg-muted mt-0.5">{countries.length} países registrados</p>
         </div>
-        <button onClick={() => setShowCreate(true)} className="btn btn-primary text-sm">
+        <Button onClick={() => setShowCreate(true)} variant="primary" className="text-sm">
           + Agregar país
-        </button>
+        </Button>
       </div>
 
       {actionData && "error" in actionData && (
@@ -179,8 +180,8 @@ export default function AdminLegalStatus() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button type="submit" className="btn btn-primary text-sm">Crear</button>
-              <button type="button" onClick={() => setShowCreate(false)} className="btn btn-ghost text-sm">Cancelar</button>
+              <Button type="submit" variant="primary" className="text-sm">Crear</Button>
+              <Button type="button" onClick={() => setShowCreate(false)} variant="ghost" className="text-sm">Cancelar</Button>
             </div>
           </Form>
         </div>
@@ -249,18 +250,18 @@ export default function AdminLegalStatus() {
                               <option key={k} value={k}>{v}</option>
                             ))}
                           </select>
-                          <button type="submit" className="btn btn-primary text-xs !py-1 !px-2">
+                          <Button type="submit" variant="primary" size="sm">
                             Actualizar estatus
-                          </button>
+                          </Button>
                         </Form>
 
                         {/* Toggle visibilidad */}
                         <Form method="post">
                           <input type="hidden" name="intent" value="toggle" />
                           <input type="hidden" name="id" value={String(country._id)} />
-                          <button type="submit" className="btn btn-ghost text-xs !py-1 !px-2">
+                          <Button type="submit" variant="ghost" size="sm">
                             {country.isActive ? "Ocultar" : "Mostrar"}
-                          </button>
+                          </Button>
                         </Form>
                       </div>
 
@@ -292,7 +293,7 @@ export default function AdminLegalStatus() {
                               <textarea name="whatYouCant" defaultValue={country.whatYouCant?.join("\n") || ""} className="input w-full text-xs font-mono" rows={4} />
                             </div>
                           </div>
-                          <button type="submit" className="btn btn-primary text-xs !py-1 !px-3">Guardar</button>
+                          <Button type="submit" variant="primary" size="sm">Guardar</Button>
                         </Form>
                       </details>
                     </td>

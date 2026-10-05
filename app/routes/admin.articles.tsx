@@ -5,6 +5,7 @@ import { requireAdmin } from "~/lib/auth.server";
 import { connectDB } from "~/lib/db.server";
 import { ArticleModel, type ArticleCategory } from "~/models/article.server";
 import { Icon } from "~/components/ui/icon";
+import { Button } from "~/components/ui/button";
 
 const CATEGORIES: { value: ArticleCategory; label: string }[] = [
   { value: "cepa", label: "Cepa" },
@@ -157,15 +158,15 @@ export default function AdminArticlesPage({ loaderData }: Route.ComponentProps) 
           Artículos ({articles.length})
         </h2>
         {mode === "list" && (
-          <button className="btn btn-primary" onClick={() => setMode("create")}>
+          <Button variant="primary" onClick={() => setMode("create")}>
             <Icon name="plus" size={14} />
             Nuevo artículo
-          </button>
+          </Button>
         )}
         {mode !== "list" && (
-          <button className="btn btn-ghost" onClick={resetMode}>
+          <Button variant="ghost" onClick={resetMode}>
             ← Volver
-          </button>
+          </Button>
         )}
       </div>
 
@@ -225,34 +226,36 @@ export default function AdminArticlesPage({ loaderData }: Route.ComponentProps) 
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button
+                <Button
                   type="button"
                   onClick={() => openEdit(article)}
-                  className="btn btn-ghost !py-1.5 !px-3 text-xs"
+                  variant="ghost"
+                  size="sm"
                 >
                   <Icon name="edit" size={12} />
                   Editar
-                </button>
+                </Button>
                 <Form method="post">
                   <input type="hidden" name="intent" value="publish" />
                   <input type="hidden" name="id" value={article._id} />
-                  <button type="submit" className="btn btn-ghost !py-1.5 !px-3 text-xs">
+                  <Button type="submit" variant="ghost" size="sm">
                     {article.status === "published" ? "Despublicar" : "Publicar"}
-                  </button>
+                  </Button>
                 </Form>
                 <Form method="post">
                   <input type="hidden" name="intent" value="delete" />
                   <input type="hidden" name="id" value={article._id} />
-                  <button
+                  <Button
                     type="submit"
-                    className="btn btn-ghost !py-1.5 !px-3 text-xs"
+                    variant="ghost"
+                    size="sm"
                     style={{ color: "var(--warm)" }}
                     onClick={(e) => {
                       if (!confirm(`¿Eliminar "${article.title}"?`)) e.preventDefault();
                     }}
                   >
                     <Icon name="trash" size={12} />
-                  </button>
+                  </Button>
                 </Form>
               </div>
             </div>
@@ -442,12 +445,12 @@ function ArticleForm({
         </div>
 
         <div className="flex gap-2 pt-2">
-          <button type="submit" className="btn btn-primary text-sm" disabled={submitting}>
+          <Button type="submit" variant="primary" className="text-sm" disabled={submitting}>
             {submitting ? "Guardando..." : intent === "create" ? "Crear borrador" : "Guardar cambios"}
-          </button>
-          <button type="button" onClick={onCancel} className="btn btn-ghost text-sm">
+          </Button>
+          <Button type="button" onClick={onCancel} variant="ghost" className="text-sm">
             Cancelar
-          </button>
+          </Button>
         </div>
       </Form>
     </div>

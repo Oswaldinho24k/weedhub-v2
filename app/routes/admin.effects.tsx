@@ -13,6 +13,7 @@ import { connectDB } from "~/lib/db.server";
 import { requireAdmin } from "~/lib/auth.server";
 import { EffectModel } from "~/models/effect.server";
 import { Icon } from "~/components/ui/icon";
+import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -148,9 +149,9 @@ export default function AdminEffects({ loaderData }: Route.ComponentProps) {
             <span><span className="text-fg">{pending.length}</span> pendientes</span>
             <span><span className="text-fg">{approved.length}</span> aprobados</span>
           </div>
-          <button className="btn btn-primary text-sm" onClick={() => setShowCreate(true)}>
+          <Button variant="primary" className="text-sm" onClick={() => setShowCreate(true)}>
             + Nuevo efecto
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -186,8 +187,8 @@ export default function AdminEffects({ loaderData }: Route.ComponentProps) {
             </select>
           </div>
           <DialogFooter>
-            <button type="button" className="btn btn-ghost" onClick={() => setShowCreate(false)}>Cancelar</button>
-            <button type="submit" disabled={busy} className="btn btn-primary">Crear efecto</button>
+            <Button type="button" variant="ghost" onClick={() => setShowCreate(false)}>Cancelar</Button>
+            <Button type="submit" disabled={busy} variant="primary">Crear efecto</Button>
           </DialogFooter>
         </Form>
       </Dialog>
@@ -260,13 +261,14 @@ function PendingCard({ effect, busy }: { effect: SerializedEffect; busy: boolean
             </div>
           )}
         </div>
-        <button
+        <Button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="btn btn-ghost text-sm"
+          variant="ghost"
+          className="text-sm"
         >
           {expanded ? "Cerrar" : "Revisar"}
-        </button>
+        </Button>
       </div>
 
       {expanded && (
@@ -294,9 +296,9 @@ function PendingCard({ effect, busy }: { effect: SerializedEffect; busy: boolean
                 <option value="positive">Positivo</option>
                 <option value="negative">Negativo</option>
               </select>
-              <button type="submit" disabled={busy} className="btn btn-primary text-sm">
+              <Button type="submit" disabled={busy} variant="primary" className="text-sm">
                 <Icon name="check" size={14} /> Aprobar
-              </button>
+              </Button>
             </div>
           </Form>
 
@@ -306,9 +308,9 @@ function PendingCard({ effect, busy }: { effect: SerializedEffect; busy: boolean
               <input type="hidden" name="intent" value="reject" />
               <input type="hidden" name="effectId" value={effect._id} />
               <input name="reason" placeholder="Razón (opcional)" className="input text-sm w-48" />
-              <button type="submit" disabled={busy} className="btn btn-ghost text-sm text-fg-muted">
+              <Button type="submit" disabled={busy} variant="ghost" className="text-sm text-fg-muted">
                 Rechazar
-              </button>
+              </Button>
             </Form>
 
             {/* Merge */}
@@ -316,9 +318,9 @@ function PendingCard({ effect, busy }: { effect: SerializedEffect; busy: boolean
               <input type="hidden" name="intent" value="merge" />
               <input type="hidden" name="effectId" value={effect._id} />
               <input name="targetKey" placeholder="key destino (ej: relaxed)" className="input text-sm w-40" />
-              <button type="submit" disabled={busy} className="btn btn-ghost text-sm">
+              <Button type="submit" disabled={busy} variant="ghost" className="text-sm">
                 Fusionar
-              </button>
+              </Button>
             </Form>
           </div>
         </div>
@@ -345,9 +347,9 @@ function ApprovedRow({ effect, busy }: { effect: SerializedEffect; busy: boolean
             {effect.usageCount > 0 && (
               <span className="mono text-xs text-fg-dim">{effect.usageCount} cepas</span>
             )}
-            <button type="button" onClick={() => setEditing(true)} className="btn btn-ghost text-xs">
+            <Button type="button" onClick={() => setEditing(true)} variant="ghost" size="sm">
               Editar
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
@@ -364,8 +366,8 @@ function ApprovedRow({ effect, busy }: { effect: SerializedEffect; busy: boolean
               <option value="positive">Positivo</option>
               <option value="negative">Negativo</option>
             </select>
-            <button type="submit" disabled={busy} className="btn btn-primary text-sm">Guardar</button>
-            <button type="button" onClick={() => setEditing(false)} className="btn btn-ghost text-sm">Cancelar</button>
+            <Button type="submit" disabled={busy} variant="primary" className="text-sm">Guardar</Button>
+            <Button type="button" onClick={() => setEditing(false)} variant="ghost" className="text-sm">Cancelar</Button>
           </div>
         </Form>
       )}

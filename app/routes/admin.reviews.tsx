@@ -5,6 +5,7 @@ import { ReviewModel } from "~/models/review.server";
 import { recalculateStrainRatings, updateUserStats } from "~/services/review.service.server";
 import { Icon } from "~/components/ui/icon";
 import { RatingStars } from "~/components/composite/rating-stars";
+import { Button } from "~/components/ui/button";
 import { formatDate } from "~/lib/utils";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -222,15 +223,16 @@ function ModBtn({
       <input type="hidden" name="intent" value="status" />
       <input type="hidden" name="reviewId" value={reviewId} />
       <input type="hidden" name="status" value={status} />
-      <button
+      <Button
         type="submit"
-        className="btn btn-ghost !py-1.5 !px-3 text-xs"
+        variant="ghost"
+        size="sm"
         style={tone === "warm" ? { color: "var(--warm)" } : undefined}
         aria-label={label}
       >
         <Icon name={icon} size={14} />
         {label}
-      </button>
+      </Button>
     </Form>
   );
 }
@@ -246,15 +248,16 @@ function DeleteBtn({ reviewId }: { reviewId: string }) {
     >
       <input type="hidden" name="intent" value="delete" />
       <input type="hidden" name="reviewId" value={reviewId} />
-      <button
+      <Button
         type="submit"
-        className="btn btn-ghost !py-1.5 !px-3 text-xs"
+        variant="ghost"
+        size="sm"
         style={{ color: "var(--warm)" }}
         aria-label="Borrar permanente"
         title="Borrar permanente"
       >
         <Icon name="trash" size={14} />
-      </button>
+      </Button>
     </Form>
   );
 }

@@ -7,6 +7,7 @@ import { ProductModel } from "~/models/product.server";
 import { BrandModel } from "~/models/brand.server";
 import { ProductCategoryModel } from "~/models/product-category.server";
 import { Icon } from "~/components/ui/icon";
+import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
 const PAGE_SIZE = 25;
@@ -120,9 +121,9 @@ export default function AdminProducts() {
           <h2 className="text-xl font-semibold">Productos</h2>
           <p className="text-sm text-fg-muted mt-0.5">{total} producto{total !== 1 ? "s" : ""}</p>
         </div>
-        <button onClick={() => setShowCreate(true)} className="btn btn-primary text-sm">
+        <Button onClick={() => setShowCreate(true)} variant="primary" className="text-sm">
           + Nuevo producto
-        </button>
+        </Button>
       </div>
 
       {actionData && "error" in actionData && (
@@ -223,8 +224,8 @@ export default function AdminProducts() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button type="submit" className="btn btn-primary text-sm">Crear como borrador</button>
-              <button type="button" onClick={() => setShowCreate(false)} className="btn btn-ghost text-sm">Cancelar</button>
+              <Button type="submit" variant="primary" className="text-sm">Crear como borrador</Button>
+              <Button type="button" onClick={() => setShowCreate(false)} variant="ghost" className="text-sm">Cancelar</Button>
             </div>
           </Form>
         </div>
@@ -298,28 +299,29 @@ export default function AdminProducts() {
                             <option value="active">Activo</option>
                             <option value="archived">Archivado</option>
                           </select>
-                          <button type="submit" className="btn btn-ghost text-xs !py-1 !px-2">
+                          <Button type="submit" variant="ghost" size="sm">
                             Cambiar estado
-                          </button>
+                          </Button>
                         </Form>
                         <Form method="post">
                           <input type="hidden" name="intent" value="toggle-promoted" />
                           <input type="hidden" name="id" value={String(product._id)} />
-                          <button type="submit" className="btn btn-ghost text-xs !py-1 !px-2">
+                          <Button type="submit" variant="ghost" size="sm">
                             {product.isPromoted ? "Quitar promoción" : "Promover"}
-                          </button>
+                          </Button>
                         </Form>
                         <Form method="post">
                           <input type="hidden" name="intent" value="delete" />
                           <input type="hidden" name="id" value={String(product._id)} />
-                          <button
+                          <Button
                             type="submit"
-                            className="btn btn-ghost text-xs !py-1 !px-2"
+                            variant="ghost"
+                            size="sm"
                             style={{ color: "var(--warm)" }}
                             onClick={(e) => { if (!confirm(`¿Eliminar "${product.name}"?`)) e.preventDefault(); }}
                           >
                             <Icon name="trash" size={12} /> Eliminar
-                          </button>
+                          </Button>
                         </Form>
                       </div>
                     </td>
@@ -341,15 +343,15 @@ export default function AdminProducts() {
       {totalPages > 1 && (
         <div className="flex gap-2 mt-4 justify-end text-sm">
           {page > 1 && (
-            <button onClick={() => setSearchParams((p) => { p.set("page", String(page - 1)); return p; })} className="btn btn-ghost text-sm flex items-center gap-1">
+            <Button onClick={() => setSearchParams((p) => { p.set("page", String(page - 1)); return p; })} variant="ghost" className="text-sm flex items-center gap-1">
               <Icon name="chevronLeft" size={14} /> Anterior
-            </button>
+            </Button>
           )}
           <span className="py-2 text-fg-muted">{page} / {totalPages}</span>
           {page < totalPages && (
-            <button onClick={() => setSearchParams((p) => { p.set("page", String(page + 1)); return p; })} className="btn btn-ghost text-sm flex items-center gap-1">
+            <Button onClick={() => setSearchParams((p) => { p.set("page", String(page + 1)); return p; })} variant="ghost" className="text-sm flex items-center gap-1">
               Siguiente <Icon name="chevronRight" size={14} />
-            </button>
+            </Button>
           )}
         </div>
       )}

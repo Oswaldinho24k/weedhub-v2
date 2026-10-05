@@ -5,6 +5,8 @@ import { connectDB } from "~/lib/db.server";
 import { PostModel } from "~/models/post.server";
 import { CommentModel } from "~/models/comment.server";
 import { Icon } from "~/components/ui/icon";
+import { Button, buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAdmin(request);
@@ -112,7 +114,7 @@ export default function AdminCommunityPage({ loaderData }: Route.ComponentProps)
                 href={`/comunidad/${post.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-ghost !py-1.5 !px-3 text-xs"
+                className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
               >
                 Ver
               </a>
@@ -120,30 +122,31 @@ export default function AdminCommunityPage({ loaderData }: Route.ComponentProps)
                 <Form method="post">
                   <input type="hidden" name="intent" value="remove-post" />
                   <input type="hidden" name="id" value={post._id} />
-                  <button type="submit" className="btn btn-ghost !py-1.5 !px-3 text-xs" style={{ color: "var(--warm)" }}>
+                  <Button type="submit" variant="ghost" size="sm" style={{ color: "var(--warm)" }}>
                     Eliminar
-                  </button>
+                  </Button>
                 </Form>
               ) : (
                 <Form method="post">
                   <input type="hidden" name="intent" value="restore-post" />
                   <input type="hidden" name="id" value={post._id} />
-                  <button type="submit" className="btn btn-ghost !py-1.5 !px-3 text-xs">
+                  <Button type="submit" variant="ghost" size="sm">
                     Restaurar
-                  </button>
+                  </Button>
                 </Form>
               )}
               <Form method="post">
                 <input type="hidden" name="intent" value="delete-post" />
                 <input type="hidden" name="id" value={post._id} />
-                <button
+                <Button
                   type="submit"
-                  className="btn btn-ghost !py-1.5 !px-3 text-xs"
+                  variant="ghost"
+                  size="sm"
                   style={{ color: "var(--warm)" }}
                   onClick={(e) => { if (!confirm("¿Eliminar permanentemente post y todos sus comentarios?")) e.preventDefault(); }}
                 >
                   <Icon name="trash" size={12} />
-                </button>
+                </Button>
               </Form>
             </div>
           </div>

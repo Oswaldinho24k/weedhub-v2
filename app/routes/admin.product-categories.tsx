@@ -5,6 +5,7 @@ import { requireAdmin } from "~/lib/auth.server";
 import { connectDB } from "~/lib/db.server";
 import { ProductCategoryModel } from "~/models/product-category.server";
 import { Icon } from "~/components/ui/icon";
+import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -67,9 +68,9 @@ export default function AdminProductCategories() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold">Categorías de producto</h2>
-        <button onClick={() => setShowCreate(true)} className="btn btn-primary text-sm">
+        <Button onClick={() => setShowCreate(true)} variant="primary" className="text-sm">
           + Nueva categoría
-        </button>
+        </Button>
       </div>
 
       {actionData && "error" in actionData && (
@@ -128,10 +129,10 @@ export default function AdminProductCategories() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button type="submit" className="btn btn-primary text-sm">Crear</button>
-              <button type="button" onClick={() => setShowCreate(false)} className="btn btn-ghost text-sm">
+              <Button type="submit" variant="primary" className="text-sm">Crear</Button>
+              <Button type="button" onClick={() => setShowCreate(false)} variant="ghost" className="text-sm">
                 Cancelar
-              </button>
+              </Button>
             </div>
           </Form>
         </div>
@@ -181,23 +182,24 @@ export default function AdminProductCategories() {
                   <Form method="post">
                     <input type="hidden" name="intent" value="toggle" />
                     <input type="hidden" name="id" value={String(cat._id)} />
-                    <button type="submit" className="btn btn-ghost !py-1 !px-2 text-xs">
+                    <Button type="submit" variant="ghost" size="sm">
                       {cat.isActive ? "Desactivar" : "Activar"}
-                    </button>
+                    </Button>
                   </Form>
                   <Form method="post">
                     <input type="hidden" name="intent" value="delete" />
                     <input type="hidden" name="id" value={String(cat._id)} />
-                    <button
+                    <Button
                       type="submit"
-                      className="btn btn-ghost !py-1 !px-2 text-xs"
+                      variant="ghost"
+                      size="sm"
                       style={{ color: "var(--warm)" }}
                       onClick={(e) => {
                         if (!confirm(`¿Eliminar categoría "${cat.key}"?`)) e.preventDefault();
                       }}
                     >
                       <Icon name="trash" size={12} />
-                    </button>
+                    </Button>
                   </Form>
                 </td>
               </tr>

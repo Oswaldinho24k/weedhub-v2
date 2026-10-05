@@ -5,6 +5,7 @@ import { requireAdmin } from "~/lib/auth.server";
 import { connectDB } from "~/lib/db.server";
 import { GlossaryTermModel, type GlossaryCategory } from "~/models/glossary-term.server";
 import { Icon } from "~/components/ui/icon";
+import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
 const CATEGORIES: Record<GlossaryCategory, string> = {
@@ -95,9 +96,9 @@ export default function AdminGlossary() {
           </h2>
           <p className="text-sm text-fg-muted mt-0.5">{terms.length} términos</p>
         </div>
-        <button onClick={() => setShowCreate(true)} className="btn btn-primary text-sm">
+        <Button onClick={() => setShowCreate(true)} variant="primary" className="text-sm">
           + Nuevo término
-        </button>
+        </Button>
       </div>
 
       {actionData && "error" in actionData && (
@@ -167,8 +168,8 @@ export default function AdminGlossary() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button type="submit" className="btn btn-primary text-sm">Crear</button>
-              <button type="button" onClick={() => setShowCreate(false)} className="btn btn-ghost text-sm">Cancelar</button>
+              <Button type="submit" variant="primary" className="text-sm">Crear</Button>
+              <Button type="button" onClick={() => setShowCreate(false)} variant="ghost" className="text-sm">Cancelar</Button>
             </div>
           </Form>
         </div>
@@ -225,21 +226,22 @@ export default function AdminGlossary() {
                         <Form method="post">
                           <input type="hidden" name="intent" value="toggle" />
                           <input type="hidden" name="id" value={String(t._id)} />
-                          <button type="submit" className="btn btn-ghost text-xs !py-1 !px-2">
+                          <Button type="submit" variant="ghost" size="sm">
                             {t.isActive ? "Ocultar" : "Mostrar"}
-                          </button>
+                          </Button>
                         </Form>
                         <Form method="post">
                           <input type="hidden" name="intent" value="delete" />
                           <input type="hidden" name="id" value={String(t._id)} />
-                          <button
+                          <Button
                             type="submit"
-                            className="btn btn-ghost text-xs !py-1 !px-2"
+                            variant="ghost"
+                            size="sm"
                             style={{ color: "var(--warm)" }}
                             onClick={(e) => { if (!confirm(`¿Eliminar "${t.term}"?`)) e.preventDefault(); }}
                           >
                             <Icon name="trash" size={12} /> Eliminar
-                          </button>
+                          </Button>
                         </Form>
                       </div>
                       <details className="mt-1">
@@ -263,7 +265,7 @@ export default function AdminGlossary() {
                             <label className="label text-xs">Ejemplos (uno por línea)</label>
                             <textarea name="examples" defaultValue={t.examples?.join("\n") || ""} className="input w-full text-xs font-mono" rows={3} />
                           </div>
-                          <button type="submit" className="btn btn-primary text-xs !py-1 !px-3">Guardar</button>
+                          <Button type="submit" variant="primary" size="sm">Guardar</Button>
                         </Form>
                       </details>
                     </td>
