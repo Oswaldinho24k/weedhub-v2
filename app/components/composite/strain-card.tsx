@@ -13,9 +13,9 @@ interface StrainCardProps {
     description?: string;
     descriptionEs?: string;
     lineage?: string;
-    cannabinoidProfile: {
-      thc: { min: number; max: number };
-      cbd: { min: number; max: number };
+    cannabinoidProfile?: {
+      thc?: { min: number; max: number };
+      cbd?: { min: number; max: number };
     };
     effects: string[];
     dominantTerpene?: string;
@@ -43,7 +43,8 @@ export function StrainCard({ strain, variant = "card" }: StrainCardProps) {
   const t = useT();
   const typeLabel = strain.typeBlend || TYPE_LABEL[strain.type] || strain.type;
   const pillVariant = TYPE_PILL[strain.type] || "";
-  const thcText = `${strain.cannabinoidProfile.thc.max}`;
+  const thcMax = strain.cannabinoidProfile?.thc?.max;
+  const thcText = thcMax != null ? `${thcMax}` : null;
   const topEffect = strain.effects?.[0];
   const tEffect = (key: string) => (t.effects as Record<string, string>)[key] ?? key;
   const tFlavor = (key: string) => (t.flavors as Record<string, string>)[key] ?? key;
@@ -59,7 +60,7 @@ export function StrainCard({ strain, variant = "card" }: StrainCardProps) {
           type={strain.type as any}
           colorHint={strain.colorHint}
           dominantTerpene={strain.dominantTerpene}
-          thcMax={strain.cannabinoidProfile.thc.max}
+          thcMax={thcMax}
           imageUrl={strain.imageUrl}
           ratio="square"
           className="w-16 h-16"
@@ -77,7 +78,7 @@ export function StrainCard({ strain, variant = "card" }: StrainCardProps) {
             THC
           </span>
           <span className="mono text-sm tnum" style={{ color: "var(--accent)" }}>
-            {thcText}%
+            {thcText != null ? `${thcText}%` : "—"}
           </span>
         </div>
         <div className="flex items-center gap-1 text-sm text-fg">
@@ -99,7 +100,7 @@ export function StrainCard({ strain, variant = "card" }: StrainCardProps) {
         type={strain.type as any}
         colorHint={strain.colorHint}
         dominantTerpene={strain.dominantTerpene}
-        thcMax={strain.cannabinoidProfile.thc.max}
+        thcMax={thcMax}
         imageUrl={strain.imageUrl}
         ratio="wide"
       />
@@ -117,7 +118,7 @@ export function StrainCard({ strain, variant = "card" }: StrainCardProps) {
             THC
           </span>
           <span className="mono text-lg tnum" style={{ color: "var(--accent)" }}>
-            {thcText}%
+            {thcText != null ? `${thcText}%` : "—"}
           </span>
         </span>
       </div>
