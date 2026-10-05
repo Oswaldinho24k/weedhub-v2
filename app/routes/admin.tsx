@@ -18,6 +18,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 const NAV_ITEMS: { to: string; label: string; icon: IconName; end?: boolean }[] = [
   { to: "/admin", label: "Dashboard", icon: "settings", end: true },
   { to: "/admin/strains", label: "Cepas", icon: "leaf" },
+  { to: "/admin/generate-images", label: "Imágenes IA", icon: "camera" },
   { to: "/admin/reviews", label: "Reseñas", icon: "edit" },
   { to: "/admin/submissions", label: "Sugerencias", icon: "plus" },
   { to: "/admin/effects", label: "Efectos", icon: "sparkle" },

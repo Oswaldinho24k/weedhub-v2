@@ -1,5 +1,5 @@
-import { Form, Link, useActionData, useNavigation, useSearchParams, useSubmit } from "react-router";
-import { useRef, useState } from "react";
+import { Form, Link, useActionData, useFetcher, useNavigation, useSearchParams, useSubmit } from "react-router";
+import { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/admin.strains";
 import { connectDB } from "~/lib/db.server";
 import { StrainModel } from "~/models/strain.server";
@@ -40,6 +40,7 @@ export async function loader({ request }: Route.LoaderArgs) {
           name: editStrain.name,
           slug: editStrain.slug,
           type: editStrain.type,
+          imageUrl: editStrain.imageUrl ?? "",
           description: editStrain.description ?? "",
           descriptionEs: editStrain.descriptionEs ?? "",
           descriptions: editStrain.descriptions ?? {},
@@ -523,6 +524,7 @@ export default function AdminStrainsPage({ loaderData }: Route.ComponentProps) {
 
 type EditStrainData = {
   _id: string; name: string; slug: string; type: string;
+  imageUrl: string;
   description: string; descriptionEs: string;
   descriptions: { es?: string; en?: string; pt?: string };
   aliases: string; lineage: string; colorHint: string;
@@ -547,6 +549,14 @@ function EditStrainDialog({
   onClose: () => void;
   navigation: ReturnType<typeof useNavigation>;
 }) {
+  const imageFetcher = useFetcher<{ imageUrl?: string; error?: string }>();
+  const isGenerating = imageFetcher.state !== "idle";
+  const [previewUrl, setPreviewUrl] = useState(strain.imageUrl || "");
+
+  useEffect(() => {
+    if (imageFetcher.data?.imageUrl) setPreviewUrl(imageFetcher.data.imageUrl);
+  }, [imageFetcher.data]);
+
   return (
     <Dialog open onClose={onClose} className="max-w-2xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
@@ -560,6 +570,43 @@ function EditStrainDialog({
       >
         <input type="hidden" name="intent" value="edit" />
         <input type="hidden" name="strainId" value={strain._id} />
+
+        {/* Imagen */}
+        <div className="edit-section space-y-3">
+          <div className="kicker">Imagen</div>
+          <div className="flex gap-4 items-start">
+            <div
+              className="rounded-md overflow-hidden border border-line bg-elev shrink-0 w-40"
+              style={{ aspectRatio: "4/3" }}
+            >
+              {previewUrl ? (
+                <img src={previewUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full grid place-items-center text-fg-dim text-xs">
+                  Sin imagen
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <imageFetcher.Form method="post" action="/api/admin/generate-strain-image">
+                <input type="hidden" name="strainId" value={strain._id} />
+                <Button type="submit" variant="ghost" size="sm" disabled={isGenerating}>
+                  {isGenerating ? "Generando..." : previewUrl ? "Regenerar imagen" : "Generar con IA"}
+                </Button>
+              </imageFetcher.Form>
+              {imageFetcher.data?.error && (
+                <p className="text-xs" style={{ color: "var(--warm)" }}>
+                  {imageFetcher.data.error}
+                </p>
+              )}
+              {imageFetcher.data?.imageUrl && (
+                <p className="text-xs" style={{ color: "var(--accent)" }}>
+                  ✓ Imagen guardada
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* Básico */}
         <div className="edit-section space-y-4">
