@@ -81,7 +81,7 @@ export default function MarcasPage() {
           <div className="kicker mb-1">Para marcas</div>
           <h2 className="display text-xl mb-2">¿Tienes una marca de cannabis?</h2>
           <p className="text-sm text-fg-muted max-w-md">
-            Crea tu perfil gratuito, obtén verificación y llega a la comunidad cannábica más grande en español.
+            Crea tu perfil gratuito, obtén verificación y llega a la comunidad cannábica más grande en LATAM.
           </p>
         </div>
         <div className="flex gap-3 shrink-0">

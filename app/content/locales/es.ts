@@ -75,7 +75,7 @@ export const es = {
   },
 
   footer: {
-    tagline: "La enciclopedia de cannabis en español. Informa, conecta, cultiva.",
+    tagline: "La enciclopedia de cannabis en LATAM. Informa, conecta, cultiva.",
     productTitle: "Producto",
     companyTitle: "Empresa",
     legalTitle: "Legal",
@@ -102,7 +102,7 @@ export const es = {
     heroKickerSuperchip: "Informa · Conecta · Cultiva",
     heroHeadlinePrefix: "La enciclopedia ",
     heroHeadlineAccent: "viva",
-    heroHeadlineSuffix: " de cannabis en español.",
+    heroHeadlineSuffix: " de cannabis en LATAM.",
     heroBody:
       "No somos un catálogo de dispensarios. Somos la comunidad que cuenta el contexto detrás de cada cepa — método, momento, experiencia.",
     heroCtaPrimary: "Explorar cepas",
@@ -482,12 +482,12 @@ export const es = {
 
   meta: {
     description:
-      "La enciclopedia de cannabis en español. Reseñas con contexto real — método, momento, experiencia.",
+      "La enciclopedia de cannabis en LATAM. Reseñas con contexto real — método, momento, experiencia.",
     savedStrainsTitle: "Cepas guardadas — WeedHub",
     savedStrainsDescription: "Tu biblioteca de cepas guardadas en WeedHub.",
-    homeTitle: "WeedHub — La enciclopedia de cannabis en español",
+    homeTitle: "WeedHub — La enciclopedia de cannabis en LATAM",
     homeDescription:
-      "Informa, conecta, cultiva. La enciclopedia de cannabis en español con reseñas contextuales reales — método, momento, experiencia.",
+      "Informa, conecta, cultiva. La enciclopedia de cannabis en LATAM con reseñas contextuales reales — método, momento, experiencia.",
     strainsTitle: "Directorio de cepas — WeedHub",
     strainsDescription:
       "Explora cientos de cepas con filtros por tipo, efectos y terpeno dominante. Cada perfil se construye con reseñas contextuales de la comunidad.",
@@ -496,7 +496,7 @@ export const es = {
       "Ciencia, cultura y crónica cannábica. Artículos editoriales sobre terpenos, landraces, microdosis y más.",
     communityTitle: "Comunidad — WeedHub",
     communityDescription:
-      "Voces reales del cannabis en español. Lee las reseñas más recientes y descubre perspectivas de toda la comunidad.",
+      "Voces reales del cannabis en LATAM. Lee las reseñas más recientes y descubre perspectivas de toda la comunidad.",
     terminosTitle: "Términos de uso — WeedHub",
     terminosDescription:
       "Términos que rigen el uso de WeedHub: edad mínima, contenido generado por usuarios, moderación y responsabilidades.",

@@ -78,7 +78,7 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
       inLanguage: "es",
       url: SITE_URL,
       description:
-        "La enciclopedia de cannabis en español. Reseñas con contexto real — método, momento, experiencia.",
+        "La enciclopedia de cannabis en LATAM. Reseñas con contexto real — método, momento, experiencia.",
       potentialAction: {
         "@type": "SearchAction",
         target: `${SITE_URL}/strains?search={search_term_string}`,
@@ -92,7 +92,7 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
       url: SITE_URL,
       logo: `${SITE_URL}/brand.svg`,
       description:
-        "La enciclopedia de cannabis en español. Reseñas con contexto real — método, momento, experiencia.",
+        "La enciclopedia de cannabis en LATAM. Reseñas con contexto real — método, momento, experiencia.",
       foundingDate: "2026",
       areaServed: "Spanish-speaking world",
       sameAs: [],

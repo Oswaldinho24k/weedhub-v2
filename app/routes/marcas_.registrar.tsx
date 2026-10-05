@@ -91,7 +91,7 @@ export default function MarcasRegistrarPage({ loaderData }: Route.ComponentProps
         <div className="kicker mt-5 mb-1">Directorio de Marcas</div>
         <h1 className="display text-4xl mb-2">Registra tu marca</h1>
         <p className="text-fg-muted">
-          Crea tu perfil en el directorio cannábico más completo en español. Gratis para empezar,
+          Crea tu perfil en el directorio cannábico más completo en LATAM. Gratis para empezar,
           activa tu verificación cuando estés listo.
         </p>
       </div>

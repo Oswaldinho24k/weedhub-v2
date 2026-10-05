@@ -19,7 +19,7 @@ const BRAND_PLANS = [
     name: "En Directorio",
     price: null,
     priceNote: "Gratis para siempre",
-    description: "Tu marca en la enciclopedia cannábica más grande en español.",
+    description: "Tu marca en la enciclopedia cannábica más grande en LATAM.",
     features: [
       "Perfil básico en el directorio",
       "Nombre, país y descripción",
@@ -92,7 +92,7 @@ export default function PlanesPage() {
           Crece con WeedHub
         </h1>
         <p className="text-fg-muted max-w-xl mx-auto">
-          El directorio cannábico de referencia en español. Regístrate gratis — activa tu verificación
+          El directorio cannábico de referencia en LATAM. Regístrate gratis — activa tu verificación
           cuando quieras. Sin contratos anuales.
         </p>
       </div>
