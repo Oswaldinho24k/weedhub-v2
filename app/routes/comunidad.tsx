@@ -1,4 +1,6 @@
 import { Link, useLoaderData, useSearchParams } from "react-router";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import type { Route } from "./+types/comunidad";
 import { connectDB } from "~/lib/db.server";
 import { PostModel, type PostCategory } from "~/models/post.server";
@@ -94,11 +96,11 @@ export default function ComunidadPage() {
           </p>
         </div>
         {user ? (
-          <Link to="/comunidad/nuevo" className="btn btn-primary shrink-0">
+          <Link to="/comunidad/nuevo" className={cn(buttonVariants({ variant: "primary" }), "shrink-0")}>
             + Nuevo post
           </Link>
         ) : (
-          <Link to="/auth" className="btn btn-ghost shrink-0">
+          <Link to="/auth" className={cn(buttonVariants({ variant: "ghost" }), "shrink-0")}>
             Entrar para participar
           </Link>
         )}
@@ -148,11 +150,11 @@ export default function ComunidadPage() {
         <div className="py-24 text-center text-fg-dim">
           <p className="text-lg mb-2">Todavía no hay posts en esta categoría</p>
           {user ? (
-            <Link to="/comunidad/nuevo" className="btn btn-primary mt-6 inline-block">
+            <Link to="/comunidad/nuevo" className={cn(buttonVariants({ variant: "primary" }), "mt-6")}>
               Ser el primero en publicar
             </Link>
           ) : (
-            <Link to="/auth" className="btn btn-ghost mt-6 inline-block">
+            <Link to="/auth" className={cn(buttonVariants({ variant: "ghost" }), "mt-6")}>
               Unirme a la comunidad
             </Link>
           )}

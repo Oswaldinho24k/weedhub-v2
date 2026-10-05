@@ -1,4 +1,6 @@
 import { data, useLoaderData, Link } from "react-router";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import type { Route } from "./+types/para.$condition";
 import { connectDB } from "~/lib/db.server";
 import { StrainModel } from "~/models/strain.server";
@@ -111,7 +113,7 @@ export default function ConditionPage() {
       ) : (
         <div className="card p-10 text-center">
           <p className="text-fg-muted mb-4">No hay cepas con datos para esta condición todavía.</p>
-          <Link to="/strains" className="btn btn-primary text-sm">
+          <Link to="/strains" className={cn(buttonVariants({ variant: "primary" }), "text-sm")}>
             Explorar el directorio
           </Link>
         </div>

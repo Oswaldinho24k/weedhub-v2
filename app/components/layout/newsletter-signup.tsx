@@ -3,6 +3,7 @@ import { useFetcher } from "react-router";
 import { Icon } from "~/components/ui/icon";
 import { useToast } from "~/components/ui/toast";
 import { useT } from "~/lib/i18n-context";
+import { Button } from "~/components/ui/button";
 
 type State = {
   ok?: boolean;
@@ -59,9 +60,10 @@ export function NewsletterSignup() {
           required
           className="flex-1 h-10 rounded-md border border-line bg-raised px-3 text-sm focus:outline-none focus:border-accent"
         />
-        <button
+        <Button
           type="submit"
-          className="btn btn-primary !py-2 !px-3 text-xs"
+          variant="primary"
+          className="!py-2 !px-3 text-xs"
           disabled={submitting}
           aria-label={t.footer.newsletter.submit}
         >
@@ -73,7 +75,7 @@ export function NewsletterSignup() {
               <span className="hidden sm:inline">{t.footer.newsletter.submit}</span>
             </>
           )}
-        </button>
+        </Button>
       </fetcher.Form>
     </div>
   );

@@ -1,4 +1,5 @@
 import { Form, Link, useActionData, useNavigation } from "react-router";
+import { Button } from "~/components/ui/button";
 import type { Route } from "./+types/auth_.forgot-password";
 import { connectDB } from "~/lib/db.server";
 import { UserModel } from "~/models/user.server";
@@ -93,13 +94,14 @@ export default function ForgotPasswordPage() {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
-              className="btn btn-primary w-full"
+              variant="primary"
+              className="w-full"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Enviando..." : "Enviar enlace de recuperación"}
-            </button>
+            </Button>
           </Form>
         )}
       </div>

@@ -1,4 +1,6 @@
 import { Form, Link, useActionData, useNavigation } from "react-router";
+import { Button, buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import type { Route } from "./+types/dispensarios_.agregar";
 import { connectDB } from "~/lib/db.server";
 import { DispensaryModel } from "~/models/dispensary.server";
@@ -93,7 +95,7 @@ export default function AgregarDispensarioPage() {
           Revisaremos tu dispensario en los próximos días hábiles. Una vez verificado, aparecerá en el directorio.
         </p>
         <div className="flex gap-3 justify-center">
-          <Link to="/dispensarios" className="btn btn-ghost">
+          <Link to="/dispensarios" className={buttonVariants({ variant: "ghost" })}>
             Ver directorio
           </Link>
         </div>
@@ -203,9 +205,9 @@ export default function AgregarDispensarioPage() {
         </div>
 
         <div className="pt-2">
-          <button type="submit" className="btn btn-primary w-full" disabled={submitting}>
+          <Button type="submit" variant="primary" className="w-full" disabled={submitting}>
             {submitting ? "Enviando..." : "Enviar solicitud"}
-          </button>
+          </Button>
           <p className="text-xs text-fg-dim text-center mt-3">
             Tu dispensario quedará en estado pendiente hasta que lo verifiquemos.
           </p>

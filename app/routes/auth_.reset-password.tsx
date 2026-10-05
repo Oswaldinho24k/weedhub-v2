@@ -1,4 +1,5 @@
 import { Form, Link, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
+import { Button, buttonVariants } from "~/components/ui/button";
 import type { Route } from "./+types/auth_.reset-password";
 import { connectDB } from "~/lib/db.server";
 import { UserModel } from "~/models/user.server";
@@ -89,7 +90,7 @@ export default function ResetPasswordPage({ loaderData }: Route.ComponentProps) 
           <p className="text-fg-muted mb-6">
             Este enlace de recuperación expiró o ya fue usado. Solicita uno nuevo.
           </p>
-          <Link to="/auth/forgot-password" className="btn btn-primary">
+          <Link to="/auth/forgot-password" className={buttonVariants({ variant: "primary" })}>
             Solicitar nuevo enlace
           </Link>
         </div>
@@ -159,13 +160,14 @@ export default function ResetPasswordPage({ loaderData }: Route.ComponentProps) 
             </div>
           )}
 
-          <button
+          <Button
             type="submit"
-            className="btn btn-primary w-full"
+            variant="primary"
+            className="w-full"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Guardando..." : "Cambiar contraseña"}
-          </button>
+          </Button>
         </Form>
       </div>
     </div>

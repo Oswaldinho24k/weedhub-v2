@@ -5,6 +5,7 @@ import { connectDB } from "~/lib/db.server";
 import { BrandModel } from "~/models/brand.server";
 import { LATIN_COUNTRIES } from "~/constants/locations";
 import { Icon } from "~/components/ui/icon";
+import { Button, buttonVariants } from "~/components/ui/button";
 
 export function meta({ data }: Route.MetaArgs) {
   return [{ title: `Editar ${data?.brand?.name || "marca"} — WeedHub` }];
@@ -263,10 +264,10 @@ export default function EditarMarcaPage({ loaderData }: Route.ComponentProps) {
         )}
 
         <div className="flex gap-3">
-          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+          <Button type="submit" variant="primary" disabled={isSubmitting}>
             {isSubmitting ? "Guardando..." : "Guardar cambios"}
-          </button>
-          <Link to={`/marcas/${brand.slug}`} className="btn btn-ghost">
+          </Button>
+          <Link to={`/marcas/${brand.slug}`} className={buttonVariants({ variant: "ghost" })}>
             Cancelar
           </Link>
         </div>

@@ -1,4 +1,6 @@
 import { Form, Link, useLoaderData, useSearchParams } from "react-router";
+import { Button, buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import type { Route } from "./+types/marcas.$slug";
 import { connectDB } from "~/lib/db.server";
 import { BrandModel } from "~/models/brand.server";
@@ -246,7 +248,7 @@ export default function MarcaSlugPage() {
               {(isOwner || isAdmin) && (
                 <Link
                   to={`/marcas/${brand.slug}/editar`}
-                  className="btn btn-ghost !py-1.5 !px-3 text-xs shrink-0"
+                  className={cn(buttonVariants({ variant: "ghost" }), "!py-1.5 !px-3 text-xs shrink-0")}
                 >
                   Editar perfil
                 </Link>
@@ -401,9 +403,9 @@ function PaymentSection({
             <input type="hidden" name="entityType" value="brand" />
             <input type="hidden" name="entityId" value={brand._id} />
             <input type="hidden" name="returnPath" value={`/marcas/${brand.slug}`} />
-            <button type="submit" className="btn btn-ghost w-full text-xs">
+            <Button type="submit" variant="ghost" className="w-full text-xs">
               Gestionar suscripción
-            </button>
+            </Button>
           </Form>
         )}
       </div>
@@ -424,18 +426,18 @@ function PaymentSection({
           <input type="hidden" name="entityId" value={brand._id} />
           <input type="hidden" name="entitySlug" value={brand.slug} />
           <input type="hidden" name="plan" value="enterprise" />
-          <button type="submit" className="btn btn-ghost w-full text-xs mb-2">
+          <Button type="submit" variant="ghost" className="w-full text-xs mb-2">
             Pasar a Destacado — {PLAN_PRICES.brand.enterprise}
-          </button>
+          </Button>
         </Form>
         {brand.stripeCustomerId && (
           <Form method="post" action="/api/stripe/portal">
             <input type="hidden" name="entityType" value="brand" />
             <input type="hidden" name="entityId" value={brand._id} />
             <input type="hidden" name="returnPath" value={`/marcas/${brand.slug}`} />
-            <button type="submit" className="btn btn-ghost w-full text-xs opacity-60">
+            <Button type="submit" variant="ghost" className="w-full text-xs opacity-60">
               Gestionar suscripción
-            </button>
+            </Button>
           </Form>
         )}
       </div>
@@ -463,12 +465,12 @@ function PaymentSection({
           <input type="hidden" name="entityId" value={brand._id} />
           <input type="hidden" name="entitySlug" value={brand.slug} />
           <input type="hidden" name="plan" value="premium" />
-          <button type="submit" className="btn btn-primary w-full text-sm">
+          <Button type="submit" variant="primary" className="w-full text-sm">
             Activar Presencia Verificada
-          </button>
+          </Button>
         </Form>
       ) : (
-        <Link to="/auth?mode=register" className="btn btn-primary w-full text-sm text-center">
+        <Link to="/auth?mode=register" className={cn(buttonVariants({ variant: "primary" }), "w-full text-sm text-center")}>
           Crear cuenta para activar
         </Link>
       )}

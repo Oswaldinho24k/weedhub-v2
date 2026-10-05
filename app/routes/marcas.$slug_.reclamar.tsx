@@ -1,4 +1,6 @@
 import { Form, Link, useActionData, useLoaderData, useNavigation } from "react-router";
+import { Button, buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import type { Route } from "./+types/marcas.$slug_.reclamar";
 import { connectDB } from "~/lib/db.server";
 import { BrandModel } from "~/models/brand.server";
@@ -70,7 +72,7 @@ export default function ReclamarPage() {
         <p className="text-fg-muted mb-8">
           Recibimos tu solicitud para reclamar <strong>{brand.name}</strong>. Nos pondremos en contacto contigo en los próximos días hábiles.
         </p>
-        <Link to={`/marcas/${brand.slug}`} className="btn btn-ghost">
+        <Link to={`/marcas/${brand.slug}`} className={buttonVariants({ variant: "ghost" })}>
           ← Volver al perfil
         </Link>
       </div>
@@ -143,7 +145,7 @@ export default function ReclamarPage() {
         <div className="pt-2">
           <button
             type="submit"
-            className="btn btn-primary w-full"
+            className={cn(buttonVariants({ variant: "primary" }), "w-full")}
             disabled={submitting}
           >
             {submitting ? "Enviando..." : "Enviar solicitud"}

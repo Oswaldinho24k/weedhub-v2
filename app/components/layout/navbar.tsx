@@ -7,6 +7,7 @@ import { Icon } from "~/components/ui/icon";
 import { useT, useHref } from "~/lib/i18n-context";
 import type { Theme } from "~/lib/theme.server";
 import { cn } from "~/lib/utils";
+import { buttonVariants } from "~/components/ui/button";
 
 interface NavbarProps {
   user?: {
@@ -255,7 +256,7 @@ export function Navbar({ user, theme }: NavbarProps) {
                 )}
               </div>
             ) : (
-              <Link to="/auth" className="hidden sm:inline-flex btn btn-primary !py-2 !px-4 text-xs">
+              <Link to="/auth" className={cn(buttonVariants({ variant: "primary" }), "hidden sm:inline-flex !py-2 !px-4 text-xs")}>
                 {t.nav.start}
               </Link>
             )}

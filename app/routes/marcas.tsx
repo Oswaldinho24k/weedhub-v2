@@ -1,4 +1,6 @@
 import { Link, useLoaderData } from "react-router";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import type { Route } from "./+types/marcas";
 import { connectDB } from "~/lib/db.server";
 import { BrandModel } from "~/models/brand.server";
@@ -85,10 +87,10 @@ export default function MarcasPage() {
           </p>
         </div>
         <div className="flex gap-3 shrink-0">
-          <Link to="/marcas/registrar" className="btn btn-primary">
+          <Link to="/marcas/registrar" className={buttonVariants({ variant: "primary" })}>
             Registrar mi marca
           </Link>
-          <Link to="/planes" className="btn btn-ghost">
+          <Link to="/planes" className={buttonVariants({ variant: "ghost" })}>
             Ver planes
           </Link>
         </div>
@@ -183,7 +185,7 @@ function EmptyState() {
     <div className="py-24 text-center text-fg-dim">
       <p className="text-lg mb-2">Aún no hay marcas registradas</p>
       <p className="text-sm mb-8">Sé la primera marca en WeedHub.</p>
-      <Link to="/marcas/registrar" className="btn btn-primary">
+      <Link to="/marcas/registrar" className={buttonVariants({ variant: "primary" })}>
         Registrar mi marca
       </Link>
     </div>

@@ -1,4 +1,5 @@
 import { Link, useLoaderData } from "react-router";
+import { buttonVariants } from "~/components/ui/button";
 import { marked } from "marked";
 import type { Route } from "./+types/magazine.$slug";
 import { connectDB } from "~/lib/db.server";
@@ -288,7 +289,7 @@ export function ErrorBoundary() {
       <div className="kicker mb-3" style={{ color: "var(--warm)" }}>Error</div>
       <h1 className="display text-3xl mb-4">Artículo no encontrado</h1>
       <p className="text-fg-muted mb-8">Este artículo no existe o fue despublicado.</p>
-      <a href="/magazine" className="btn btn-primary">Ver todos los artículos</a>
+      <a href="/magazine" className={buttonVariants({ variant: "primary" })}>Ver todos los artículos</a>
     </div>
   );
 }

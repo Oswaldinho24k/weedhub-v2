@@ -1,6 +1,7 @@
 import { useFetcher } from "react-router";
 import { useState } from "react";
 import { Icon } from "~/components/ui/icon";
+import { Button } from "~/components/ui/button";
 
 const QUICK_EFFECTS = [
   "Relajación", "Euforia", "Creatividad", "Energía",
@@ -108,14 +109,15 @@ export function QuickRateWidget({ strainId, isLoggedIn, existingRating }: Props)
               </button>
             ))}
           </div>
-          <button
+          <Button
             type="button"
             onClick={() => submit(selected)}
-            className="btn btn-primary !py-1.5 !px-4 text-xs mt-1"
+            variant="primary"
+            className="!py-1.5 !px-4 text-xs mt-1"
             disabled={fetcher.state !== "idle"}
           >
             Guardar
-          </button>
+          </Button>
         </div>
       )}
     </div>

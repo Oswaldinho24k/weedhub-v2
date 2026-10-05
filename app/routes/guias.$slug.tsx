@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { buttonVariants } from "~/components/ui/button";
 import type { Route } from "./+types/guias.$slug";
 import { resolveLocale } from "~/lib/locale.server";
 import { getGuide } from "~/content/guides";
@@ -153,7 +154,7 @@ export function ErrorBoundary() {
       <div className="kicker mb-3" style={{ color: "var(--warm)" }}>Error</div>
       <h1 className="display text-3xl mb-4">Guía no encontrada</h1>
       <p className="text-fg-muted mb-8">Esta guía no existe.</p>
-      <a href="/guias" className="btn btn-primary">Ver todas las guías</a>
+      <a href="/guias" className={buttonVariants({ variant: "primary" })}>Ver todas las guías</a>
     </div>
   );
 }

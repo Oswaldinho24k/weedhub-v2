@@ -1,4 +1,5 @@
 import { Form, Link, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
+import { Button, buttonVariants } from "~/components/ui/button";
 import type { Route } from "./+types/comunidad_.nuevo";
 import { connectDB } from "~/lib/db.server";
 import { requireUser } from "~/lib/auth.server";
@@ -192,10 +193,10 @@ export default function NuevoPostPage() {
         </div>
 
         <div className="flex gap-3 pt-2">
-          <button type="submit" className="btn btn-primary" disabled={submitting}>
+          <Button type="submit" variant="primary" disabled={submitting}>
             {submitting ? "Publicando..." : "Publicar post"}
-          </button>
-          <Link to="/comunidad" className="btn btn-ghost">
+          </Button>
+          <Link to="/comunidad" className={buttonVariants({ variant: "ghost" })}>
             Cancelar
           </Link>
         </div>

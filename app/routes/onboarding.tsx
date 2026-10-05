@@ -12,7 +12,7 @@ import { type IconName } from "~/components/ui/icon";
 import { useT } from "~/lib/i18n-context";
 import { SelectionCard } from "~/components/ui/selection-card";
 import { Chip } from "~/components/ui/chip";
-import { Button } from "~/components/ui/button";
+import { Button, buttonVariants } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Field } from "~/components/ui/field";
 import { Icon } from "~/components/ui/icon";
@@ -417,7 +417,7 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
                   {isSubmitting ? t.common.saving : t.onboarding.primaryCta}
                   <Icon name="arrowRight" size={15} />
                 </Button>
-                <Link to="/profile/edit" className="btn btn-ghost" style={{ padding: "14px 24px" }}>
+                <Link to="/profile/edit" className={buttonVariants({ variant: "ghost" })} style={{ padding: "14px 24px" }}>
                   {t.onboarding.editProfile}
                 </Link>
               </div>

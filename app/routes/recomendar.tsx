@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { StrainCard } from "~/components/composite/strain-card";
 import { Icon } from "~/components/ui/icon";
 import { cn } from "~/lib/utils";
+import { Button, buttonVariants } from "~/components/ui/button";
 import { CONDITIONS } from "~/constants/conditions";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
@@ -116,9 +117,9 @@ export default function RecomendarPage() {
         </div>
 
         <div className="mt-12 flex gap-3">
-          <button
+          <Button
             type="button"
-            className="btn btn-ghost"
+            variant="ghost"
             onClick={() => {
               setResults(null);
               setStep(1);
@@ -130,8 +131,8 @@ export default function RecomendarPage() {
           >
             <Icon name="arrowLeft" size={14} />
             Volver a intentar
-          </button>
-          <Link to="/strains" className="btn btn-primary">
+          </Button>
+          <Link to="/strains" className={buttonVariants({ variant: "primary" })}>
             Ver directorio completo
             <Icon name="arrowRight" size={14} />
           </Link>
@@ -349,20 +350,20 @@ function StepCard({
       {children}
       <div className="flex items-center gap-3 pt-2">
         {onBack && (
-          <button type="button" onClick={onBack} className="btn btn-ghost">
+          <Button type="button" onClick={onBack} variant="ghost">
             <Icon name="arrowLeft" size={14} />
             Atrás
-          </button>
+          </Button>
         )}
-        <button
+        <Button
           type="button"
           onClick={onNext}
           disabled={!canContinue || disabled}
-          className="btn btn-primary"
+          variant="primary"
         >
           {ctaLabel}
           {!disabled && <Icon name="arrowRight" size={14} />}
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -17,6 +17,8 @@ import { MAX_IMAGE_MB } from "~/lib/upload-config";
 import { awardPoints } from "~/services/gamification.service.server";
 import { Icon } from "~/components/ui/icon";
 import { useT } from "~/lib/i18n-context";
+import { Button, buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
 export function meta() {
@@ -219,11 +221,11 @@ export default function SugerirStrainPage({ loaderData }: Route.ComponentProps) 
         <h1 className="display text-4xl mb-3">{t.suggest.successTitle}</h1>
         <p className="text-fg-muted mb-8">{t.suggest.successBody}</p>
         <div className="flex gap-3 justify-center">
-          <Link to="/strains" className="btn btn-primary">
+          <Link to="/strains" className={buttonVariants({ variant: "primary" })}>
             {t.suggest.backToDirectory}
             <Icon name="arrowRight" size={14} />
           </Link>
-          <Link to="/profile" className="btn btn-ghost">
+          <Link to="/profile" className={buttonVariants({ variant: "ghost" })}>
             {t.suggest.viewMySubmissions}
           </Link>
         </div>
@@ -347,7 +349,7 @@ export default function SugerirStrainPage({ loaderData }: Route.ComponentProps) 
           </p>
           <Link
             to={`/strains/${actionData.duplicateFound.strainSlug}`}
-            className="btn btn-primary !py-1.5 !px-3 text-xs inline-flex mr-2"
+            className={cn(buttonVariants({ variant: "primary" }), "!py-1.5 !px-3 text-xs inline-flex mr-2")}
           >
             {t.suggest.goToStrain}
           </Link>
@@ -490,15 +492,15 @@ export default function SugerirStrainPage({ loaderData }: Route.ComponentProps) 
         )}
 
         <div className="flex gap-3 items-center pt-2">
-          <button
+          <Button
             type="submit"
-            className="btn btn-primary"
+            variant="primary"
             disabled={isSubmitting || name.trim().length < 3 || !!exact}
           >
             {isSubmitting ? t.common.sending : t.suggest.submit}
             <Icon name="arrowRight" size={14} />
-          </button>
-          <Link to="/strains" className="btn btn-ghost">
+          </Button>
+          <Link to="/strains" className={buttonVariants({ variant: "ghost" })}>
             {t.common.cancel}
           </Link>
         </div>

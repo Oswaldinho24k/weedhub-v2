@@ -1,5 +1,7 @@
 import { Link } from "react-router";
 import type { Route } from "./+types/planes";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
 export function meta(): ReturnType<Route.MetaFunction> {
@@ -180,7 +182,7 @@ export default function PlanesPage() {
               ))}
             </div>
           </div>
-          <Link to="/dispensarios/agregar" className="btn btn-ghost text-sm shrink-0">
+          <Link to="/dispensarios/agregar" className={cn(buttonVariants({ variant: "ghost" }), "text-sm shrink-0")}>
             Agregar mi dispensario →
           </Link>
         </div>
@@ -215,7 +217,7 @@ export default function PlanesPage() {
         <p className="text-sm text-fg-muted mb-4">¿Dudas antes de registrarte?</p>
         <a
           href="mailto:hola@weedhub.info?subject=Consulta planes WeedHub"
-          className="btn btn-ghost"
+          className={buttonVariants({ variant: "ghost" })}
         >
           Escríbenos a hola@weedhub.info
         </a>

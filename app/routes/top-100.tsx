@@ -1,5 +1,7 @@
 import { Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/top-100";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import { connectDB } from "~/lib/db.server";
 import { StrainModel } from "~/models/strain.server";
 import { buildMeta, SITE_URL } from "~/lib/seo";
@@ -200,7 +202,7 @@ export default function Top100Page() {
       {strains.length === 0 && (
         <div className="card p-12 text-center">
           <p className="text-fg-muted">Aún no hay suficientes reseñas para generar el ranking.</p>
-          <Link to="/strains" className="btn btn-primary mt-4">
+          <Link to="/strains" className={cn(buttonVariants({ variant: "primary" }), "mt-4")}>
             Explorar cepas
           </Link>
         </div>

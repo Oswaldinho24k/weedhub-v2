@@ -1,4 +1,6 @@
 import { Form, Link, useLoaderData, useActionData, useFetcher, useNavigation } from "react-router";
+import { Button, buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import type { Route } from "./+types/comunidad.$slug";
 import { connectDB } from "~/lib/db.server";
 import { PostModel } from "~/models/post.server";
@@ -267,16 +269,16 @@ export default function ComunidadSlugPage() {
                     <span>{user.anonymousHandle}</span>
                   </label>
                 </div>
-                <button type="submit" className="btn btn-primary text-sm" disabled={submitting}>
+                <Button type="submit" variant="primary" className="text-sm" disabled={submitting}>
                   {submitting ? "Publicando..." : "Comentar"}
-                </button>
+                </Button>
               </div>
             </Form>
           </div>
         ) : (
           <div className="card p-5 text-center">
             <p className="text-sm text-fg-muted mb-3">Inicia sesión para comentar</p>
-            <Link to="/auth" className="btn btn-primary text-sm">
+            <Link to="/auth" className={cn(buttonVariants({ variant: "primary" }), "text-sm")}>
               Entrar
             </Link>
           </div>

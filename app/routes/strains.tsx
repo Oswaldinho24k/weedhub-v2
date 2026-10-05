@@ -11,6 +11,7 @@ import { StrainCard } from "~/components/composite/strain-card";
 import { FilterSheet } from "~/components/composite/filter-sheet";
 import { Icon } from "~/components/ui/icon";
 import { cn } from "~/lib/utils";
+import { Button, buttonVariants } from "~/components/ui/button";
 import { useT } from "~/lib/i18n-context";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
@@ -323,13 +324,13 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
             <h2 className="display text-3xl mb-3">{t.directory.emptyTitle}</h2>
             <p className="text-fg-muted mb-6">{t.directory.emptyBody}</p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <button
-                className="btn btn-ghost"
+              <Button
+                variant="ghost"
                 onClick={() => setSearchParams(new URLSearchParams())}
               >
                 {t.directory.clearFilters}
-              </button>
-              <Link to="/strains/sugerir" className="btn btn-primary inline-flex">
+              </Button>
+              <Link to="/strains/sugerir" className={cn(buttonVariants({ variant: "primary" }), "inline-flex")}>
                 <Icon name="plus" size={14} />
                 {t.suggest.ctaEmptyState}
               </Link>
@@ -351,25 +352,25 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
 
         {totalPages > 1 && (
           <div className="flex justify-center items-center gap-4 mt-14">
-            <button
-              className="btn btn-ghost"
+            <Button
+              variant="ghost"
               disabled={page <= 1}
               onClick={() => updateFilter("page", String(page - 1))}
             >
               <Icon name="chevronLeft" size={14} />
               {t.directory.previous}
-            </button>
+            </Button>
             <span className="mono text-xs text-fg-muted tnum">
               {page} / {totalPages}
             </span>
-            <button
-              className="btn btn-ghost"
+            <Button
+              variant="ghost"
               disabled={page >= totalPages}
               onClick={() => updateFilter("page", String(page + 1))}
             >
               {t.directory.next}
               <Icon name="chevronRight" size={14} />
-            </button>
+            </Button>
           </div>
         )}
       </section>

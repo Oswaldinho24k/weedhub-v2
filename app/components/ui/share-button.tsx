@@ -1,5 +1,6 @@
-"use client";
 import { useState } from "react";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 
 interface ShareButtonProps {
   title: string;
@@ -34,7 +35,7 @@ export function ShareButton({ title, text, url, className = "" }: ShareButtonPro
     <button
       type="button"
       onClick={handleShare}
-      className={`btn btn-ghost text-sm shrink-0 ${className}`}
+      className={cn(buttonVariants({ variant: "ghost" }), "text-sm shrink-0", className)}
       title="Compartir"
       style={{ gap: 6 }}
     >

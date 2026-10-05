@@ -5,6 +5,7 @@ import { connectDB } from "~/lib/db.server";
 import { BrandModel } from "~/models/brand.server";
 import { LATIN_COUNTRIES } from "~/constants/locations";
 import { Icon } from "~/components/ui/icon";
+import { Button, buttonVariants } from "~/components/ui/button";
 
 export function meta() {
   return [{ title: "Registra tu marca — WeedHub" }];
@@ -253,10 +254,10 @@ export default function MarcasRegistrarPage({ loaderData }: Route.ComponentProps
         )}
 
         <div className="flex gap-3">
-          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+          <Button type="submit" variant="primary" disabled={isSubmitting}>
             {isSubmitting ? "Creando perfil..." : "Crear mi perfil de marca →"}
-          </button>
-          <Link to="/marcas" className="btn btn-ghost">
+          </Button>
+          <Link to="/marcas" className={buttonVariants({ variant: "ghost" })}>
             Cancelar
           </Link>
         </div>

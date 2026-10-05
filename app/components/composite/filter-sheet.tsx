@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Icon } from "~/components/ui/icon";
 import { cn } from "~/lib/utils";
+import { Button } from "~/components/ui/button";
 import { STRAIN_TYPES } from "~/constants/cannabis";
 import { CONDITIONS } from "~/constants/conditions";
 import { useT } from "~/lib/i18n-context";
@@ -264,13 +265,14 @@ export function FilterSheet({
             </div>
 
             <div className="px-5 pb-5">
-              <button
+              <Button
                 type="button"
-                className="btn btn-primary w-full"
+                variant="primary"
+                className="w-full"
                 onClick={() => setOpen(false)}
               >
                 Ver {total} {total === 1 ? "cepa" : "cepas"}
-              </button>
+              </Button>
             </div>
           </div>
         </>

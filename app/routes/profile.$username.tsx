@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link, useFetcher, useOutletContext } from "react-router";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import type { Route } from "./+types/profile.$username";
 import { connectDB } from "~/lib/db.server";
 import { UserModel } from "~/models/user.server";
@@ -250,7 +252,7 @@ export default function PublicProfilePage({ loaderData }: Route.ComponentProps) 
               <FollowButton userId={user._id} initialIsFollowing={isFollowing} />
             )}
             {isOwnProfile && (
-              <Link to="/profile" className="btn btn-ghost">
+              <Link to="/profile" className={buttonVariants({ variant: "ghost" })}>
                 <Icon name="settings" size={14} />
                 Mi perfil
               </Link>
@@ -449,7 +451,7 @@ function FollowButton({
     <fetcher.Form method="post" action={`/api/users/${userId}/follow`}>
       <button
         type="submit"
-        className={isFollowing ? "btn btn-ghost" : "btn btn-primary"}
+        className={cn(isFollowing ? buttonVariants({ variant: "ghost" }) : buttonVariants({ variant: "primary" }))}
         disabled={fetcher.state !== "idle"}
       >
         {isFollowing ? "Siguiendo" : "Seguir"}

@@ -1,5 +1,7 @@
 import { Link } from "react-router";
 import type { Route } from "./+types/community";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import { connectDB } from "~/lib/db.server";
 import { ReviewModel } from "~/models/review.server";
 import { ReviewCard } from "~/components/composite/review-card";
@@ -134,14 +136,14 @@ export default function CommunityPage({ loaderData }: Route.ComponentProps) {
             <div className="kicker mb-2">{t.community.feedKicker}</div>
             <h2 className="display text-3xl md:text-4xl">{t.community.feedTitle}</h2>
           </div>
-          <Link to={href("/strains")} className="btn btn-ghost">
+          <Link to={href("/strains")} className={buttonVariants({ variant: "ghost" })}>
             {t.community.writeReview}
           </Link>
         </div>
         {reviews.length === 0 ? (
           <div className="card p-10 text-center">
             <p className="text-fg-muted mb-4">{t.community.emptyBody}</p>
-            <Link to={href("/strains")} className="btn btn-primary inline-flex">
+            <Link to={href("/strains")} className={cn(buttonVariants({ variant: "primary" }), "inline-flex")}>
               {t.community.emptyCta}
             </Link>
           </div>

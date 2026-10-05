@@ -20,6 +20,8 @@ import { Navbar } from "~/components/layout/navbar";
 import { Footer } from "~/components/layout/footer";
 import { MinimalNav } from "~/components/layout/minimal-nav";
 import { ToastProvider } from "~/components/ui/toast";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -156,13 +158,13 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         <p className="text-fg-muted mb-8">{details}</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           {is404 && (
-            <a href={errLocale === "es" ? "/strains" : `/${errLocale}/strains`} className="btn btn-primary">
+            <a href={errLocale === "es" ? "/strains" : `/${errLocale}/strains`} className={buttonVariants({ variant: "primary" })}>
               {dict.errors.goToStrains}
             </a>
           )}
           <a
             href={errLocale === "es" ? "/" : `/${errLocale}`}
-            className={is404 ? "btn btn-ghost" : "btn btn-primary"}
+            className={cn(is404 ? buttonVariants({ variant: "ghost" }) : buttonVariants({ variant: "primary" }))}
           >
             {dict.errors.goHome}
           </a>

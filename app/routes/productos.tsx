@@ -1,4 +1,6 @@
 import { Link, useLoaderData, useSearchParams } from "react-router";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import type { Route } from "./+types/productos";
 import { connectDB } from "~/lib/db.server";
 import { ProductModel } from "~/models/product.server";
@@ -222,7 +224,7 @@ export default function ProductosPage() {
               <p className="text-sm mb-8">
                 Las marcas registradas irán agregando su catálogo.
               </p>
-              <Link to="/marcas" className="btn btn-primary inline-block">
+              <Link to="/marcas" className={cn(buttonVariants({ variant: "primary" }), "inline-block")}>
                 Ver marcas
               </Link>
             </div>

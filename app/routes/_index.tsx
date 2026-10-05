@@ -13,6 +13,8 @@ import { buildMeta, SITE_URL } from "~/lib/seo";
 import { resolveLocale } from "~/lib/locale.server";
 import { getDictionary } from "~/content/locales";
 import { NewsletterSignup } from "~/components/layout/newsletter-signup";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 
 export function meta({ data }: Route.MetaArgs) {
   const locale = data?.locale || "es";
@@ -126,11 +128,11 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
           {t.landing.heroBody}
         </p>
         <div className="mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <Link to={href("/strains")} className="btn btn-primary">
+          <Link to={href("/strains")} className={buttonVariants({ variant: "primary" })}>
             {t.landing.heroCtaPrimary}
             <Icon name="arrowRight" size={16} />
           </Link>
-          <Link to="/onboarding" className="btn btn-ghost">
+          <Link to="/onboarding" className={buttonVariants({ variant: "ghost" })}>
             {t.landing.heroCtaGhost}
           </Link>
         </div>
@@ -213,7 +215,7 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
                 {t.landing.directoryHeadlineSuffix}
               </h2>
             </div>
-            <Link to={href("/strains")} className="btn btn-ghost">
+            <Link to={href("/strains")} className={buttonVariants({ variant: "ghost" })}>
               {t.landing.directoryCta}
               <Icon name="arrowRight" size={14} />
             </Link>
@@ -264,7 +266,7 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
             <div className="kicker mb-2">{t.landing.magazineKicker}</div>
             <h2 className="display text-4xl md:text-5xl">{t.landing.magazineTitle}</h2>
           </div>
-          <Link to={href("/editorial")} className="btn btn-ghost">
+          <Link to={href("/editorial")} className={buttonVariants({ variant: "ghost" })}>
             {t.landing.magazineCta}
             <Icon name="arrowRight" size={14} />
           </Link>
@@ -326,7 +328,7 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
           <p className="text-fg-muted max-w-lg mx-auto mb-8">
             {t.landing.ctaBody}
           </p>
-          <Link to="/auth?mode=register" className="btn btn-primary inline-flex">
+          <Link to="/auth?mode=register" className={cn(buttonVariants({ variant: "primary" }), "inline-flex")}>
             {t.landing.ctaButton}
             <Icon name="arrowRight" size={16} />
           </Link>

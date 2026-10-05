@@ -1,4 +1,6 @@
 import { Link, useLoaderData, useSearchParams } from "react-router";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import type { Route } from "./+types/dispensarios";
 import { connectDB } from "~/lib/db.server";
 import { DispensaryModel } from "~/models/dispensary.server";
@@ -137,7 +139,7 @@ export default function DispensariosPage() {
             </div>
           )}
 
-          <Link to="/dispensarios/agregar" className="btn btn-ghost w-full text-sm text-center">
+          <Link to="/dispensarios/agregar" className={cn(buttonVariants({ variant: "ghost" }), "w-full text-sm text-center")}>
             + Agregar dispensario
           </Link>
         </aside>
@@ -151,7 +153,7 @@ export default function DispensariosPage() {
                   ? `No hay dispensarios en ${activeCity} todavía`
                   : "No hay dispensarios registrados aún"}
               </p>
-              <Link to="/dispensarios/agregar" className="btn btn-primary mt-6 inline-block">
+              <Link to="/dispensarios/agregar" className={cn(buttonVariants({ variant: "primary" }), "mt-6")}>
                 Ser el primero en registrarse
               </Link>
             </div>

@@ -1,5 +1,7 @@
 import { Link } from "react-router";
 import type { Route } from "./+types/profile_.saved";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import { requireUser } from "~/lib/auth.server";
 import { connectDB } from "~/lib/db.server";
 import { SavedStrainModel } from "~/models/saved-strain.server";
@@ -77,7 +79,7 @@ export default function SavedStrainsPage({ loaderData }: Route.ComponentProps) {
           <p className="text-fg-muted mb-6 max-w-[42ch] mx-auto">
             {t.profile.savedEmptyBody}
           </p>
-          <Link to="/strains" className="btn btn-primary inline-flex">
+          <Link to="/strains" className={cn(buttonVariants({ variant: "primary" }), "inline-flex")}>
             {t.profile.savedEmptyCta}
             <Icon name="arrowRight" size={14} />
           </Link>

@@ -22,6 +22,8 @@ import { CONDITIONS_BY_SLUG } from "~/constants/conditions";
 import { QuickRateWidget } from "~/components/composite/quick-rate-widget";
 import { QuickRatingModel } from "~/models/quick-rating.server";
 import { GeneticTree } from "~/components/composite/genetic-tree";
+import { Button, buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 
 const TYPE_PILL: Record<string, string> = {
   sativa: "accent",
@@ -303,22 +305,22 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
             <div className="mt-8 flex items-center gap-3 flex-wrap">
               <Link
                 to={`/strains/${strain.slug}/review`}
-                className="btn btn-primary"
+                className={buttonVariants({ variant: "primary" })}
               >
                 <Icon name="edit" size={14} />
                 {t.strain.publishReview}
               </Link>
               {currentUser && (
                 <saveFetcher.Form method="post" action={`/api/strains/${strain._id}/save`}>
-                  <button type="submit" className="btn btn-ghost">
+                  <Button type="submit" variant="ghost">
                     <Icon name={optimisticSaved ? "bookmarkOn" : "bookmark"} size={14} />
                     {optimisticSaved ? t.strain.savedStrain : t.strain.saveStrain}
-                  </button>
+                  </Button>
                 </saveFetcher.Form>
               )}
-              <button
+              <Button
                 type="button"
-                className="btn btn-ghost"
+                variant="ghost"
                 onClick={() => {
                   if (typeof navigator !== "undefined" && "share" in navigator) {
                     navigator.share({
@@ -330,7 +332,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
               >
                 <Icon name="share" size={14} />
                 {t.strain.share}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -540,7 +542,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
             </div>
             <Link
               to={`/strains/${strain.slug}/review`}
-              className="btn btn-primary w-full"
+              className={cn(buttonVariants({ variant: "primary" }), "w-full")}
             >
               <Icon name="edit" size={14} />
               {t.strain.writeReview}
@@ -565,7 +567,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
                       <p className="text-fg-muted mb-4">{t.strain.noReviewsYet}</p>
                       <Link
                         to={`/strains/${strain.slug}/review`}
-                        className="btn btn-primary inline-flex"
+                        className={cn(buttonVariants({ variant: "primary" }), "inline-flex")}
                       >
                         {t.strain.beFirst}
                       </Link>
@@ -739,7 +741,7 @@ export function ErrorBoundary() {
       <div className="kicker mb-3" style={{ color: "var(--warm)" }}>Error</div>
       <h1 className="display text-3xl mb-4">Cepa no encontrada</h1>
       <p className="text-fg-muted mb-8">Esta cepa no existe o fue archivada.</p>
-      <a href="/strains" className="btn btn-primary">Ver todas las cepas</a>
+      <a href="/strains" className={buttonVariants({ variant: "primary" })}>Ver todas las cepas</a>
     </div>
   );
 }
