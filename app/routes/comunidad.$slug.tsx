@@ -5,8 +5,10 @@ import type { Route } from "./+types/comunidad.$slug";
 import { connectDB } from "~/lib/db.server";
 import { PostModel } from "~/models/post.server";
 import { CommentModel } from "~/models/comment.server";
+import { UserModel } from "~/models/user.server";
 import { getUserFromSession } from "~/lib/auth.server";
 import { buildMeta, SITE_URL } from "~/lib/seo";
+import { sendNewCommentEmail } from "~/lib/email.server";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   await connectDB();
@@ -81,7 +83,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     if (!body) return { error: "El comentario no puede estar vacío" };
     if (body.length > 2000) return { error: "El comentario no puede superar 2000 caracteres" };
 
-    const post = await PostModel.findOne({ slug: params.slug }).lean().select("_id");
+    const post = await PostModel.findOne({ slug: params.slug }).lean().select("_id userId title slug");
     if (!post) throw new Response("Not Found", { status: 404 });
 
     await CommentModel.create({
@@ -92,6 +94,23 @@ export async function action({ request, params }: Route.ActionArgs) {
     });
 
     await PostModel.findByIdAndUpdate(post._id, { $inc: { commentCount: 1 } });
+
+    // Notify post author (fire-and-forget)
+    const authorId = String((post as any).userId);
+    if (authorId && authorId !== String(user._id)) {
+      UserModel.findById(authorId).select("email username displayName").lean().then((author) => {
+        if (author?.email) {
+          sendNewCommentEmail({
+            toEmail: author.email,
+            toName: author.displayName || author.username,
+            commenterUsername: user.username,
+            postTitle: (post as any).title || "tu post",
+            postSlug: params.slug,
+            commentPreview: body,
+          }).catch(() => {});
+        }
+      }).catch(() => {});
+    }
 
     return { success: "Comentario publicado" };
   }

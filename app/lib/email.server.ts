@@ -11,7 +11,7 @@ function getClient() {
   return client;
 }
 
-const FROM = "WeedHub <hola@weedhub.info>";
+const FROM = "WeedHub <contacto@weedhub.info>";
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string): Promise<void> {
   const resend = getClient();
@@ -362,6 +362,142 @@ export async function sendSubscriptionConfirmationEmail(
   </table>
 </body>
 </html>`,
+    });
+  } catch {
+    // Non-fatal
+  }
+}
+
+export async function sendNewCommentEmail(opts: {
+  toEmail: string;
+  toName: string;
+  commenterUsername: string;
+  postTitle: string;
+  postSlug: string;
+  commentPreview: string;
+}): Promise<void> {
+  const resend = getClient();
+  if (!resend) return;
+
+  const postUrl = `${SITE_URL}/comunidad/${opts.postSlug}`;
+  const preview = opts.commentPreview.length > 150
+    ? opts.commentPreview.slice(0, 150) + "…"
+    : opts.commentPreview;
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Nuevo comentario — WeedHub</title></head>
+<body style="margin:0;padding:0;background:#0f1a14;font-family:'Instrument Sans',Arial,sans-serif;color:#e8f0eb;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f1a14;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" style="max-width:560px;background:#141f18;border-radius:16px;border:1px solid #253028;overflow:hidden;">
+          <tr>
+            <td style="padding:32px 40px 24px;border-bottom:1px solid #253028;">
+              <p style="margin:0;font-size:13px;letter-spacing:0.12em;color:#6b9e7a;text-transform:uppercase;font-weight:600;">WeedHub Comunidad</p>
+              <h1 style="margin:12px 0 0;font-size:22px;font-weight:700;line-height:1.2;color:#e8f0eb;">
+                💬 @${opts.commenterUsername} comentó en tu post
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 40px;">
+              <p style="margin:0 0 8px;font-size:13px;color:#6b9e7a;font-weight:600;">${opts.postTitle}</p>
+              <div style="padding:16px;background:#0f1a14;border-radius:10px;border:1px solid #253028;margin-bottom:20px;">
+                <p style="margin:0;font-size:14px;line-height:1.6;color:#a8c4b0;">"${preview}"</p>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 40px 32px;">
+              <a href="${postUrl}" style="display:inline-block;background:#4a9e64;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:10px;">
+                Ver comentario →
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 40px;border-top:1px solid #253028;">
+              <p style="margin:0;font-size:12px;color:#4a6654;">
+                <a href="${SITE_URL}" style="color:#6b9e7a;text-decoration:none;">weedhub.info</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: opts.toEmail,
+      subject: `💬 @${opts.commenterUsername} comentó en tu post "${opts.postTitle}"`,
+      html,
+      text: `@${opts.commenterUsername} comentó en tu post "${opts.postTitle}":\n\n"${preview}"\n\nVer en WeedHub: ${postUrl}`,
+    });
+  } catch {
+    // Non-fatal
+  }
+}
+
+export async function sendNewFollowerEmail(opts: {
+  toEmail: string;
+  toName: string;
+  followerUsername: string;
+  followerProfileUrl: string;
+}): Promise<void> {
+  const resend = getClient();
+  if (!resend) return;
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Nuevo seguidor — WeedHub</title></head>
+<body style="margin:0;padding:0;background:#0f1a14;font-family:'Instrument Sans',Arial,sans-serif;color:#e8f0eb;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f1a14;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" style="max-width:560px;background:#141f18;border-radius:16px;border:1px solid #253028;overflow:hidden;">
+          <tr>
+            <td style="padding:32px 40px 24px;border-bottom:1px solid #253028;">
+              <p style="margin:0;font-size:13px;letter-spacing:0.12em;color:#6b9e7a;text-transform:uppercase;font-weight:600;">WeedHub</p>
+              <h1 style="margin:12px 0 0;font-size:22px;font-weight:700;line-height:1.2;color:#e8f0eb;">
+                🌿 @${opts.followerUsername} ahora te sigue
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 40px 32px;">
+              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#a8c4b0;">
+                <strong style="color:#e8f0eb;">@${opts.followerUsername}</strong> comenzó a seguirte en WeedHub.
+              </p>
+              <a href="${opts.followerProfileUrl}" style="display:inline-block;background:#4a9e64;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:10px;">
+                Ver su perfil →
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 40px;border-top:1px solid #253028;">
+              <p style="margin:0;font-size:12px;color:#4a6654;">
+                <a href="${SITE_URL}" style="color:#6b9e7a;text-decoration:none;">weedhub.info</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: opts.toEmail,
+      subject: `🌿 @${opts.followerUsername} ahora te sigue en WeedHub`,
+      html,
+      text: `@${opts.followerUsername} comenzó a seguirte en WeedHub.\n\nVer su perfil: ${opts.followerProfileUrl}`,
     });
   } catch {
     // Non-fatal
