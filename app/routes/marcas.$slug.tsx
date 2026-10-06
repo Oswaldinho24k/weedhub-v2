@@ -30,7 +30,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       .sort({ createdAt: -1 })
       .limit(5)
       .lean()
-      .select("ratings text createdAt publishedAs"),
+      .select("ratings comment createdAt publishedAs"),
   ]);
 
   const sessionUserId = sessionUser ? String(sessionUser._id) : null;
@@ -70,7 +70,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     })),
     reviews: reviews.map((r) => ({
       overall: (r.ratings as any)?.overall || 0,
-      text: (r as any).text || null,
+      comment: (r as any).comment || null,
       publishedAs: (r as any).publishedAs || "anonymous",
       createdAt: (r.createdAt as Date)?.toISOString(),
     })),
@@ -322,9 +322,26 @@ export default function MarcaSlugPage() {
               </div>
             )}
 
-            {reviews.length > 0 && (
-              <div>
-                <div className="kicker mb-4">Reseñas recientes</div>
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="kicker">Reseñas{brand.reviewCount > 0 ? ` (${brand.reviewCount})` : ""}</div>
+                {sessionUserId ? (
+                  <Link
+                    to={`/marcas/${brand.slug}/review`}
+                    className={cn(buttonVariants({ variant: "primary" }), "!py-1.5 !px-3 text-xs")}
+                  >
+                    Escribir reseña
+                  </Link>
+                ) : (
+                  <Link
+                    to="/auth?mode=login"
+                    className={cn(buttonVariants({ variant: "ghost" }), "!py-1.5 !px-3 text-xs")}
+                  >
+                    Inicia sesión para reseñar
+                  </Link>
+                )}
+              </div>
+              {reviews.length > 0 ? (
                 <div className="space-y-3">
                   {reviews.map((r, i) => (
                     <div key={i} className="card p-4">
@@ -337,14 +354,18 @@ export default function MarcaSlugPage() {
                           {new Date(r.createdAt).toLocaleDateString("es-MX")}
                         </span>
                       </div>
-                      {r.text && (
-                        <p className="text-sm text-fg-muted leading-relaxed">{r.text}</p>
+                      {r.comment && (
+                        <p className="text-sm text-fg-muted leading-relaxed">{r.comment}</p>
                       )}
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="card p-6 text-center">
+                  <p className="text-sm text-fg-muted">Aún no hay reseñas. ¡Sé el primero!</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Sidebar */}

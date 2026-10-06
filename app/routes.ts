@@ -98,6 +98,7 @@ export default [
   route("marcas/registrar", "routes/marcas_.registrar.tsx"),
   route("marcas/:slug/reclamar", "routes/marcas.$slug_.reclamar.tsx"),
   route("marcas/:slug/editar", "routes/marcas.$slug_.editar.tsx"),
+  route("marcas/:slug/review", "routes/marcas.$slug_.review.tsx"),
   route("marcas/:slug", "routes/marcas.$slug.tsx"),
   route("planes", "routes/planes.tsx"),
   route("productos", "routes/productos.tsx"),
@@ -105,6 +106,7 @@ export default [
   // Dispensarios
   route("dispensarios", "routes/dispensarios.tsx"),
   route("dispensarios/agregar", "routes/dispensarios_.agregar.tsx"),
+  route("dispensarios/:slug/review", "routes/dispensarios.$slug_.review.tsx"),
   route("dispensarios/:slug", "routes/dispensarios.$slug.tsx"),
 
   // API + sitemap — locale-agnostic

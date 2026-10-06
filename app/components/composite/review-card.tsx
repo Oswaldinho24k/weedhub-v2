@@ -18,9 +18,10 @@ interface ReviewCardProps {
     user?: ReviewAuthor;
   };
   currentUserId?: string;
+  variant?: "strain" | "entity";
 }
 
-export function ReviewCard({ review, currentUserId }: ReviewCardProps) {
+export function ReviewCard({ review, currentUserId, variant = "strain" }: ReviewCardProps) {
   const fetcher = useFetcher();
   const hasVoted = currentUserId && review.helpfulVotes?.includes(currentUserId);
   const optimisticCount =
@@ -41,7 +42,7 @@ export function ReviewCard({ review, currentUserId }: ReviewCardProps) {
         <RatingStars rating={review.ratings.overall} size="sm" />
       </header>
 
-      {review.context && (review.context.method || review.context.timeOfDay || review.context.setting) && (
+      {variant === "strain" && review.context && (review.context.method || review.context.timeOfDay || review.context.setting) && (
         <div className="flex flex-wrap gap-1.5">
           {review.context.method && <span className="pill">{review.context.method}</span>}
           {review.context.timeOfDay && <span className="pill">{review.context.timeOfDay}</span>}
@@ -53,7 +54,7 @@ export function ReviewCard({ review, currentUserId }: ReviewCardProps) {
         <p className="text-sm text-fg-muted leading-relaxed">{review.comment}</p>
       )}
 
-      {review.effectsExperienced?.length > 0 && (
+      {variant === "strain" && review.effectsExperienced?.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {review.effectsExperienced.map((effect) => (
             <span key={effect} className="pill accent">
