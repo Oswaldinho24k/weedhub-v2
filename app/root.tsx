@@ -22,6 +22,7 @@ import { MinimalNav } from "~/components/layout/minimal-nav";
 import { ToastProvider } from "~/components/ui/toast";
 import { buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
+import { Analytics } from "@vercel/analytics/react";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -86,6 +87,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
         <ScrollRestoration />
         <Scripts />
+        <Analytics />
       </body>
     </html>
   );
