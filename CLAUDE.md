@@ -18,6 +18,8 @@ Spanish-language cannabis encyclopedia and community platform at **weedhub.info*
 - **Images:** Cloudinary (upload + transform + CDN); Pexels API as fallback for strains without custom images
 - **Email:** Resend (newsletter audiences)
 - **Moderation:** Anthropic Claude Haiku (optional, for strain submissions)
+- **AI Agent:** Vercel AI SDK + Claude (conversational strain recommender, streaming)
+- **Image Generation:** fal.ai + Flux Schnell (`IMAGE_GEN_API_KEY`) — admin pipeline
 - **Payments:** Stripe (B2B subscriptions for brands and dispensaries)
 - **Fonts:** Fraunces / Instrument Sans / JetBrains Mono
 - **Icons:** Lucide React
@@ -164,12 +166,13 @@ prompts/                        # Generated Midjourney prompts (gitignored)
 Key routes export `ErrorBoundary` for contained error handling: `strains.$slug`, `magazine.$slug`, `guias.$slug`. Root-level ErrorBoundary in `root.tsx`.
 
 ### Image Pipeline
-**Current fallback (active):** `scripts/fill-pexels-images.ts` searches Pexels for cannabis images and populates `strain.imageUrl` for strains without custom images. Run: `npm run images:pexels`.
+**AI pipeline (active):** Admin generates images via `app/lib/image-gen.server.ts` (fal.ai + Flux Schnell). Prompt built from strain name/terpenes/type by `app/lib/strain-image-prompt.server.ts`. Images upload to Cloudinary and update `strain.imageUrl` automatically.
+- Per-strain: edit dialog → "Generar con IA" button
+- Bulk: `/admin/generate-images` — Top 100 queue, 5 parallel, real-time progress
 
-**Midjourney pipeline (paused):**
-1. Prompts generated: `scripts/gen-midjourney-prompts.ts`
-2. Images go into `strain-cards/` (gitignored)
-3. Upload: `scripts/upload-strain-cards.ts` → Cloudinary `weedhub/strains/{slug}`
+**Pexels fallback (active):** `scripts/fill-pexels-images.ts` populates `imageUrl` for strains without images. Run: `npm run images:pexels`.
+
+**Midjourney pipeline (deprecated):** prompts exist in `scripts/gen-midjourney-prompts.ts` but the flow is replaced by the AI pipeline above.
 
 `StrainThumb` renders `<img>` if `imageUrl` exists, falls back to procedural SVG placeholder.
 
@@ -251,31 +254,118 @@ Users can follow other users. `profile.$username.tsx` shows follower/following c
 - Error boundaries on key detail routes
 
 **Email:**
-- Welcome email on registration (`sendWelcomeEmail`)
+- Welcome email on registration (`sendWelcomeEmail`) — sender: `contacto@weedhub.info`
 - Subscription confirmation email (`sendSubscriptionConfirmationEmail`)
+- New comment notification (`sendNewCommentEmail`) — fires when someone comments on your post
+- New follower notification (`sendNewFollowerEmail`) — fires when someone follows you
+
+**Analytics:**
+- Vercel Analytics (`@vercel/analytics`) — page views, top pages, Core Web Vitals in Vercel dashboard
 
 **Images:**
-- `fill-pexels-images.ts` script — populates `imageUrl` for strains without images
-- `PEXELS_API_KEY` set in Vercel (production)
+- AI image generation pipeline — fal.ai + Flux Schnell, per-strain + bulk Top 100
+- `fill-pexels-images.ts` script — Pexels fallback for strains without custom images
+
+**UI / Design System:**
+- Full DS Button refactor — zero legacy `btn btn-*` classes across all 40+ route files
 
 ### Pending 🔧
-- **Plausible setup:** Script deployed, needs plausible.io account for `weedhub.info`
-- **Resend domain verification:** `hola@weedhub.info` needs DNS verification (emails land in spam without it)
+- **Stripe live mode:** Sandbox configured and tested; needs live price IDs + live secret key for production
+- **RESEND_API_KEY:** Domain verified (`contacto@weedhub.info`), needs API key added to Vercel env
+- **IMAGE_GEN_API_KEY:** fal.ai key needed to activate AI image generation
 - **Google Search Console:** Submit sitemap, verify hreflang indexing
-- **Stripe live mode:** Currently set up for test mode, needs production price IDs
-- **Pexels images:** Run `npm run images:pexels` against production DB to populate strain images
-- **Rate limiting:** `/auth`, `/api/newsletter`, `/api/ai/find-strain` have no throttling — bot-vulnerable and AI cost risk. Vercel Firewall rules (no code needed).
-- **Sentry / error logging:** No production error tracking yet
-- **SESSION_SECRET fallback:** `app/sessions.server.ts` has `|| "dev-secret-change-me"` — must throw instead (being fixed)
-- **Terpene name index:** Missing `{ "terpenes.name": 1 }` on Strain model — terpene filter in `/strains` does full collection scan
+- **Rate limiting:** `/auth`, `/api/newsletter`, `/recomendar` have no throttling — Vercel Firewall rules (no code needed)
+- **Sentry / error logging:** No production error tracking
+- **Terpene name index:** Missing `{ "terpenes.name": 1 }` on Strain model — terpene filter does full scan
 
 ### Not Yet Built ❌
+- **Conversational AI agent** — `/chat` or upgraded `/recomendar` with Vercel AI SDK + tool use (next priority)
 - **Review forms for brands/dispensaries/products** — models exist, no submission UI
-- **Community section full UX** — exists but minimal (no rich text editor, no notifications)
-- **Email flows** — review notifications, weekly digest (welcome + subscription emails done)
-- **A/B testing** — no tooling (PostHog if needed)
+- **Reply notifications** — `CommentModel` has no `parentId` yet; add when threaded comments ship
+- **Community full UX** — no rich text editor, no notification center
 - **Brand analytics dashboard** — brands can't see their own traffic/review data
-- **Legal review** — privacy policy and terms may need review for Mexican cannabis regulations
+- **AI content tools (admin)** — strain description enrichment, article assistant, admin chat
+- **Natural language search** — Claude-powered intent parsing over strain DB
+- **Legal review** — privacy policy and terms for Mexican cannabis regulations
+
+## AI-Native Vision
+
+WeedHub is being built as an AI-native platform. AI is not a feature add-on — it's a first-class layer across both the public app and the admin. Every content, discovery, and operational workflow should have an AI path.
+
+### Architecture
+
+```
+Vercel AI SDK (streaming, tool use, provider-agnostic)
+    ↓
+Claude (Anthropic) — reasoning, chat, content         fal.ai — image generation
+    ↓                                                       ↓
+Tool calls → MongoDB (real strain/user data)        Cloudinary (store + CDN)
+```
+
+- **Vercel AI SDK** is the primary layer for all conversational/streaming AI in the app
+- **Claude Haiku** for fast, cheap tasks (moderation, search, quick suggestions)
+- **Claude Sonnet** for quality tasks (full conversations, content generation)
+- **fal.ai + Flux Schnell** for image generation (~$0.003/image)
+- All agents have tool access to real WeedHub data (strains, effects, glossary) — not generic cannabis knowledge
+- Provider-agnostic: swap models via env var without code changes
+
+### AI Features — Current ✅
+
+| Feature | Route / File | Model | Notes |
+|---------|-------------|-------|-------|
+| Strain submission moderation | `api/admin/ai` + `app/lib/moderation.server.ts` | Claude Haiku | Optional — skips if no API key |
+| AI strain recommender (wizard) | `/recomendar` | Claude Haiku | 4-step structured wizard |
+| AI image generation (per-strain) | `api/admin/generate-strain-image` + edit dialog | fal.ai Flux Schnell | Admin only, preview in dialog |
+| AI image generation (bulk) | `/admin/generate-images` | fal.ai Flux Schnell | Top 100 queue, 5 parallel |
+
+### AI Features — Planned 🔧
+
+#### Web (user-facing)
+
+**1. Conversational strain agent** — priority next feature
+- Route: upgrade `/recomendar` or new `/chat`
+- Stack: Vercel AI SDK + Claude Sonnet, streaming
+- Tools the agent can call:
+  - `searchStrains(filters)` — queries MongoDB, returns matching strains
+  - `getStrainDetail(slug)` — full strain profile
+  - `getEffectInfo(effectKey)` — effect description + common strains
+  - `searchGlossary(term)` — definition lookup
+- Context injected per request: user's experience level, preferred effects, consumption method (from `cannabisProfile`)
+- Spanish, LATAM-aware system prompt
+- No login required for basic queries; logged-in users get personalized context
+
+**2. Natural language search**
+- "algo relajante para el dolor de cabeza sin quedarse dormido" → strain results
+- Replaces/augments the current fuzzy Levenshtein search at `api/strain-search`
+- Claude parses intent → structured filters → MongoDB query
+
+**3. Personalized homepage recommendations**
+- For logged-in users: "Para ti" section on `/` based on saved strains + review history + onboarding profile
+- Claude Haiku generates the filter set; MongoDB executes it
+
+#### Admin (operational)
+
+**4. Strain description enrichment**
+- In edit dialog: "Mejorar descripción" button → Claude rewrites/translates descriptions (ES/EN/PT)
+- Also: auto-suggest terpenes/effects/flavors from the description text
+
+**5. Magazine article assistant**
+- In article editor: AI drafts article body from a title + outline
+- Auto-suggests SEO meta description, tags, related strains
+
+**6. Admin chat (natural language queries)**
+- "¿Cuántas reseñas se publicaron esta semana?" → Claude queries the DB via tools and answers
+- Replaces hand-written MongoDB queries for non-technical admin tasks
+
+### AI Conventions
+
+- All AI server code lives in `app/lib/` with `.server.ts` suffix
+- `app/lib/moderation.server.ts` — submission moderation
+- `app/lib/image-gen.server.ts` — image generation (provider-agnostic wrapper)
+- `app/lib/strain-image-prompt.server.ts` — prompt builder (color/structure logic)
+- Future: `app/lib/ai-agent.server.ts` — conversational agent tools
+- All AI calls are fire-and-forget where possible; never block user actions waiting for AI
+- Always degrade gracefully: if API key missing → log + return null, never throw to user
 
 ## Environment Variables
 
@@ -290,18 +380,26 @@ CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 
 # Images fallback
-PEXELS_API_KEY=         # Pexels API key for strain image fallback (set in Vercel ✅)
+PEXELS_API_KEY=         # Pexels API key for strain image fallback
 
-# Email (Resend)
+# Email (Resend) — sender: contacto@weedhub.info (domain verified ✅)
 RESEND_API_KEY=
 RESEND_AUDIENCE_ID=
 
-# AI moderation (optional)
+# AI — Anthropic (moderation + conversational agent)
 ANTHROPIC_API_KEY=
+
+# AI — Image generation
+IMAGE_GEN_API_KEY=      # fal.ai key (https://fal.ai/dashboard/keys)
+IMAGE_GEN_PROVIDER=fal  # fal | replicate | openai
+
+# Google OAuth
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 
 # Stripe (B2B self-serve)
 STRIPE_SECRET_KEY=                   # sk_test_... or sk_live_...
-STRIPE_WEBHOOK_SECRET=               # whsec_...
+STRIPE_WEBHOOK_SECRET=               # whsec_... (stripe listen --forward-to localhost:5173/api/stripe/webhook)
 STRIPE_PRICE_PRESENCIA_BRAND=        # $49/mes — Presencia Verificada (marcas)
 STRIPE_PRICE_DESTACADO_BRAND=        # $149/mes — Destacado (marcas)
 STRIPE_PRICE_PRESENCIA_DISPENSARIO=  # $39/mes — Presencia Verificada (dispensarios)
@@ -318,10 +416,6 @@ npm run seed:full        # Full database seed (870 strains + 200 users + ~1500 r
 npm run images:pexels    # Populate imageUrl from Pexels for strains without images
 npm run images:pexels:dry  # Dry run — preview what would be updated
 
-# Stripe dev
+# Stripe dev (get webhook secret for local testing)
 stripe listen --forward-to localhost:5173/api/stripe/webhook
-
-# Image pipeline (Midjourney path — paused)
-npx tsx scripts/upload-strain-cards.ts --dry-run    # Preview uploads
-npx tsx scripts/upload-strain-cards.ts --skip-existing  # Upload new only
 ```
