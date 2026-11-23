@@ -45,7 +45,6 @@ export async function action({ request }: Route.ActionArgs) {
 export default function DeleteAccountPage({ actionData }: Route.ComponentProps) {
   return (
     <div className="mx-auto max-w-[480px] px-6 py-16">
-      <div className="kicker mb-2" style={{ color: "var(--warm)" }}>Zona peligrosa</div>
       <h1 className="display text-3xl mb-4">Eliminar mi cuenta</h1>
       <p className="text-fg-muted mb-8 leading-relaxed">
         Esta acción es irreversible. Tu cuenta, historial de sesión y preferencias serán eliminados.

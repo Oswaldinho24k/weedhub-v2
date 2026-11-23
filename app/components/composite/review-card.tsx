@@ -1,3 +1,4 @@
+import { effectLabels } from "~/lib/effect-labels";
 import { Link, useFetcher } from "react-router";
 import { RatingStars } from "./rating-stars";
 import { formatRelativeTime } from "~/lib/utils";
@@ -51,12 +52,12 @@ export function ReviewCard({ review, currentUserId, variant = "strain" }: Review
       )}
 
       {review.comment && (
-        <p className="text-sm text-fg-muted leading-relaxed">{review.comment}</p>
+        <p className="text-[16px] text-fg leading-relaxed">{review.comment}</p>
       )}
 
       {variant === "strain" && review.effectsExperienced?.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          {review.effectsExperienced.map((effect) => (
+          {effectLabels(review.effectsExperienced).map((effect) => (
             <span key={effect} className="pill accent">
               {effect}
             </span>
@@ -64,13 +65,13 @@ export function ReviewCard({ review, currentUserId, variant = "strain" }: Review
         </div>
       )}
 
-      <footer className="flex items-center gap-4 pt-2 border-t border-line">
+      <footer className="flex items-center gap-4 pt-2 border-t-2 border-ink">
         {currentUserId ? (
           <fetcher.Form method="post" action={`/api/reviews/${review._id}/vote`}>
             <button
               type="submit"
               className={`flex items-center gap-1.5 text-xs transition-colors ${
-                hasVoted ? "text-accent" : "text-fg-muted hover:text-accent"
+                hasVoted ? "text-fg font-extrabold bg-yellow px-1.5" : "text-fg font-bold hover:bg-yellow px-1.5"
               }`}
             >
               <Icon name="thumbUp" size={14} />
@@ -78,7 +79,7 @@ export function ReviewCard({ review, currentUserId, variant = "strain" }: Review
             </button>
           </fetcher.Form>
         ) : (
-          <span className="flex items-center gap-1.5 text-xs text-fg-muted">
+          <span className="flex items-center gap-1.5 text-xs font-bold text-fg-muted">
             <Icon name="thumbUp" size={14} />
             Útil ({review.helpfulCount})
           </span>
@@ -99,18 +100,17 @@ function AuthorHeader({
     <img
       src={display.avatar}
       alt=""
-      className="h-10 w-10 rounded-full object-cover border border-line"
+      className="h-10 w-10 object-cover border-2 border-ink"
     />
   ) : (
     <span
       aria-hidden
-      className="h-10 w-10 rounded-full bg-elev border border-line flex items-center justify-center"
-      style={{ color: display.isAnonymous ? "var(--fg-dim)" : "var(--accent)" }}
+      className={`h-10 w-10 border-2 border-ink flex items-center justify-center text-ink ${display.isAnonymous ? "bg-white" : "bg-yellow"}`}
     >
       {display.isAnonymous ? (
         <Icon name="user" size={16} />
       ) : (
-        <span className="font-medium">{display.initial}</span>
+        <span className="rotulo text-lg">{display.initial}</span>
       )}
     </span>
   );
@@ -119,7 +119,7 @@ function AuthorHeader({
     <div>
       <div className="flex items-center gap-2 flex-wrap">
         <span
-          className={`text-sm font-medium ${display.isAnonymous ? "mono text-fg" : "text-fg"}`}
+          className="text-[15px] font-extrabold [font-stretch:85%] text-fg"
         >
           {display.handle}
         </span>
@@ -129,7 +129,7 @@ function AuthorHeader({
           </span>
         )}
       </div>
-      <div className="text-xs text-fg-dim flex items-center gap-1.5">
+      <div className="text-xs font-semibold text-fg-muted flex items-center gap-1.5">
         <span>{formatRelativeTime(createdAt)}</span>
         {display.locationLine && (
           <>
@@ -145,7 +145,7 @@ function AuthorHeader({
     return (
       <Link
         to={display.profileHref}
-        className="flex items-center gap-3 group hover:text-accent transition-colors"
+        className="flex items-center gap-3 group hover:underline decoration-2 underline-offset-4"
       >
         {avatarNode}
         {body}

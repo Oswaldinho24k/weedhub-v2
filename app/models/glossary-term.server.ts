@@ -22,6 +22,7 @@ export interface IGlossaryTerm extends Document {
   relatedSlugs: string[];
   relatedStrainSlugs: string[];
   examples?: string[];
+  examplesPt?: string[];
   isActive: boolean;
   sortOrder: number;
   createdAt: Date;
@@ -45,6 +46,7 @@ const glossaryTermSchema = new Schema<IGlossaryTerm>(
     relatedSlugs: [{ type: String }],
     relatedStrainSlugs: [{ type: String }],
     examples: [{ type: String }],
+    examplesPt: [{ type: String }],
     isActive: { type: Boolean, default: true },
     sortOrder: { type: Number, default: 0 },
   },

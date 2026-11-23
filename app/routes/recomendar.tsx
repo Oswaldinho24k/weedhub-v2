@@ -12,19 +12,18 @@ export function meta() {
     title: "Encuentra tu cepa ideal — WeedHub",
     description: "Responde 4 preguntas y nuestra IA te recomienda las mejores cepas de cannabis para ti.",
     url: `${SITE_URL}/recomendar`,
-    canonicalPath: "/recomendar",
   });
 }
 
 const EFFECT_OPTIONS = [
-  { key: "Relajado", label: "Relajarme 😌" },
-  { key: "Creativo", label: "Creatividad 🎨" },
-  { key: "Energético", label: "Energía ⚡" },
-  { key: "Somnoliento", label: "Dormir 💤" },
-  { key: "Alivio dolor", label: "Alivio del dolor 🌡️" },
-  { key: "Ansiolítico", label: "Control ansiedad 🧘" },
-  { key: "Eufórico", label: "Euforia 😄" },
-  { key: "Concentrado", label: "Concentración 🎯" },
+  { key: "Relajado", label: "Relajarme" },
+  { key: "Creativo", label: "Creatividad" },
+  { key: "Energético", label: "Energía" },
+  { key: "Somnoliento", label: "Dormir" },
+  { key: "Alivio dolor", label: "Alivio del dolor" },
+  { key: "Ansiolítico", label: "Control ansiedad" },
+  { key: "Eufórico", label: "Euforia" },
+  { key: "Concentrado", label: "Concentración" },
 ];
 
 const EXPERIENCE_OPTIONS = [
@@ -34,9 +33,9 @@ const EXPERIENCE_OPTIONS = [
 ];
 
 const METHOD_OPTIONS = [
-  { key: "joint", label: "Fumar 🚬" },
-  { key: "vaporizer", label: "Vaporizar 💨" },
-  { key: "edible", label: "Comestibles 🍪" },
+  { key: "joint", label: "Fumar" },
+  { key: "vaporizer", label: "Vaporizar" },
+  { key: "edible", label: "Comestibles" },
   { key: "any", label: "No sé / Me da igual" },
 ];
 
@@ -93,7 +92,6 @@ export default function RecomendarPage() {
   if (results) {
     return (
       <div className="mx-auto max-w-[1200px] px-6 py-16">
-        <div className="kicker mb-4">IA Cannábica</div>
         <h1 className="display text-4xl md:text-5xl mb-3">Tus cepas ideales</h1>
         <p className="text-fg-muted mb-10 max-w-[54ch]">
           Basado en tu perfil, nuestra IA seleccionó estas cepas para ti.
@@ -144,12 +142,11 @@ export default function RecomendarPage() {
   return (
     <div className="mx-auto max-w-[800px] px-6 py-16">
       {/* Header */}
-      <div className="kicker mb-4">IA Cannábica</div>
       <h1 className="display text-4xl md:text-5xl mb-3">
         Encuentra tu cepa ideal
       </h1>
       <p className="text-fg-muted mb-10 max-w-[54ch]">
-        4 preguntas. Nuestra IA analiza 870+ cepas y te recomienda las mejores para ti.
+        4 preguntas. La IA revisa más de 3,000 cepas y te sugiere las que encajan contigo.
       </p>
 
       {/* Step indicator */}
@@ -307,7 +304,7 @@ export default function RecomendarPage() {
                     : undefined
                 }
               >
-                {c.emoji} {c.labelEs}
+                {c.labelEs}
               </button>
             ))}
           </div>

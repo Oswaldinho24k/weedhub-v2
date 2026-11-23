@@ -123,7 +123,6 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
   const showcaseBadge = getShowcaseBadge(user.earnedBadges as any);
   const levelColor = LEVEL_COLOR[currentLevel.name] || "var(--accent)";
   const levelColorDark = LEVEL_COLOR_DARK[currentLevel.name] || "var(--accent)";
-  const levelEmoji = LEVEL_EMOJI[currentLevel.name] || "🌱";
   const earnedCount = user.earnedBadges?.length || 0;
 
   return (
@@ -164,7 +163,7 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
                   className="pill text-xs"
                   style={{ background: levelColor, color: "white", borderColor: "transparent" }}
                 >
-                  {levelEmoji} {currentLevel.name}
+                  <Icon name="sprout" size={14} className="inline -mt-0.5 mr-1" />{currentLevel.name}
                 </span>
               </div>
               <div className="flex items-center gap-2 mt-1 text-sm text-fg-muted flex-wrap">
@@ -326,7 +325,7 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
                         className="text-3xl mb-3 leading-none"
                         title={badge.description}
                       >
-                        {badge.emoji || "🏅"}
+                        <span className="inline-grid place-items-center w-10 h-10 bg-yellow text-ink border-2 border-ink"><Icon name="crown" size={20} /></span>
                       </div>
                       <div className="font-medium text-sm">{badge.name}</div>
                       <div className="text-[11px] text-fg-dim mt-1 leading-snug">{badge.description}</div>

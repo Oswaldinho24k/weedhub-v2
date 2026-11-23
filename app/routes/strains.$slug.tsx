@@ -6,7 +6,6 @@ import { StrainModel } from "~/models/strain.server";
 import { ReviewModel } from "~/models/review.server";
 import { SavedStrainModel } from "~/models/saved-strain.server";
 import { getUserFromSession } from "~/lib/auth.server";
-import { StrainThumb } from "~/components/composite/strain-thumb";
 import { EffectBar } from "~/components/composite/effect-bar";
 import { TimeCurve } from "~/components/composite/time-curve";
 import { TerpeneRadar } from "~/components/composite/terpene-radar";
@@ -14,6 +13,7 @@ import { MomentoBar } from "~/components/composite/momento-bar";
 import { RatingStars } from "~/components/composite/rating-stars";
 import { ReviewCard } from "~/components/composite/review-card";
 import { StrainCard } from "~/components/composite/strain-card";
+import { StrainSign } from "~/components/composite/strain-sign";
 import { Icon } from "~/components/ui/icon";
 import { useT, useHref } from "~/lib/i18n-context";
 import { pickStrainDescription } from "~/lib/strain-description";
@@ -24,6 +24,21 @@ import { QuickRatingModel } from "~/models/quick-rating.server";
 import { GeneticTree } from "~/components/composite/genetic-tree";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
+import { strainSummary, strainFaq } from "~/lib/strain-summary";
+import { effectLabels } from "~/lib/effect-labels";
+import { resolveLocale } from "~/lib/locale.server";
+
+const WALL: Record<string, string> = {
+  sativa: "wall--yellow",
+  indica: "wall--pink",
+  hybrid: "bg-lime text-ink",
+};
+
+const STRAIN_COPY = {
+  es: { noReviews: "Sin reseñas aún. Sé la primera persona en contar cómo te fue.", effectsNote: "Ordenados por frecuencia", faqTitle: "Preguntas frecuentes", disclaimer: "Información de referencia, no consejo médico. Los efectos varían por persona, dosis y método. Solo para personas adultas (+18) donde su uso sea legal." },
+  pt: { noReviews: "Sem avaliações ainda. Seja a primeira pessoa a contar como foi.", effectsNote: "Ordenados por frequência", faqTitle: "Perguntas frequentes", disclaimer: "Informação de referência, não é aconselhamento médico. Os efeitos variam por pessoa, dose e método. Apenas para adultos (+18) onde o uso for legal." },
+  en: { noReviews: "No reviews yet. Be the first to share how it went.", effectsNote: "Ordered by frequency", faqTitle: "Frequently asked questions", disclaimer: "Reference information, not medical advice. Effects vary by person, dose and method. Adults only (18+) where legal." },
+} as const;
 
 const TYPE_PILL: Record<string, string> = {
   sativa: "accent",
@@ -31,17 +46,26 @@ const TYPE_PILL: Record<string, string> = {
   hybrid: "lilac",
 };
 
+const META_TITLE = {
+  es: (n: string) => `${n}: efectos, THC y terpenos | WeedHub`,
+  pt: (n: string) => `${n}: efeitos, THC e terpenos | WeedHub`,
+  en: (n: string) => `${n} strain: effects, THC and terpenes | WeedHub`,
+};
+
 export function meta({ data }: Route.MetaArgs) {
   const strain = data?.strain;
-  const name = strain?.name || "Cepa";
-  const description = strain?.descriptionEs || strain?.description || "";
+  if (!strain) return [{ title: "WeedHub" }];
+  const locale = (data?.locale || "es") as keyof typeof META_TITLE;
+  const prefix = locale !== "es" ? `/${locale}` : "";
+  const description = strainSummary(strain as any, locale);
   return buildMeta({
-    title: `${name} — WeedHub`,
-    description: description.slice(0, 160),
-    url: `${SITE_URL}/strains/${strain?.slug || ""}`,
-    image: strain?.imageUrl || undefined,
-    type: "product",
-    canonicalPath: `/strains/${strain?.slug || ""}`,
+    title: META_TITLE[locale](strain.name),
+    description: description.length > 158 ? description.slice(0, 155).replace(/\s+\S*$/, "") + "…" : description,
+    url: `${SITE_URL}${prefix}/strains/${strain.slug}`,
+    image: strain.imageUrl || undefined,
+    type: "article",
+    locale,
+    canonicalPath: `/strains/${strain.slug}`,
   });
 }
 
@@ -152,6 +176,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   );
 
   return {
+    locale: await resolveLocale(request),
     strain: {
       ...strain,
       _id: String(strain._id),
@@ -188,10 +213,9 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
   const tEffect = (key: string) => (t.effects as Record<string, string>)[key] ?? key;
   const tFlavor = (key: string) => (t.flavors as Record<string, string>)[key] ?? key;
 
-  const effectValues = (strain.effects || []).slice(0, 5).map((e: string, i: number) => ({
-    label: tEffect(e),
-    value: 90 - i * 10,
-  }));
+  const effectList = effectLabels(strain.effects || [], locale).slice(0, 6);
+  const summary = strainSummary(strain as any, locale);
+  const faq = strainFaq(strain as any, locale);
 
   // Terpene radar expects 0..1 values. Scale percentages (usually 0..2%).
   const radarData = (strain.terpenes || []).slice(0, 6).map((t: any) => ({
@@ -201,23 +225,30 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
 
   const prefix = locale !== "es" ? `/${locale}` : "";
 
-  const productJsonLd: any = {
+  const pageUrl = `${SITE_URL}${prefix}/strains/${strain.slug}`;
+  const pageJsonLd = {
     "@context": "https://schema.org",
-    "@type": "Product",
+    "@type": "WebPage",
+    url: pageUrl,
     name: strain.name,
-    description: strain.descriptionEs || strain.description,
-    url: `${SITE_URL}/strains/${strain.slug}`,
-    ...(strain.imageUrl ? { image: strain.imageUrl } : {}),
+    inLanguage: locale === "pt" ? "pt-BR" : locale,
+    description: summary,
+    dateModified: strain.updatedAt,
+    isPartOf: { "@type": "WebSite", name: "WeedHub", url: SITE_URL },
+    about: {
+      "@type": "Thing",
+      name: strain.name,
+      alternateName: strain.aliases?.length ? strain.aliases : undefined,
+      description: summary,
+    },
   };
-  if (strain.reviewCount > 0) {
-    productJsonLd.aggregateRating = {
-      "@type": "AggregateRating",
-      ratingValue: strain.averageRatings.overall.toFixed(1),
-      reviewCount: strain.reviewCount,
-      bestRating: 5,
-      worstRating: 1,
-    };
-  }
+  const faqJsonLd = faq.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+      }
+    : null;
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -239,156 +270,149 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
         "@type": "ListItem",
         position: 3,
         name: strain.name,
-        item: `${SITE_URL}/strains/${strain.slug}`,
+        item: pageUrl,
       },
     ],
   };
 
   return (
     <div>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }} />
+      {faqJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
-      {/* Back */}
-      <div className="mx-auto max-w-[1200px] px-6 pt-6">
-        <Link
-          to={href("/strains")}
-          className="inline-flex items-center gap-2 text-sm text-fg-muted hover:text-fg"
-        >
-          <Icon name="arrowLeft" size={14} />
-          {t.strain.backToDirectory}
-        </Link>
-      </div>
+      {/* Wall: type-colored field with the strain lettered on it */}
+      <section className={cn("border-b-[3px] border-ink", WALL[strain.type] ?? "wall")}>
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 pt-5 pb-12">
+          <nav aria-label="Breadcrumb" className="text-[14px] font-bold [font-stretch:85%] flex items-center gap-1.5 flex-wrap opacity-90">
+            <Link to={href("/")} className="hover:underline underline-offset-4 decoration-2">WeedHub</Link>
+            <Icon name="chevronRight" size={12} />
+            <Link to={href("/strains")} className="hover:underline underline-offset-4 decoration-2">{t.nav.directory}</Link>
+            <Icon name="chevronRight" size={12} />
+            <span aria-current="page">{strain.name}</span>
+          </nav>
 
-      {/* Hero */}
-      <section className="mx-auto max-w-[1200px] px-6 pt-8 pb-14">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-10">
-          <div>
-            <div className="flex items-center gap-2 flex-wrap mb-5">
-              <span className={`pill ${pillVariant}`}>
-                {strain.typeBlend || typeLabel}
-              </span>
-              {strain.lineage && <span className="pill">{strain.lineage}</span>}
-            </div>
-            <h1
-              className="display"
-              style={{ fontSize: "clamp(48px, 7vw, 120px)", lineHeight: 0.98 }}
-            >
-              {strain.name}
-            </h1>
-            {strain.aliases && strain.aliases.length > 0 && (
-              <div className="mt-3 text-xs text-fg-dim">
-                <span className="kicker mr-2">{t.strain.alsoKnownAs}</span>
-                {strain.aliases.join(" · ")}
+          <div className="mt-8 grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:items-start">
+            <div>
+              <h1 className="rotulo break-words" style={{ fontSize: "clamp(48px, 8.5vw, 112px)", lineHeight: 0.9 }}>
+                {strain.name}
+              </h1>
+              <div className="flex items-center gap-2 flex-wrap mt-4">
+                <span className="pill active">{strain.typeBlend || typeLabel}</span>
+                {strain.lineage && <span className="pill">{strain.lineage}</span>}
               </div>
-            )}
-            <p className="mt-6 text-lg text-fg-muted leading-relaxed max-w-[54ch]">
-              {strainDescription}
-            </p>
-
-            <div className="mt-6 flex items-center gap-4">
-              <RatingStars rating={strain.averageRatings.overall || 0} size="md" />
-              <span className="mono text-sm tnum">
-                {(strain.averageRatings.overall || 0).toFixed(1)}
-              </span>
-              <span className="text-sm text-fg-dim">
-                {strain.reviewCount} {t.strain.reviewsCount}
-              </span>
-            </div>
-
-            <div className="mt-8 flex items-center gap-3 flex-wrap">
-              <Link
-                to={`/strains/${strain.slug}/review`}
-                className={buttonVariants({ variant: "primary" })}
-              >
-                <Icon name="edit" size={14} />
-                {t.strain.publishReview}
-              </Link>
-              {currentUser && (
-                <saveFetcher.Form method="post" action={`/api/strains/${strain._id}/save`}>
-                  <Button type="submit" variant="ghost">
-                    <Icon name={optimisticSaved ? "bookmarkOn" : "bookmark"} size={14} />
-                    {optimisticSaved ? t.strain.savedStrain : t.strain.saveStrain}
-                  </Button>
-                </saveFetcher.Form>
+              {strain.aliases && strain.aliases.length > 0 && (
+                <p className="mt-3 text-[15px] font-semibold">
+                  {t.strain.alsoKnownAs}: {strain.aliases.join(" · ")}
+                </p>
               )}
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  if (typeof navigator !== "undefined" && "share" in navigator) {
-                    navigator.share({
-                      title: strain.name,
-                      url: window.location.href,
-                    });
-                  }
-                }}
-              >
-                <Icon name="share" size={14} />
-                {t.strain.share}
-              </Button>
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-5">
-            <StrainThumb
-              name={strain.name}
-              type={strain.type as any}
-              colorHint={strain.colorHint}
-              dominantTerpene={strain.dominantTerpene}
-              thcMax={strain.cannabinoidProfile?.thc?.max}
-              imageUrl={strain.imageUrl}
-              ratio="wide"
-              className="w-full"
-            />
-            <div className="card p-5 grid grid-cols-5 gap-3">
-              <HeroStat kicker={t.strain.heroStats.thc} value={`${strain.cannabinoidProfile.thc.max}%`} tone="accent" />
-              <HeroStat kicker={t.strain.heroStats.cbd} value={`${strain.cannabinoidProfile.cbd.max || 0}%`} />
-              <HeroStat kicker={t.strain.heroStats.terpene} value={strain.dominantTerpene || "—"} />
-              <HeroStat
-                kicker={t.strain.heroStats.effect}
-                value={tEffect((strain.effects || [])[0] || "") || "—"}
-              />
-              <HeroStat kicker={t.strain.heroStats.difficulty} value={strain.difficulty || "—"} />
+              {/* Direct answer block (40–60 words, built from data) */}
+              <p className="mt-6 text-[19px] leading-relaxed font-medium max-w-[56ch]">{summary}</p>
+              {strainDescription && strainDescription !== summary && strainDescription.trim() !== strain.name && strainDescription.length > 40 && (
+                <p className="mt-4 text-[16px] leading-relaxed max-w-[60ch] opacity-90">{strainDescription}</p>
+              )}
+
+              <div className="mt-8 flex items-center gap-3 flex-wrap">
+                <Link to={`/strains/${strain.slug}/review`} className={buttonVariants({ variant: "primary" })}>
+                  <Icon name="edit" size={15} />
+                  {t.strain.publishReview}
+                </Link>
+                {currentUser && (
+                  <saveFetcher.Form method="post" action={`/api/strains/${strain._id}/save`}>
+                    <Button type="submit" variant="ghost" aria-pressed={optimisticSaved}>
+                      <Icon name={optimisticSaved ? "bookmarkOn" : "bookmark"} size={15} />
+                      {optimisticSaved ? t.strain.savedStrain : t.strain.saveStrain}
+                    </Button>
+                  </saveFetcher.Form>
+                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    if (typeof navigator !== "undefined" && "share" in navigator) {
+                      navigator.share({ title: strain.name, url: window.location.href });
+                    } else if (typeof navigator !== "undefined") {
+                      (navigator as Navigator).clipboard?.writeText(window.location.href);
+                    }
+                  }}
+                >
+                  <Icon name="share" size={15} />
+                  {t.strain.share}
+                </Button>
+              </div>
             </div>
+
+            {/* The price card: lettered data */}
+            <dl className="cartulina cartulina--blank cartulina-pin bg-white p-6 lg:rotate-[1.5deg] grid grid-cols-2 gap-x-6 gap-y-5">
+              <div className="col-span-2 border-b-2 border-ink pb-4">
+                <dt className="text-[13px] font-extrabold uppercase [font-stretch:78%]">{t.strain.heroStats.thc}</dt>
+                <dd className="rotulo leading-none mt-1" style={{ fontSize: "clamp(64px, 9vw, 96px)" }}>
+                  {strain.cannabinoidProfile?.thc?.max ? (
+                    <>
+                      {strain.cannabinoidProfile.thc.max}
+                      <span style={{ fontSize: "0.45em" }}>%</span>
+                    </>
+                  ) : (
+                    <span className="font-[Archivo] text-2xl font-bold normal-case">—</span>
+                  )}
+                </dd>
+              </div>
+              <DataCell label={t.strain.heroStats.cbd} value={strain.cannabinoidProfile?.cbd?.max ? `${strain.cannabinoidProfile.cbd.max}%` : "—"} />
+              <DataCell label={t.strain.heroStats.terpene} value={strain.dominantTerpene || "—"} />
+              <DataCell label={t.strain.heroStats.effect} value={effectList[0] || "—"} />
+              <DataCell label={t.strain.heroStats.difficulty} value={strain.difficulty || "—"} />
+              <div className="col-span-2 border-t-2 border-ink pt-4 flex items-center gap-3 flex-wrap">
+                {strain.reviewCount > 0 ? (
+                  <>
+                    <RatingStars rating={strain.averageRatings.overall || 0} size="md" />
+                    <span className={cn("tnum", strain.reviewCount >= 10 ? "text-2xl font-black" : "text-lg font-bold")}>
+                      {(strain.averageRatings.overall || 0).toFixed(1)}
+                    </span>
+                    <span className="text-sm font-bold">
+                      {strain.reviewCount} {t.strain.reviewsCount}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-[15px] font-bold">{STRAIN_COPY[locale].noReviews}</span>
+                )}
+              </div>
+            </dl>
           </div>
         </div>
       </section>
 
       {/* Genetics tree */}
       {(strain.genetics?.parent1 || strain.genetics?.parent2 || (strain.genetics?.children && strain.genetics.children.length > 0)) && (
-        <section className="mx-auto max-w-[1200px] px-6 py-8 border-t border-line">
-          <div className="kicker mb-3">Genética</div>
+        <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-8 border-t-[3px] border-ink">
           <h2 className="display text-2xl mb-6">Árbol genético</h2>
           <GeneticTree strain={strain as any} />
         </section>
       )}
 
       {/* Effects + Time curve */}
-      <section className="mx-auto max-w-[1200px] px-6 py-10">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="card p-6">
             <div className="flex items-baseline justify-between mb-5">
               <h2 className="display text-2xl">{t.strain.effectsPanelTitle}</h2>
-              <span className="kicker">
-                {t.strain.effectsAccording.replace("{count}", String(strain.reviewCount || 0))}
-              </span>
+              <span className="text-sm font-semibold text-fg-muted">{STRAIN_COPY[locale].effectsNote}</span>
             </div>
-            <div className="space-y-4">
-              {effectValues.length > 0 ? (
-                effectValues.map((e) => (
-                  <EffectBar key={e.label} label={e.label} value={e.value} />
-                ))
-              ) : (
-                <p className="text-sm text-fg-muted">{t.strain.noEffectsData}</p>
-              )}
-            </div>
+            {effectList.length > 0 ? (
+              <ol className="flex flex-col">
+                {effectList.map((e, i) => (
+                  <li key={e} className="flex items-center gap-4 py-2.5 border-b-2 border-ink last:border-b-0">
+                    <span className="rotulo text-xl w-6 text-cobalt">{i + 1}</span>
+                    <span className="text-lg font-bold [font-stretch:85%]">{e}</span>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="text-sm text-fg-muted">{t.strain.noEffectsData}</p>
+            )}
           </div>
 
           <div className="card p-6">
@@ -406,11 +430,11 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
       </section>
 
       {/* Terpenes + Flavors/Momento */}
-      <section className="mx-auto max-w-[1200px] px-6 py-10">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8">
           <div className="card p-6">
             <h2 className="display text-2xl mb-5">{t.strain.terpenesTitle}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-6 items-center">
+            <div className="grid grid-cols-1 md:grid-cols-[230px_1fr] gap-6 items-center">
               {radarData.length > 0 && <TerpeneRadar terpenes={radarData} />}
               <ul className="flex flex-col gap-3">
                 {(strain.terpenes || []).slice(0, 6).map((terp: any) => (
@@ -452,6 +476,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
             </div>
             {strain.momento && (
               <MomentoBar
+                locale={locale}
                 manana={strain.momento.manana || 0}
                 tarde={strain.momento.tarde || 0}
                 noche={strain.momento.noche || 0}
@@ -462,8 +487,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
       </section>
 
       {/* Grow info */}
-      <section className="mx-auto max-w-[1200px] px-6 py-10 border-t border-line">
-        <div className="kicker mb-3">Para cultivadores</div>
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-10 border-t-[3px] border-ink">
         <h2 className="display text-2xl md:text-3xl mb-6">Datos de cultivo</h2>
         {strain.grow && (strain.grow.floweringWeeks || strain.grow.yieldIndoor || strain.grow.yieldOutdoor || strain.grow.climate || strain.grow.isAutoflowering || strain.grow.isFeminized) ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -500,10 +524,9 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
       </section>
 
       {/* Reviews */}
-      <section className="mx-auto max-w-[1200px] px-6 py-14">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-14">
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-10">
           <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
-            <div className="kicker">{t.strain.experiencesTitle}</div>
             <h2 className="display text-3xl">{t.strain.experiencesFromCommunity}</h2>
             <div className="card p-5">
               <div className="display text-6xl tnum mb-1">
@@ -530,7 +553,7 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
                         <span className="h-1 rounded-full bg-sunken overflow-hidden">
                           <span
                             className="block h-full rounded-full"
-                            style={{ width: `${pct}%`, background: "var(--gold)" }}
+                            style={{ width: `${pct}%`, background: "var(--fg)" }}
                           />
                         </span>
                         <span className="text-fg-dim tnum text-right">{count}</span>
@@ -592,9 +615,9 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
 
       {/* Condition votes */}
       {strain.conditionVotes && Object.keys(strain.conditionVotes).length > 0 && (
-        <section className="mx-auto max-w-[1200px] px-6 py-10 border-t border-line">
-          <div className="kicker mb-3">Reportado por la comunidad</div>
-          <h2 className="display text-2xl md:text-3xl mb-6">¿Para qué ayuda?</h2>
+        <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-10 border-t-[3px] border-ink">
+          <h2 className="display text-2xl md:text-3xl mb-3">{locale === "pt" ? "Para que a comunidade usa" : "¿Para qué la usa la comunidad?"}</h2>
+          <p className="mb-6 max-w-[60ch] text-[15px] font-semibold border-2 border-ink bg-yellow text-ink px-3 py-2">{STRAIN_COPY[locale].disclaimer}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
             {Object.entries(strain.conditionVotes as Record<string, number>)
               .sort((a, b) => b[1] - a[1])
@@ -606,17 +629,13 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
                 return (
                   <Link
                     key={slug}
-                    to={`/para/${slug}`}
-                    className="card p-4 flex items-center gap-3 hover:border-accent transition-colors"
+                    to={`${prefix}/para/${slug}`}
+                    className="card p-4 flex items-center gap-3 hover:bg-yellow hover:text-ink transition-colors"
                   >
-                    <div className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xl"
-                      style={{ background: "var(--sunken)" }}>
-                      {cond.emoji}
-                    </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-fg">{cond.labelEs}</div>
-                      <div className="h-1 rounded-full mt-1.5 overflow-hidden" style={{ background: "var(--sunken)" }}>
-                        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--accent)" }} />
+                      <div className="text-sm font-bold text-fg">{locale === "pt" ? cond.labelPt : cond.labelEs}</div>
+                      <div className="h-2 mt-1.5 overflow-hidden border border-ink" style={{ background: "var(--bg-sunken)" }}>
+                        <div className="h-full" style={{ width: `${pct}%`, background: "var(--accent)" }} />
                       </div>
                     </div>
                     <div className="shrink-0 mono text-xs text-fg-muted tnum">{pct}%</div>
@@ -627,18 +646,33 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
         </section>
       )}
 
+      {/* FAQ: plain answers built from the record */}
+      {faq.length > 0 && (
+        <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-14 border-t-[3px] border-ink">
+          <h2 className="display text-3xl md:text-5xl mb-8">{STRAIN_COPY[locale].faqTitle}</h2>
+          <div className="grid gap-x-10 md:grid-cols-2">
+            {faq.map((f) => (
+              <div key={f.q} className="py-5 border-b-2 border-ink">
+                <h3 className="text-xl font-extrabold [font-stretch:85%] leading-snug">{f.q}</h3>
+                <p className="mt-2 text-[17px] leading-relaxed text-fg-muted">{f.a}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-sm font-semibold text-fg-muted max-w-[70ch]">{STRAIN_COPY[locale].disclaimer}</p>
+        </section>
+      )}
+
       {/* Similar */}
       <Suspense fallback={<SimilarStrainsSkeleton />}>
         <Await resolve={loaderData.similarStrains}>
           {(similarStrains: any[]) =>
             similarStrains.length > 0 ? (
-              <section className="mx-auto max-w-[1200px] px-6 py-14 border-t border-line">
-                <div className="kicker mb-3">{t.strain.similarKicker}</div>
+              <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-14 border-t-[3px] border-ink">
                 <h2 className="display text-3xl md:text-4xl mb-8">{t.strain.similarTitle}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 pt-2">
                   {similarStrains.map((s: any) => (
-                    <div key={s._id} className="flex flex-col gap-2">
-                      <StrainCard strain={s} />
+                    <div key={s._id} className="flex flex-col gap-3">
+                      <StrainSign strain={s} to={href(`/strains/${s.slug}`)} locale={locale} />
                       <div className="flex flex-wrap gap-1.5 px-1">
                         {s.sharedEffects > 0 && (
                           <span className="pill accent text-xs">
@@ -684,7 +718,7 @@ function ReviewsSkeleton() {
 
 function SimilarStrainsSkeleton() {
   return (
-    <section className="mx-auto max-w-[1200px] px-6 py-14 border-t border-line">
+    <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-14 border-t-[3px] border-ink">
       <div className="h-3 w-24 rounded bg-elev mb-3 animate-pulse" />
       <div className="h-8 w-64 rounded bg-elev mb-8 animate-pulse" />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -709,6 +743,15 @@ function GrowStat({ label, value }: { label: string; value: string }) {
     <div className="card p-4">
       <div className="kicker mb-1.5">{label}</div>
       <div className="mono text-sm" style={{ color: "var(--accent)" }}>{value}</div>
+    </div>
+  );
+}
+
+function DataCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-[12px] font-extrabold uppercase [font-stretch:78%]">{label}</dt>
+      <dd className="text-xl font-extrabold [font-stretch:85%] leading-tight mt-0.5 break-words">{value}</dd>
     </div>
   );
 }
@@ -738,7 +781,6 @@ function HeroStat({
 export function ErrorBoundary() {
   return (
     <div className="mx-auto max-w-[760px] px-6 py-24 text-center">
-      <div className="kicker mb-3" style={{ color: "var(--warm)" }}>Error</div>
       <h1 className="display text-3xl mb-4">Cepa no encontrada</h1>
       <p className="text-fg-muted mb-8">Esta cepa no existe o fue archivada.</p>
       <a href="/strains" className={buttonVariants({ variant: "primary" })}>Ver todas las cepas</a>

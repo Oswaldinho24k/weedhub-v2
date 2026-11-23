@@ -62,7 +62,6 @@ export function meta({ data }: Route.MetaArgs) {
     url: `${SITE_URL}/magazine/${article.slug}`,
     image: article.coverImage || undefined,
     type: "article",
-    canonicalPath: `/magazine/${article.slug}`,
     locale,
   });
 }
@@ -113,12 +112,10 @@ export default function MagazineSlugPage() {
         "@type": "Article",
         headline: article.title,
         description: article.excerpt,
-        image: article.coverImage || undefined,
-        author: {
-          "@type": "Person",
-          name: article.authorName,
-          jobTitle: article.authorRole || undefined,
-        },
+        image: article.coverImage || `${SITE_URL}/og-default.png`,
+        author: /^redacci[oó]n/i.test(article.authorName || "")
+          ? { "@type": "Organization", name: article.authorName, url: `${SITE_URL}/sobre` }
+          : { "@type": "Person", name: article.authorName, jobTitle: article.authorRole || undefined },
         publisher: {
           "@type": "Organization",
           name: "WeedHub",
@@ -133,7 +130,7 @@ export default function MagazineSlugPage() {
   };
 
   return (
-    <>
+    <div lang={article.locale === "pt" ? "pt-BR" : "es"}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -211,7 +208,7 @@ export default function MagazineSlugPage() {
             )}
 
             <div
-              className="prose prose-sm max-w-none"
+              className="prose max-w-[68ch]"
               style={{ color: "var(--fg)" }}
               dangerouslySetInnerHTML={{ __html: article.bodyHtml }}
             />
@@ -279,14 +276,13 @@ export default function MagazineSlugPage() {
           </aside>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
 export function ErrorBoundary() {
   return (
     <div className="mx-auto max-w-[760px] px-6 py-24 text-center">
-      <div className="kicker mb-3" style={{ color: "var(--warm)" }}>Error</div>
       <h1 className="display text-3xl mb-4">Artículo no encontrado</h1>
       <p className="text-fg-muted mb-8">Este artículo no existe o fue despublicado.</p>
       <a href="/magazine" className={buttonVariants({ variant: "primary" })}>Ver todos los artículos</a>

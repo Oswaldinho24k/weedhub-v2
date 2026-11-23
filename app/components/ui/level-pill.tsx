@@ -11,7 +11,6 @@ interface LevelPillProps extends HTMLAttributes<HTMLSpanElement> {
 const LevelPill = forwardRef<HTMLSpanElement, LevelPillProps>(
   ({ className, level, size = "md", showEmoji = true, ...props }, ref) => {
     const color = LEVEL_COLOR[level] || "var(--accent)";
-    const emoji = LEVEL_EMOJI[level] || "🌱";
 
     return (
       <span
@@ -24,7 +23,7 @@ const LevelPill = forwardRef<HTMLSpanElement, LevelPillProps>(
         style={{ background: color, color: "white", border: "none" }}
         {...props}
       >
-        {showEmoji && <span aria-hidden="true">{emoji}</span>}
+        {showEmoji && <span aria-hidden="true"></span>}
         {level}
       </span>
     );

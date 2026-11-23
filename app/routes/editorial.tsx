@@ -1,3 +1,4 @@
+import { redirect } from "react-router";
 import type { Route } from "./+types/editorial";
 import { getFeaturedArticles } from "~/content/articles";
 import { useT, useLocale } from "~/lib/i18n-context";
@@ -19,6 +20,9 @@ export function meta({ data }: Route.MetaArgs) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
+  // Static "editorial" duplicated the Magazine; articles now live in /magazine.
+  throw redirect("/magazine", 301);
+
   const locale = await resolveLocale(request);
   return { locale };
 }
@@ -31,13 +35,12 @@ export default function EditorialPage() {
   return (
     <div>
       <section className="mx-auto max-w-[1200px] px-6 pt-16 pb-10">
-        <div className="kicker mb-4">{t.editorial.kicker}</div>
         <h1
           className="display max-w-[22ch]"
           style={{ fontSize: "clamp(44px, 7vw, 96px)", lineHeight: 0.98 }}
         >
           {t.editorial.headlinePrefix}
-          <span className="display-wonk" style={{ color: "var(--accent)" }}>
+          <span className="display-wonk">
             {t.editorial.headlineAccent}
           </span>
           {t.editorial.headlineSuffix}

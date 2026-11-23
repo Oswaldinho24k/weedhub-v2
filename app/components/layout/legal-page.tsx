@@ -11,7 +11,6 @@ export function LegalPage({ kicker, title, lastUpdated, sections }: LegalPagePro
   return (
     <article className="mx-auto max-w-[720px] px-6 py-16">
       <header className="mb-12">
-        <div className="kicker mb-4">{kicker}</div>
         <h1
           className="display mb-4"
           style={{ fontSize: "clamp(40px, 6vw, 80px)", lineHeight: 1.02 }}

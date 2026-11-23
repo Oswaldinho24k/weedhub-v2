@@ -2,185 +2,171 @@ import { useLoaderData, Link } from "react-router";
 import type { Route } from "./+types/mapa-verde";
 import { connectDB } from "~/lib/db.server";
 import { LegalStatusModel, type LegalStatusType } from "~/models/legal-status.server";
-import { STATUS_LABEL, STATUS_PILL, STATUS_PILL_STYLE, STATUS_DOT_STYLE } from "~/lib/legal-status-ui";
+import { STATUS_PILL, STATUS_PILL_STYLE, STATUS_DOT_STYLE, statusLabel } from "~/lib/legal-status-ui";
 import { buildMeta, SITE_URL } from "~/lib/seo";
+import { resolveLocale } from "~/lib/locale.server";
 import { CountryFlag } from "~/components/ui/country-flag";
+import { Icon } from "~/components/ui/icon";
 import { cn } from "~/lib/utils";
 
-export async function loader(_: Route.LoaderArgs) {
+const STATUSES: LegalStatusType[] = ["legal-rec", "legal-med", "decriminalized", "partial", "illegal"];
+
+const UI = {
+  es: {
+    title: "Mapa Verde: ¿es legal el cannabis en tu país? Estatus 2026 | WeedHub",
+    description: "El estatus legal del cannabis en México, América Latina, España y más: qué está permitido, qué no, fuentes oficiales y fecha de revisión.",
+    h1: "Mapa Verde",
+    lede: "El estatus legal del cannabis, país por país. Cada ficha dice qué está permitido, qué no, de dónde sale la información y cuándo la revisamos.",
+    regions: { mexico: "México", "latam-south": "Sudamérica", "latam-central": "Centroamérica", "latam-caribe": "Caribe", europe: "Europa", "north-america": "Norteamérica", other: "Otros" } as Record<string, string>,
+    countries: (n: number) => (n === 1 ? "1 país" : `${n} países`),
+    more: (n: number) => `+${n} más`,
+    reviewed: "Última revisión",
+    disclaimer: "Información educativa, no asesoría legal. Las leyes cambian seguido: confirma siempre con una fuente oficial de tu país.",
+    dateLocale: "es-MX",
+  },
+  pt: {
+    title: "Mapa Verde: a cannabis é legal no seu país? Status 2026 | WeedHub",
+    description: "O status legal da cannabis no Brasil, na América Latina, em Portugal e mais: o que é permitido, o que não é, fontes oficiais e data de revisão.",
+    h1: "Mapa Verde",
+    lede: "O status legal da cannabis, país por país. Cada ficha diz o que é permitido, o que não é, de onde vem a informação e quando a revisamos.",
+    regions: { mexico: "México", "latam-south": "América do Sul", "latam-central": "América Central", "latam-caribe": "Caribe", europe: "Europa", "north-america": "América do Norte", other: "Outros" } as Record<string, string>,
+    countries: (n: number) => (n === 1 ? "1 país" : `${n} países`),
+    more: (n: number) => `+${n}`,
+    reviewed: "Última revisão",
+    disclaimer: "Informação educativa, não é assessoria jurídica. As leis mudam com frequência: confirme sempre com uma fonte oficial do seu país.",
+    dateLocale: "pt-BR",
+  },
+} as const;
+
+const REGION_ORDER = ["mexico", "latam-south", "latam-central", "latam-caribe", "europe", "north-america", "other"];
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const locale = (await resolveLocale(request)) === "pt" ? "pt" : "es";
   await connectDB();
-  const countries = await LegalStatusModel.find({ isActive: true })
-    .sort({ sortOrder: 1, countryNameEs: 1 })
-    .lean();
-  return { countries };
+  const countries = await LegalStatusModel.find({ isActive: true }).sort({ sortOrder: 1, countryNameEs: 1 }).lean();
+  const lastReviewed = countries.reduce<Date | null>((max, c) => {
+    const d = c.lastReviewedAt ? new Date(c.lastReviewedAt) : null;
+    return d && (!max || d > max) ? d : max;
+  }, null);
+  return { countries, locale, lastReviewed: lastReviewed?.toISOString() ?? null } as const;
 }
 
-export function meta() {
-  return buildMeta({
-    title: "El Mapa Verde — Estatus Legal del Cannabis en el Mundo | WeedHub",
-    description:
-      "¿Es legal el cannabis en tu país? Mapa global del estatus legal del cannabis: México, Europa, Norteamérica y más. Información actualizada.",
-    url: `${SITE_URL}/mapa-verde`,
-    canonicalPath: "/mapa-verde",
-  });
+export function meta({ data }: Route.MetaArgs) {
+  const loc = data?.locale ?? "es";
+  const U = UI[loc];
+  const prefix = loc === "pt" ? "/pt" : "";
+  return [
+    ...buildMeta({ title: U.title, description: U.description, url: `${SITE_URL}${prefix}/mapa-verde`, canonicalPath: "/mapa-verde", locale: loc }),
+    data?.countries
+      ? {
+          "script:ld+json": {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: U.h1,
+            url: `${SITE_URL}${prefix}/mapa-verde`,
+            numberOfItems: data.countries.length,
+            itemListElement: data.countries.map((c: any, i: number) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              name: loc === "pt" ? c.countryNamePt || c.countryNameEs : c.countryNameEs,
+              url: `${SITE_URL}${prefix}/mapa-verde/${String(c.countryCode).toLowerCase()}`,
+            })),
+          },
+        }
+      : {},
+  ];
 }
-
-const REGION_LABELS: Record<string, string> = {
-  mexico: "México",
-  "latam-south": "Sudamérica",
-  "latam-central": "Centroamérica",
-  "latam-caribe": "Caribe",
-  europe: "Europa",
-  "north-america": "Norteamérica",
-  other: "Otros",
-};
-
-const REGION_ORDER = [
-  "mexico", "latam-south", "latam-central", "latam-caribe", "europe", "north-america", "other",
-];
 
 export default function MapaVerdePage() {
-  const { countries } = useLoaderData<typeof loader>();
+  const { countries, locale, lastReviewed } = useLoaderData<typeof loader>();
+  const U = UI[locale];
+  const pt = locale === "pt";
+  const prefix = pt ? "/pt" : "";
 
-  const byRegion: Record<string, typeof countries> = {};
-  for (const c of countries) {
-    if (!byRegion[c.region]) byRegion[c.region] = [];
-    byRegion[c.region].push(c);
-  }
-
-  const stats: Record<LegalStatusType, number> = {
-    "legal-rec": 0, "legal-med": 0, decriminalized: 0, partial: 0, illegal: 0,
-  };
-  for (const c of countries) {
-    stats[c.nationalStatus as LegalStatusType]++;
-  }
+  const byRegion: Record<string, any[]> = {};
+  for (const c of countries as any[]) (byRegion[c.region] ??= []).push(c);
+  const stats = Object.fromEntries(STATUSES.map((s) => [s, 0])) as Record<LegalStatusType, number>;
+  for (const c of countries as any[]) stats[c.nationalStatus as LegalStatusType]++;
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-16">
-      {/* Hero */}
-      <div className="mb-16 max-w-3xl">
-        <div className="kicker mb-3">WeedHub · Regulación</div>
-        <h1 className="display text-5xl md:text-6xl mb-6">El Mapa Verde</h1>
-        <p className="text-lg text-fg-muted leading-relaxed max-w-2xl">
-          El estatus legal del cannabis, país por país, en todo el mundo.
-          Con foco en el mundo de habla española — para que sepas exactamente qué está permitido donde estás.
-        </p>
-      </div>
+    <div>
+      <section className="bg-lime text-ink border-b-[3px] border-ink">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12">
+          <h1 className="rotulo" style={{ fontSize: "clamp(56px, 10vw, 140px)" }}>{U.h1}</h1>
+          <p className="mt-5 max-w-[58ch] text-xl font-semibold leading-snug">{U.lede}</p>
+          {lastReviewed && (
+            <p className="mt-4 inline-flex items-center gap-2 text-[15px] font-bold">
+              <Icon name="calendar" size={15} />
+              {U.reviewed}: {new Date(lastReviewed).toLocaleDateString(U.dateLocale, { month: "long", year: "numeric" })}
+            </p>
+          )}
+          <ul className="mt-8 grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {STATUSES.map((key) => (
+              <li key={key} className="bg-white border-2 border-ink px-3 py-2.5">
+                <span className="flex items-center gap-2 text-[13px] font-extrabold uppercase [font-stretch:78%]">
+                  <span className="w-3 h-3 shrink-0" style={STATUS_DOT_STYLE[key]} />
+                  {statusLabel(key, locale)}
+                </span>
+                <span className="rotulo text-[34px] tnum block mt-1">{stats[key]}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
-      {/* Stats — neutral cards, dot as sole color signal */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-16">
-        {(Object.entries(STATUS_LABEL) as [LegalStatusType, string][]).map(([key, label]) => (
-          <div key={key} className="card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span
-                className="w-2 h-2 rounded-full shrink-0"
-                style={STATUS_DOT_STYLE[key]}
-              />
-              <span className="text-xs text-fg-dim">{label}</span>
-            </div>
-            <div className="display text-3xl tnum">{stats[key]}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 mb-12 items-center">
-        <span className="kicker">Leyenda</span>
-        {(Object.entries(STATUS_LABEL) as [LegalStatusType, string][]).map(([key, label]) => (
-          <span key={key} className="flex items-center gap-1.5 text-sm text-fg-muted">
-            <span className="w-2 h-2 rounded-full" style={STATUS_DOT_STYLE[key]} />
-            {label}
-          </span>
-        ))}
-      </div>
-
-      {/* Regions */}
-      <div className="space-y-16">
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12 space-y-14">
         {REGION_ORDER.filter((r) => byRegion[r]?.length).map((region) => (
           <section key={region}>
-            <h2 className="display text-2xl mb-6 flex items-center gap-3">
-              {REGION_LABELS[region]}
-              <span className="text-base font-normal text-fg-dim" style={{ fontFamily: "var(--font-body)" }}>
-                {byRegion[region].length} {byRegion[region].length === 1 ? "país" : "países"}
-              </span>
+            <h2 className="display text-[clamp(32px,4vw,48px)] mb-6 flex items-baseline gap-3">
+              {U.regions[region]}
+              <span className="text-base font-bold text-fg-muted [font-stretch:85%]">{U.countries(byRegion[region].length)}</span>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {byRegion[region].map((country) => (
-                <Link
-                  key={country.countryCode}
-                  to={`/mapa-verde/${country.countryCode.toLowerCase()}`}
-                  className="card p-5 hover:bg-elev transition-colors group"
-                >
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="flex items-center gap-3">
-                      <CountryFlag
-                        code={country.countryCode}
-                        title={country.countryNameEs}
-                        className="w-8 h-auto rounded-sm shrink-0"
-                      />
-                      <div>
-                        <div className="font-medium group-hover:text-accent transition-colors">
-                          {country.countryNameEs}
+              {byRegion[region].map((country) => {
+                const name = pt ? country.countryNamePt || country.countryNameEs : country.countryNameEs;
+                const st = country.nationalStatus as LegalStatusType;
+                return (
+                  <Link
+                    key={country.countryCode}
+                    to={`${prefix}/mapa-verde/${country.countryCode.toLowerCase()}`}
+                    className="card p-5 hover:bg-yellow hover:text-ink transition-colors group flex flex-col"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3">
+                        <CountryFlag code={country.countryCode} title={name} className="w-9 h-auto border border-ink shrink-0" />
+                        <div>
+                          <div className="text-xl font-extrabold [font-stretch:85%] leading-tight">{name}</div>
+                          {(pt ? country.keyDatePt || country.keyDate : country.keyDate) && (
+                            <div className="text-xs font-semibold opacity-75 mt-0.5">{pt ? country.keyDatePt || country.keyDate : country.keyDate}</div>
+                          )}
                         </div>
-                        {country.keyDate && (
-                          <div className="text-xs text-fg-dim mt-0.5">{country.keyDate}</div>
-                        )}
                       </div>
+                      <span className={cn("shrink-0 text-xs", STATUS_PILL[st])} style={STATUS_PILL_STYLE[st]}>
+                        {statusLabel(st, locale)}
+                      </span>
                     </div>
-                    <span
-                      className={cn("shrink-0 text-xs", STATUS_PILL[country.nationalStatus as LegalStatusType])}
-                      style={STATUS_PILL_STYLE[country.nationalStatus as LegalStatusType]}
-                    >
-                      {STATUS_LABEL[country.nationalStatus as LegalStatusType]}
-                    </span>
-                  </div>
-                  <p className="text-sm text-fg-muted leading-relaxed line-clamp-3">
-                    {country.summary}
-                  </p>
-                  {country.states && country.states.length > 0 && (
-                    <div className="mt-3 flex gap-1.5 flex-wrap">
-                      {country.states.slice(0, 3).map((s) => (
-                        <span
-                          key={s.name}
-                          className={cn("text-xs", STATUS_PILL[s.status as LegalStatusType])}
-                          style={STATUS_PILL_STYLE[s.status as LegalStatusType]}
-                        >
-                          {s.nameEs}
-                        </span>
-                      ))}
-                      {country.states.length > 3 && (
-                        <span className="text-xs text-fg-dim px-1.5 py-0.5">
-                          +{country.states.length - 3} más
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </Link>
-              ))}
+                    <p className="text-[15px] leading-relaxed line-clamp-3">{(pt && country.summaryPt) || country.summary}</p>
+                    {country.states?.length > 0 && (
+                      <div className="mt-3 flex gap-1.5 flex-wrap">
+                        {country.states.slice(0, 3).map((s: any) => (
+                          <span key={s.name} className={cn("text-xs", STATUS_PILL[s.status as LegalStatusType])} style={STATUS_PILL_STYLE[s.status as LegalStatusType]}>
+                            {pt ? s.namePt || s.nameEs : s.nameEs}
+                          </span>
+                        ))}
+                        {country.states.length > 3 && <span className="text-xs font-bold px-1.5 py-0.5">{U.more(country.states.length - 3)}</span>}
+                      </div>
+                    )}
+                  </Link>
+                );
+              })}
             </div>
           </section>
         ))}
-      </div>
 
-      {/* Disclaimer */}
-      <div className="mt-20 p-6 card flex gap-3">
-        <div className="shrink-0 mt-0.5" style={{ color: "var(--warm)" }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-            <path d="M12 9v4"/><path d="M12 17h.01"/>
-          </svg>
-        </div>
-        <div>
-          <div className="font-medium text-sm mb-1">Aviso legal</div>
-          <p className="text-sm text-fg-muted">
-            Esta información es de carácter educativo y se actualiza periódicamente. Las leyes cambian
-            frecuentemente — siempre verifica el estatus legal vigente en tu país con una fuente oficial
-            antes de tomar decisiones. WeedHub no proporciona asesoría legal.
-          </p>
-          <p className="text-xs text-fg-dim mt-2">
-            Última revisión: {new Date().toLocaleDateString("es-MX", { month: "long", year: "numeric" })}
-          </p>
-        </div>
+        <p className="border-2 border-ink bg-yellow text-ink px-4 py-3 text-[15px] font-semibold flex gap-3">
+          <Icon name="alert" size={18} className="shrink-0 mt-0.5" />
+          {U.disclaimer}
+        </p>
       </div>
     </div>
   );

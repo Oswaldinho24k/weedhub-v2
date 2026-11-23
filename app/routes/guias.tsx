@@ -54,7 +54,6 @@ export default function GuiasPage() {
       />
 
       <section className="mx-auto max-w-[1200px] px-6 pt-16 pb-10">
-        <div className="kicker mb-4">{t.guides.kicker}</div>
         <h1
           className="display max-w-[22ch]"
           style={{ fontSize: "clamp(44px, 7vw, 80px)", lineHeight: 0.98 }}

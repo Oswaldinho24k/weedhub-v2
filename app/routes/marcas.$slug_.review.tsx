@@ -116,7 +116,7 @@ export async function action({ params, request }: Route.ActionArgs) {
   return redirect(`/marcas/${brand.slug}?reviewed=1`);
 }
 
-const MOODS = ["😶", "🙁", "😐", "🙂", "🤩", "🤯"];
+const MOODS = ["Sin calificar", "Mala", "Regular", "Buena", "Muy buena", "Excelente"]; // idx 0..5
 
 export default function BrandReviewPage({ loaderData }: Route.ComponentProps) {
   const { brand, existingReview } = loaderData;
@@ -191,7 +191,7 @@ export default function BrandReviewPage({ loaderData }: Route.ComponentProps) {
             <p className="text-fg-muted mb-8">
               Tu calificación ayuda a otros a descubrir las mejores marcas.
             </p>
-            <div className="text-6xl mb-6" aria-hidden>
+            <div className="rotulo text-[44px] mb-6" aria-live="polite">
               {MOODS[Math.max(0, Math.min(5, Math.round(overall)))]}
             </div>
             <div className="flex justify-center mb-10">

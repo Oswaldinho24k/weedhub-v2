@@ -97,7 +97,6 @@ export default function EditarMarcaPage({ loaderData }: Route.ComponentProps) {
           <Icon name="arrowLeft" size={14} />
           Volver al perfil
         </Link>
-        <div className="kicker mt-5 mb-1">Gestión de marca</div>
         <h1 className="display text-4xl">Editar {brand.name}</h1>
       </div>
 

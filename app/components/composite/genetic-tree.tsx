@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { Icon } from "~/components/ui/icon";
 
 const TYPE_PILL: Record<string, string> = {
   sativa: "accent",
@@ -36,62 +37,34 @@ export function GeneticTree({ strain, parentNodes = [], childNodes = [] }: Genet
 
   if (!hasParents && !hasChildren) return null;
 
+  const TONE: Record<string, string> = { sativa: "cartulina--yellow", indica: "cartulina--pink", hybrid: "cartulina--green" };
   return (
-    <div className="space-y-4">
-      {/* Parents row */}
+    <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 flex-wrap">
       {hasParents && (
-        <div>
-          <div className="kicker text-xs mb-3 text-fg-dim">Genética parental</div>
+        <>
           <div className="flex items-center gap-3 flex-wrap">
             {parents.map((p, i) => (
               <div key={p.slug} className="flex items-center gap-3">
                 <NodePill name={p.name} slug={p.slug} type={p.type} />
-                {i < parents.length - 1 && (
-                  <span className="text-fg-dim text-sm">×</span>
-                )}
+                {i < parents.length - 1 && <span className="rotulo text-3xl">×</span>}
               </div>
             ))}
-            <ConnectorArrow />
           </div>
-        </div>
+          <Icon name="arrowRight" size={30} strokeWidth={3} className="rotate-90 md:rotate-0 self-start md:self-auto" />
+        </>
       )}
-
-      {/* Current strain */}
-      <div className="flex items-center gap-2">
-        {hasParents && <div className="w-4 shrink-0" />}
-        <div
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium"
-          style={{
-            background: "var(--accent-soft)",
-            border: "1px solid var(--accent)",
-            color: "var(--accent)",
-          }}
-        >
-          <span
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ background: "var(--accent)" }}
-          />
-          {strain.name}
-        </div>
-        <span className={`pill text-xs ${TYPE_PILL[strain.type] || ""}`}>
-          {strain.type}
-        </span>
+      <div className={`cartulina ${TONE[strain.type] ?? "cartulina--blank"} px-5 py-3 -rotate-1`}>
+        <span className="marker text-2xl">{strain.name}</span>
       </div>
 
-      {/* Children row */}
       {hasChildren && (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <ConnectorArrow rotate />
-            <div className="kicker text-xs text-fg-dim">Descendientes conocidos</div>
-          </div>
-          <div className="flex gap-2 flex-wrap overflow-x-auto">
+        <div className="basis-full mt-4">
+          <h3 className="text-lg font-extrabold [font-stretch:85%] mb-3">Descendientes conocidos</h3>
+          <div className="flex gap-2 flex-wrap">
             {children.slice(0, 8).map((c) => (
               <NodePill key={c.slug} name={c.name} slug={c.slug} type={c.type} />
             ))}
-            {children.length > 8 && (
-              <span className="pill text-xs text-fg-dim">+{children.length - 8} más</span>
-            )}
+            {children.length > 8 && <span className="pill">+{children.length - 8} más</span>}
           </div>
         </div>
       )}
@@ -116,13 +89,11 @@ function rawParents(strain: GeneticTreeProps["strain"]): GeneticNode[] {
   return nodes;
 }
 
-function NodePill({ name, slug, type }: GeneticNode) {
-  const pill = type ? TYPE_PILL[type] || "" : "";
+function NodePill({ name, slug }: GeneticNode) {
   return (
     <Link
       to={`/strains/${slug}`}
-      className={`pill ${pill} text-sm hover:opacity-80 transition-opacity`}
-      prefetch="intent"
+      className="inline-block border-2 border-ink bg-white text-ink px-3 py-1.5 font-extrabold [font-stretch:85%] hover:bg-yellow transition-colors"
     >
       {name}
     </Link>

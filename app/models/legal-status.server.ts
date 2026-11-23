@@ -21,6 +21,8 @@ export interface ILegalStatusState {
   nameEs: string;
   status: LegalStatusType;
   note?: string;
+  namePt?: string;
+  notePt?: string;
 }
 
 export interface ILegalStatusSource {
@@ -38,6 +40,10 @@ export interface ILegalStatus extends Document {
   nationalStatus: LegalStatusType;
   // Summary shown on hub + country card
   summary: string; // 1-2 sentences, current situation in Spanish
+  summaryPt?: string;
+  whatYouCanPt?: string[];
+  whatYouCantPt?: string[];
+  keyDatePt?: string;
   // Detail page content
   whatYouCan: string[];
   whatYouCant: string[];
@@ -73,6 +79,10 @@ const legalStatusSchema = new Schema<ILegalStatus>(
     summary: { type: String, required: true, trim: true },
     whatYouCan: { type: [String], default: [] },
     whatYouCant: { type: [String], default: [] },
+    summaryPt: { type: String, trim: true },
+    whatYouCanPt: { type: [String], default: undefined },
+    whatYouCantPt: { type: [String], default: undefined },
+    keyDatePt: { type: String, trim: true },
     keyDate: { type: String, trim: true },
     keyLaw: { type: String, trim: true },
     states: [
@@ -84,6 +94,8 @@ const legalStatusSchema = new Schema<ILegalStatus>(
           enum: ["legal-rec", "legal-med", "decriminalized", "partial", "illegal"],
         },
         note: String,
+        namePt: String,
+        notePt: String,
       },
     ],
     sources: [{ label: String, url: String }],

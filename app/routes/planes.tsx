@@ -1,3 +1,4 @@
+import { Icon } from "~/components/ui/icon";
 import { Link } from "react-router";
 import type { Route } from "./+types/planes";
 import { buttonVariants } from "~/components/ui/button";
@@ -10,7 +11,6 @@ export function meta(): ReturnType<Route.MetaFunction> {
     description:
       "Activa tu presencia verificada en WeedHub. Desde $39 USD/mes. Sin contratos anuales. 30 días de prueba gratis.",
     url: `${SITE_URL}/planes`,
-    canonicalPath: "/planes",
     locale: "es",
   });
 }
@@ -45,7 +45,7 @@ const BRAND_PLANS = [
     description: "Control total de tu perfil y badge de verificación.",
     badge: "Más popular",
     features: [
-      "Badge ✓ Verificada en el directorio",
+      "Insignia de verificada en el directorio",
       "Control total: logo, fotos, descripción",
       "Catálogo de productos activo",
       "Posición sobre marcas sin verificar",
@@ -69,7 +69,7 @@ const BRAND_PLANS = [
       "Todo lo de Presencia Verificada",
       "Posición top en el directorio",
       "Rotación en homepage de WeedHub",
-      "Badge ✦ Destacada",
+      "Insignia de destacada",
     ],
     missing: [],
     cta: "Empezar gratis",
@@ -89,7 +89,6 @@ export default function PlanesPage() {
     <div className="mx-auto max-w-[1200px] px-6 py-16">
       {/* Hero */}
       <div className="text-center mb-16">
-        <div className="kicker mb-3">Planes y Precios</div>
         <h1 className="display text-4xl mb-4">
           Crece con WeedHub
         </h1>
@@ -141,7 +140,7 @@ export default function PlanesPage() {
             <ul className="space-y-2 mb-6 flex-1">
               {plan.features.map((f) => (
                 <li key={f} className="flex items-start gap-2 text-sm">
-                  <span style={{ color: "var(--accent)" }} className="mt-0.5 shrink-0">✓</span>
+                  <Icon name="check" size={14} strokeWidth={3} className="mt-1 shrink-0 text-accent" />
                   <span>{f}</span>
                 </li>
               ))}

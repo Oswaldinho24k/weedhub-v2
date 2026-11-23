@@ -22,7 +22,7 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
     <div ref={ref} className={cn("relative flex shrink-0", className)} {...props}>
       <div
         className={cn(
-          "overflow-hidden rounded-full bg-elev border border-line",
+          "overflow-hidden rounded-[3px] bg-yellow border-2 border-ink",
           sizeClasses[size]
         )}
       >
@@ -33,7 +33,7 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
             className="aspect-square h-full w-full object-cover"
           />
         ) : (
-          <span className="flex h-full w-full items-center justify-center font-medium text-accent uppercase">
+          <span className="flex h-full w-full items-center justify-center font-black text-ink uppercase [font-family:var(--font-rotulo)]">
             {fallback || "?"}
           </span>
         )}

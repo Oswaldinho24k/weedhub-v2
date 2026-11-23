@@ -56,7 +56,7 @@ export function LanguageSwitcher() {
         aria-label="Cambiar idioma"
         aria-haspopup="menu"
         aria-expanded={open}
-        className="h-9 px-2.5 grid grid-flow-col items-center gap-1 rounded-full border border-line text-fg-muted hover:text-fg hover:bg-elev transition-colors text-xs mono uppercase tracking-wider"
+        className="h-9 px-2.5 grid grid-flow-col items-center gap-1 rounded-[3px] border-2 border-enamel/60 text-enamel hover:bg-yellow hover:text-ink hover:border-yellow transition-colors text-[13px] font-bold uppercase [font-stretch:80%]"
       >
         {current}
         <Icon name="chevronDown" size={12} />
@@ -64,7 +64,7 @@ export function LanguageSwitcher() {
       {open && (
         <div
           role="menu"
-          className="fade-up absolute right-0 top-full mt-2 w-44 card-strong p-1 shadow-[var(--shadow-soft)] z-50"
+          className="fade-up absolute right-0 top-full mt-2 w-44 card-strong p-1 text-fg z-50"
         >
           {SUPPORTED_LOCALES.map((locale) => {
             const m = LOCALE_META[locale];
@@ -74,7 +74,7 @@ export function LanguageSwitcher() {
                 key={locale}
                 type="button"
                 onClick={() => switchTo(locale)}
-                className="w-full flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm text-fg-muted hover:bg-elev hover:text-fg transition-colors"
+                className="w-full flex items-center justify-between gap-3 px-3 py-2 text-sm font-semibold hover:bg-yellow hover:text-ink transition-colors"
                 style={active ? { color: "var(--accent)" } : undefined}
               >
                 <span>{m.nativeLabel}</span>

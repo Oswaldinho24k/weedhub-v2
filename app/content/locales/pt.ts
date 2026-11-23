@@ -481,9 +481,9 @@ export const pt: Dictionary = {
       "A enciclopédia viva da cannabis. Avaliações com contexto real — método, momento, experiência.",
     savedStrainsTitle: "Variedades salvas — WeedHub",
     savedStrainsDescription: "Sua biblioteca de variedades salvas no WeedHub.",
-    homeTitle: "WeedHub — A enciclopédia de cannabis em espanhol",
+    homeTitle: "WeedHub: a enciclopédia da cannabis em português",
     homeDescription:
-      "Informa, conecta, cultiva. Comunidade de avaliações contextuais de cannabis — método, momento, experiência.",
+      "Mais de 3.000 cepas com THC, terpenos, efeitos e momento do dia, guias claros e o status legal da cannabis em cada país da América Latina.",
     strainsTitle: "Diretório de variedades — WeedHub",
     strainsDescription:
       "Explore centenas de variedades com filtros por tipo, efeitos e terpeno dominante. Cada perfil é construído com avaliações reais da comunidade.",

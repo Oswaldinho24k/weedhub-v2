@@ -101,9 +101,6 @@ export default function ResetPasswordPage({ loaderData }: Route.ComponentProps) 
   return (
     <div className="min-h-[calc(100vh-56px)] grid place-items-center px-4 py-16">
       <div className="w-full max-w-[400px]">
-        <div className="kicker mb-6">
-          <Link to="/auth" className="hover:text-fg">← Volver a iniciar sesión</Link>
-        </div>
 
         <h1 className="display text-3xl mb-3">Nueva contraseña</h1>
         <p className="text-fg-muted mb-8">Elige una contraseña segura para tu cuenta.</p>

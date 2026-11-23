@@ -4,7 +4,12 @@ import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { STRAIN_TYPES } from "~/constants/cannabis";
 import { CONDITIONS } from "~/constants/conditions";
-import { useT } from "~/lib/i18n-context";
+import { useT, useLocale } from "~/lib/i18n-context";
+
+const FS = {
+  es: { filters: "Filtros", type: "Tipo", effects: "Efectos", terpenes: "Terpenos", difficulty: "Dificultad", diff: { Baja: "Baja", Moderada: "Moderada", Alta: "Alta" } },
+  pt: { filters: "Filtros", type: "Tipo", effects: "Efeitos", terpenes: "Terpenos", difficulty: "Dificuldade", diff: { Baja: "Baixa", Moderada: "Moderada", Alta: "Alta" } },
+} as const;
 
 interface FilterSheetProps {
   filters: {
@@ -33,6 +38,7 @@ export function FilterSheet({
 }: FilterSheetProps) {
   const [open, setOpen] = useState(false);
   const t = useT();
+  const L = FS[useLocale() === "pt" ? "pt" : "es"];
 
   const currentEffects = filters.effects ? filters.effects.split(",") : [];
 
@@ -108,7 +114,7 @@ export function FilterSheet({
             style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-line">
-              <span className="font-medium text-sm">Filtros</span>
+              <span className="font-medium text-sm">{L.filters}</span>
               <div className="flex items-center gap-3">
                 {activeCount > 0 && (
                   <button
@@ -131,7 +137,7 @@ export function FilterSheet({
 
             <div className="p-5 space-y-6">
               {/* Type */}
-              <FilterSection label="Tipo">
+              <FilterSection label={L.type}>
                 <div className="flex flex-wrap gap-2">
                   <MobileChip active={!filters.type} onClick={() => updateFilter("type", "")}>
                     {t.strainTypes.all}
@@ -157,7 +163,7 @@ export function FilterSheet({
               </FilterSection>
 
               {/* Difficulty */}
-              <FilterSection label="Dificultad de cultivo">
+              <FilterSection label={L.difficulty}>
                 <div className="flex flex-wrap gap-2">
                   {(["Baja", "Moderada", "Alta"] as const).map((d) => (
                     <MobileChip
@@ -165,7 +171,7 @@ export function FilterSheet({
                       active={filters.difficulty === d}
                       onClick={() => updateFilter("difficulty", filters.difficulty === d ? "" : d)}
                     >
-                      {d}
+                      {L.diff[d]}
                     </MobileChip>
                   ))}
                 </div>
@@ -173,7 +179,7 @@ export function FilterSheet({
 
               {/* Effects */}
               {effectFilters.length > 0 && (
-                <FilterSection label="Efectos">
+                <FilterSection label={L.effects}>
                   <div className="flex flex-wrap gap-2">
                     {effectFilters.map((effect) => {
                       const isActive = currentEffects.includes(effect.key);
@@ -199,7 +205,7 @@ export function FilterSheet({
 
               {/* Terpenes */}
               {terpeneFilters.length > 0 && (
-                <FilterSection label="Terpenos">
+                <FilterSection label={L.terpenes}>
                   <div className="flex flex-wrap gap-2">
                     {terpeneFilters.map((name) => (
                       <MobileChip
@@ -330,6 +336,7 @@ function FilterChips({
   updateFilter: FilterSheetProps["updateFilter"];
   t: any;
 }) {
+  const L = FS[useLocale() === "pt" ? "pt" : "es"];
   return (
     <>
       <div className="flex gap-2">
@@ -355,7 +362,7 @@ function FilterChips({
         })}
       </div>
 
-      <div className="w-px h-5 bg-line" />
+      <div className="w-0.5 h-6 bg-ink" />
 
       <div className="flex gap-2">
         {(["Baja", "Moderada", "Alta"] as const).map((d) => (
@@ -364,12 +371,12 @@ function FilterChips({
             active={filters.difficulty === d}
             onClick={() => updateFilter("difficulty", filters.difficulty === d ? "" : d)}
           >
-            {d}
+            {L.diff[d]}
           </DesktopChip>
         ))}
       </div>
 
-      <div className="w-px h-5 bg-line" />
+      <div className="w-0.5 h-6 bg-ink" />
 
       <div className="flex gap-2 flex-wrap">
         {effectFilters.map((effect) => {
@@ -394,7 +401,7 @@ function FilterChips({
 
       {terpeneFilters.length > 0 && (
         <>
-          <div className="w-px h-5 bg-line" />
+          <div className="w-0.5 h-6 bg-ink" />
           <div className="flex gap-2 flex-wrap">
             {terpeneFilters.map((name) => (
               <DesktopChip

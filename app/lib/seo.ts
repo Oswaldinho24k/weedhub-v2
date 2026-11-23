@@ -1,20 +1,19 @@
 export const SITE_URL = "https://www.weedhub.info";
 export const SITE_NAME = "WeedHub";
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.svg`;
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.png`;
 export const BRAND_IMAGE = `${SITE_URL}/brand.svg`;
 
 type LocaleKey = "es" | "pt" | "en";
 
 const OG_LOCALE: Record<LocaleKey, { primary: string; alternates: string[] }> = {
-  es: { primary: "es_MX", alternates: ["es_ES", "pt_BR", "en_US"] },
-  pt: { primary: "pt_BR", alternates: ["es_MX", "en_US"] },
-  en: { primary: "en_US", alternates: ["es_MX", "pt_BR"] },
+  es: { primary: "es_MX", alternates: ["es_ES", "pt_BR"] },
+  pt: { primary: "pt_BR", alternates: ["es_MX"] },
+  en: { primary: "es_MX", alternates: ["pt_BR"] },
 };
 
 function normLocale(locale?: string | null): LocaleKey {
   const base = (locale || "es").slice(0, 2).toLowerCase();
   if (base === "pt") return "pt";
-  if (base === "en") return "en";
   return "es";
 }
 
@@ -50,7 +49,7 @@ export function buildMeta({
     { property: "og:image", content: ogImage },
     ...(isDefault
       ? [
-          { property: "og:image:type", content: "image/svg+xml" },
+          { property: "og:image:type", content: "image/png" },
           { property: "og:image:width", content: "1200" },
           { property: "og:image:height", content: "630" },
         ]
@@ -71,7 +70,6 @@ export function buildMeta({
       ? [
           { tagName: "link", rel: "alternate", hrefLang: "es", href: `${SITE_URL}${canonicalPath}` },
           { tagName: "link", rel: "alternate", hrefLang: "pt-BR", href: `${SITE_URL}/pt${canonicalPath}` },
-          { tagName: "link", rel: "alternate", hrefLang: "en", href: `${SITE_URL}/en${canonicalPath}` },
           { tagName: "link", rel: "alternate", hrefLang: "x-default", href: `${SITE_URL}${canonicalPath}` },
         ]
       : []),

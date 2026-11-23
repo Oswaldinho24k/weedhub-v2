@@ -1,0 +1,922 @@
+{
+  "threads": [
+    {
+      "title": "me pegó durísimo un brownie, ¿es normal sentir que no se acaba nunca?",
+      "body": "pues eso. el sábado en casa de un amigo probé un brownie que él hizo. a la hora no sentía nada y me comí otro pedazo (ya sé, ya sé). como a las dos horas me empezó a pegar horrible, el corazón a mil, sentía que me iba a desmayar y que eso nunca se iba a acabar. me acosté con la luz prendida y mi amigo se quedó conmigo un rato. al otro día amanecí bien pero todavía medio lento. ¿a alguien más le ha pasado? ¿qué les ayudó? neta no sé si volver a intentarlo",
+      "category": "experiencias",
+      "locale": "es",
+      "country": "MX",
+      "anonymous": true,
+      "daysAgo": 14,
+      "upvotes": 31,
+      "comments": [
+        {
+          "body": "nos ha pasado a casi todos con los comestibles jaja. lo del segundo pedazo es el error clásico. a mí lo que me ayudó fue agua, algo de comer y poner una serie tonta que ya me supiera de memoria",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 18,
+          "hoursAfter": 2
+        },
+        {
+          "body": "Parce lo importante es que ya pasó y estuviste acompañado. Si algún día vuelves a probar, la mitad de lo que crees y esperas toda la tarde sin afán.",
+          "locale": "es",
+          "country": "CO",
+          "anonymous": true,
+          "upvotes": 9,
+          "hoursAfter": 3
+        },
+        {
+          "body": "Ojo con lo del corazón a mil y sentir que te desmayas. Casi siempre es la ansiedad del momento, pero si te vuelve a pasar o tienes algo de presión o del corazón, vale la pena platicarlo con un médico. No es regaño, nomás para que te quedes tranquilo.",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": true,
+          "upvotes": 14,
+          "hoursAfter": 5
+        },
+        {
+          "body": "x2 con lo de la serie que ya conocés, a mí me bajó un montón la ansiedad",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": false,
+          "upvotes": 6,
+          "hoursAfter": 9
+        },
+        {
+          "body": "gracias, me sirvió leerlos. si vuelvo a probar va a ser con algo que pueda medir mejor y en mi casa",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 4,
+          "hoursAfter": 20
+        }
+      ]
+    },
+    {
+      "title": "hojas amarillas en mi planta del balcón, ¿le estoy echando mucha agua?",
+      "body": "qué onda banda. tengo una planta en maceta de unos 15 litros en el balcón, lleva como 5 semanas. las hojas de abajo se están poniendo amarillas y algunas se ven caídas, como blanditas. la riego diario porque hace un calorón en Guadalajara pero ahora creo que me estoy pasando, la tierra casi siempre está húmeda. ¿cómo saben ustedes cuándo toca regar?",
+      "category": "cultivo",
+      "locale": "es",
+      "country": "MX",
+      "anonymous": false,
+      "daysAgo": 22,
+      "upvotes": 17,
+      "comments": [
+        {
+          "body": "suena a exceso de riego. lo que a mí me funcionó: meter el dedo un par de centímetros, si está húmedo no riegas. también levanta la maceta, cuando pesa poquito ya toca",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 12,
+          "hoursAfter": 1
+        },
+        {
+          "body": "Las hojas de abajo amarillas también pueden ser falta de nitrógeno, pero si están caídas y blandas con la tierra siempre mojada, yo apostaría al agua. Fijate que la maceta drene bien.",
+          "locale": "es",
+          "country": "UY",
+          "anonymous": false,
+          "upvotes": 9,
+          "hoursAfter": 3
+        },
+        {
+          "body": "x2 con lo del peso de la maceta, es lo más fácil",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": true,
+          "upvotes": 3,
+          "hoursAfter": 4
+        },
+        {
+          "body": "che y fijate que no tenga plato abajo juntando agua, a mí me pasó eso y se me pudrieron las raíces",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": true,
+          "upvotes": 7,
+          "hoursAfter": 6
+        },
+        {
+          "body": "gracias!! sí tiene plato y siempre tiene agua jaja. ya se lo quité, les cuento en una semana",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 5,
+          "hoursAfter": 11
+        }
+      ]
+    },
+    {
+      "title": "¿Qué luz y qué semillas para empezar en interior? Soy bien nuevo",
+      "body": "Hola, quiero intentar un cultivo chiquito dentro de un clóset. Leí sobre las lámparas LED pero hay de todo y no entiendo la diferencia entre lo que consume de verdad y el número que dice la caja. También, ¿conviene empezar con automáticas? Leí que perdonan más los errores. Agradezco cualquier consejo, prefiero preguntar antes de gastar en algo que no sirve.",
+      "category": "cultivo",
+      "locale": "es",
+      "country": "MX",
+      "anonymous": false,
+      "daysAgo": 37,
+      "upvotes": 22,
+      "comments": [
+        {
+          "body": "Para empezar sí te recomiendo automáticas, no dependes de cambiar las horas de luz y salen más rápido. En las LED fíjate en el consumo real en watts, no en el número grande de la caja que casi siempre es un 'equivalente'.",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 15,
+          "hoursAfter": 2
+        },
+        {
+          "body": "ojo con el calor en el clóset, cachai? ponle aunque sea un extractor chico, sin ventilación se te llena de hongos",
+          "locale": "es",
+          "country": "CL",
+          "anonymous": false,
+          "upvotes": 11,
+          "hoursAfter": 5
+        },
+        {
+          "body": "Yo empecé con una regular y no me arrepiento, aprendes más. pero es gusto, cada quien",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": true,
+          "upvotes": 4,
+          "hoursAfter": 8
+        },
+        {
+          "body": "Y antes que nada fijate bien qué dice la ley donde vivís. Acá en Uruguay hay que registrarse para autocultivo, en otros países es otra historia.",
+          "locale": "es",
+          "country": "UY",
+          "anonymous": false,
+          "upvotes": 8,
+          "hoursAfter": 12
+        },
+        {
+          "body": "neta gracias, voy a leer más de lo del extractor antes de comprar nada",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 3,
+          "hoursAfter": 30
+        }
+      ]
+    },
+    {
+      "title": "¿algo para dormir sin amanecer como zombi al otro día?",
+      "body": "llevo meses durmiendo mal y unos amigos me dicen que pruebe algo de cannabis en la noche. lo que me preocupa es amanecer todo lento porque entro a trabajar temprano. ¿alguien tiene experiencia con esto? vi que la lavender tiene fama de relajante pero no sé qué tan cierto sea o si es pura vibra del nombre",
+      "category": "experiencias",
+      "locale": "es",
+      "country": "MX",
+      "strainSlug": "lavender",
+      "anonymous": true,
+      "daysAgo": 9,
+      "upvotes": 24,
+      "comments": [
+        {
+          "body": "yo antes de cualquier cosa iría con un médico. meses durmiendo mal puede ser estrés, apnea, tiroides, mil cosas. a mí me salió que era apnea y nada que ver con lo que yo creía",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 19,
+          "hoursAfter": 1
+        },
+        {
+          "body": "a mí en la noche me ayudaba a dormirme pero amanecía como con guayabo, así que lo dejé. cada cuerpo es distinto parce",
+          "locale": "es",
+          "country": "CO",
+          "anonymous": false,
+          "upvotes": 8,
+          "hoursAfter": 3
+        },
+        {
+          "body": "lo de la lavender es más por el aroma que otra cosa, no te creas mucho las fichas. si igual decidís probar, empezá con muy poco y un fin de semana, no un día que trabajás",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": false,
+          "upvotes": 10,
+          "hoursAfter": 6
+        },
+        {
+          "body": "Coincido con lo del médico. Y si ya tomas algo para dormir, no lo mezcles sin preguntar primero.",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": true,
+          "upvotes": 7,
+          "hoursAfter": 10
+        },
+        {
+          "body": "gracias a todos, sí voy a sacar cita primero. ya les contaré",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 5,
+          "hoursAfter": 26
+        }
+      ]
+    },
+    {
+      "title": "¿qué onda con la ley en México ahora? me hice bolas",
+      "body": "Neta me hice bolas. Unos dicen que ya es legal desde lo de la Corte, otros que no. Mi primo jura que puedes traer hasta cierta cantidad y ya no te hacen nada. ¿Alguien que sepa bien me explica cómo está la cosa en 2026? No quiero meterme en problemas por andar creyendo cosas de TikTok.",
+      "category": "legal",
+      "locale": "es",
+      "country": "MX",
+      "anonymous": false,
+      "daysAgo": 6,
+      "upvotes": 35,
+      "comments": [
+        {
+          "body": "Hasta donde entiendo: la Corte sí dijo que prohibirle a un adulto el consumo personal va contra sus derechos, y por eso se puede pedir un permiso. Pero eso no hizo legal comprar ni vender. No hay tiendas legales para uso adulto.",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 21,
+          "hoursAfter": 1
+        },
+        {
+          "body": "Y lo de la cantidad: sí hay una cantidad chica que la ley considera consumo personal, pero eso no quiere decir que no te puedan detener o hacerte pasar un mal rato. Mejor no confiarse.",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 13,
+          "hoursAfter": 2
+        },
+        {
+          "body": "lo medicinal es otro tema, eso sí tiene reglamento. pero necesitas receta y productos autorizados",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": true,
+          "upvotes": 6,
+          "hoursAfter": 4
+        },
+        {
+          "body": "En Colombia pasa algo parecido, lo medicinal regulado y lo demás en zona gris. Si es algo serio, mejor pregúntale a un abogado.",
+          "locale": "es",
+          "country": "CO",
+          "anonymous": false,
+          "upvotes": 5,
+          "hoursAfter": 7
+        },
+        {
+          "body": "x2 con lo del abogado. y fíjense en la fecha de lo que leen, hay mucha info vieja circulando",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 9,
+          "hoursAfter": 15
+        }
+      ]
+    },
+    {
+      "title": "Mi experiencia registrándome para comprar en farmacia",
+      "body": "Les cuento por si a alguien le sirve. Me registré hace unos meses. El trámite fue más simple de lo que pensaba: fui con la cédula al correo y tuve que elegir la vía de farmacia, porque no podés estar en las tres a la vez. Lo que sí me jodió es que en mi barrio hay pocas farmacias adheridas y a veces no hay stock, así que hay que estar atento. ¿A otros les pasa lo mismo o es mi zona nomás?",
+      "category": "legal",
+      "locale": "es",
+      "country": "UY",
+      "anonymous": false,
+      "daysAgo": 48,
+      "upvotes": 19,
+      "comments": [
+        {
+          "body": "Me pasa igual. En el centro es más fácil, en los barrios hay días que te volvés con las manos vacías.",
+          "locale": "es",
+          "country": "UY",
+          "anonymous": false,
+          "upvotes": 8,
+          "hoursAfter": 3
+        },
+        {
+          "body": "Yo me pasé a club por eso mismo. Igual cada opción tiene lo suyo, el club tiene cuota y reglas internas que no a todos les cierran.",
+          "locale": "es",
+          "country": "UY",
+          "anonymous": true,
+          "upvotes": 6,
+          "hoursAfter": 9
+        },
+        {
+          "body": "qué envidia sana che, acá estamos lejos de algo así",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": false,
+          "upvotes": 4,
+          "hoursAfter": 14
+        },
+        {
+          "body": "Está bueno que lo cuentes. Mucha gente de afuera cree que cualquiera puede comprar y no, tenés que ser residente y estar registrado.",
+          "locale": "es",
+          "country": "UY",
+          "anonymous": true,
+          "upvotes": 7,
+          "hoursAfter": 40
+        }
+      ]
+    },
+    {
+      "title": "¿Alguien ha probado Durban Poison? dicen que es muy activa",
+      "body": "Qué más parceros. Un amigo que vive en Montevideo me habló de la Durban Poison, dice que es de las más despiertas que ha probado y que huele dulce, como a anís. Me dio curiosidad sobre todo por la historia, entiendo que viene de Sudáfrica. ¿Alguien la conoce? ¿Sí es tan activa o es puro cuento de internet?",
+      "category": "cepas",
+      "locale": "es",
+      "country": "CO",
+      "strainSlug": "durban-poison",
+      "anonymous": false,
+      "daysAgo": 29,
+      "upvotes": 14,
+      "comments": [
+        {
+          "body": "La probé hace años y a mí sí me pareció más mental que otras. Pero también me dio algo de ansiedad, no es para todo el mundo",
+          "locale": "es",
+          "country": "CO",
+          "anonymous": false,
+          "upvotes": 9,
+          "hoursAfter": 2
+        },
+        {
+          "body": "Es de las pocas que casi todos describen parecido, eso ya dice algo. Igual depende mucho de cómo esté cultivada",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": false,
+          "upvotes": 7,
+          "hoursAfter": 5
+        },
+        {
+          "body": "lo del anís sí es real, es lo que más me acuerdo de ella jaja",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 4,
+          "hoursAfter": 8
+        },
+        {
+          "body": "Ojo que el nombre lo usan para muchas cosas. Si no hay análisis, no sabés qué es realmente.",
+          "locale": "es",
+          "country": "CO",
+          "anonymous": true,
+          "upvotes": 6,
+          "hoursAfter": 12
+        },
+        {
+          "body": "bacano, gracias. más que nada me interesaba por la historia de las landraces africanas, voy a leer más",
+          "locale": "es",
+          "country": "CO",
+          "anonymous": false,
+          "upvotes": 3,
+          "hoursAfter": 20
+        }
+      ]
+    },
+    {
+      "title": "Primera vez cultivando con REPROCANN: el viento del balcón me está matando una planta",
+      "body": "Buenas, tengo el registro aprobado y arranqué con dos plantas en el balcón, en un piso 8. El tema es que hay mucho viento y una ya se dobló. ¿Conviene atarla, ponerle un tutor? También me da un poco de miedo que los vecinos se quejen del olor cuando florezca. Si alguien tiene experiencia cultivando en departamento, se agradece cualquier dato.",
+      "category": "cultivo",
+      "locale": "es",
+      "country": "AR",
+      "anonymous": true,
+      "daysAgo": 18,
+      "upvotes": 12,
+      "comments": [
+        {
+          "body": "Tutor sí o sí, una caña y un hilo suave. Si el tallo se dobló pero no se partió, se recupera. Con el viento después el tallo se pone más fuerte.",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": false,
+          "upvotes": 10,
+          "hoursAfter": 2
+        },
+        {
+          "body": "lo del olor en floración es real, posta. yo puse aromáticas al lado (romero, lavanda) y algo ayuda pero no hace magia",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": true,
+          "upvotes": 7,
+          "hoursAfter": 4
+        },
+        {
+          "body": "Si podés, una malla cortaviento en la baranda. Te salva.",
+          "locale": "es",
+          "country": "UY",
+          "anonymous": false,
+          "upvotes": 5,
+          "hoursAfter": 7
+        },
+        {
+          "body": "Tené a mano el comprobante del registro por cualquier cosa. A mí un vecino me armó un escándalo y con eso se calmó todo",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": true,
+          "upvotes": 8,
+          "hoursAfter": 10
+        },
+        {
+          "body": "gracias! mañana compro la caña y la malla",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": false,
+          "upvotes": 2,
+          "hoursAfter": 22
+        }
+      ]
+    },
+    {
+      "title": "Presentación: soy nuevo, escribo desde Valparaíso",
+      "body": "Hola a todos, soy nuevo por acá. Tengo 34, vivo en Valpo y llegué buscando info seria, porque la mayoría de los grupos que conozco son puro meme o gente vendiendo cosas. Me interesa más que nada la parte de cultivo y la historia de las cepas, de dónde viene cada una. Ojalá aprender harto con ustedes. Saludos po",
+      "category": "comunidad",
+      "locale": "es",
+      "country": "CL",
+      "anonymous": false,
+      "daysAgo": 11,
+      "upvotes": 9,
+      "comments": [
+        {
+          "body": "bienvenido! de Santiago acá. lo de la info seria es justo lo que me gusta de este lugar",
+          "locale": "es",
+          "country": "CL",
+          "anonymous": false,
+          "upvotes": 4,
+          "hoursAfter": 1
+        },
+        {
+          "body": "bienvenido, échale un ojo a la sección de cultivo que hay preguntas muy buenas",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 3,
+          "hoursAfter": 3
+        },
+        {
+          "body": "Bienvenido! Leé la nota de Acapulco Gold si te gusta la historia, está buena",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": false,
+          "upvotes": 2,
+          "hoursAfter": 6
+        },
+        {
+          "body": "Valpo presente 🙌 bienvenido compadre, aquí nos vemos",
+          "locale": "es",
+          "country": "CL",
+          "anonymous": false,
+          "upvotes": 3,
+          "hoursAfter": 15
+        }
+      ]
+    },
+    {
+      "title": "¿Qué les gustaría ver en WeedHub?",
+      "body": "Llevo unas semanas por aquí y me late mucho, pero se me ocurrió preguntar qué les gustaría que agregaran. Yo por ejemplo quisiera un apartado de leyes por país que se actualice seguido y una forma de guardar mis cepas favoritas para no andar buscándolas cada vez. ¿Ustedes qué agregarían o qué quitarían?",
+      "category": "comunidad",
+      "locale": "es",
+      "country": "MX",
+      "anonymous": false,
+      "daysAgo": 4,
+      "upvotes": 28,
+      "comments": [
+        {
+          "body": "un calendario de cultivo según el hemisferio! todas las guías son del norte y acá las estaciones van al revés",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": false,
+          "upvotes": 16,
+          "hoursAfter": 2
+        },
+        {
+          "body": "Más artículos de historia, lo de las variedades criollas me gustó mucho",
+          "locale": "es",
+          "country": "CO",
+          "anonymous": false,
+          "upvotes": 9,
+          "hoursAfter": 4
+        },
+        {
+          "body": "galera, mais conteúdo em português por favor 🙏",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 12,
+          "hoursAfter": 5
+        },
+        {
+          "body": "filtros por terpeno, que pueda buscar todas las cítricas por ejemplo",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": true,
+          "upvotes": 8,
+          "hoursAfter": 7
+        },
+        {
+          "body": "Yo quisiera que las fichas digan claro de dónde sale cada dato de THC. A veces uno no sabe si es de laboratorio o inventado",
+          "locale": "es",
+          "country": "CL",
+          "anonymous": false,
+          "upvotes": 14,
+          "hoursAfter": 10
+        },
+        {
+          "body": "x2 con lo de las fuentes, eso le daría mucha confianza al sitio",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 5,
+          "hoursAfter": 12
+        }
+      ]
+    },
+    {
+      "title": "¿Por qué la Lemon Haze huele tan distinto según quién la cultive?",
+      "body": "Che, pregunta medio nerd. Probé Lemon Haze de dos cosechas distintas, las dos de gente con registro, y una olía re a limón y la otra más a pasto, casi nada cítrico. Mismo nombre. ¿Es el curado, la genética o qué? Me interesa entender un poco mejor lo de los terpenos.",
+      "category": "cepas",
+      "locale": "es",
+      "country": "AR",
+      "strainSlug": "lemon-haze",
+      "anonymous": false,
+      "daysAgo": 33,
+      "upvotes": 16,
+      "comments": [
+        {
+          "body": "El curado tiene mucho que ver. Si la secás rápido y con calor, los terpenos vuelan. La que olía a pasto seguro se secó mal",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": false,
+          "upvotes": 11,
+          "hoursAfter": 3
+        },
+        {
+          "body": "Y la genética también, el nombre no garantiza nada. Hay mil versiones de Lemon Haze dando vueltas",
+          "locale": "es",
+          "country": "UY",
+          "anonymous": false,
+          "upvotes": 8,
+          "hoursAfter": 5
+        },
+        {
+          "body": "a mí me pasa con todo, el frasco que abrís a cada rato mata el olor en dos semanas",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": true,
+          "upvotes": 4,
+          "hoursAfter": 9
+        },
+        {
+          "body": "Lo de olor a pasto es típico de mal curado, coincido con el de arriba",
+          "locale": "es",
+          "country": "CO",
+          "anonymous": false,
+          "upvotes": 3,
+          "hoursAfter": 16
+        }
+      ]
+    },
+    {
+      "title": "Lo de indica = relaja y sativa = activa es puro cuento, ¿o no?",
+      "body": "Abro debate. Leí que las etiquetas indica y sativa ya no significan mucho porque casi todo es híbrido. Pero a mí sí me pasa que las que me dicen que son indica me tumban y las sativas no tanto. ¿Es sugestión mía o sí hay algo de cierto? Quiero leer opiniones de los dos lados.",
+      "category": "cepas",
+      "locale": "es",
+      "country": "MX",
+      "strainSlug": "og-kush",
+      "anonymous": false,
+      "daysAgo": 16,
+      "upvotes": 26,
+      "comments": [
+        {
+          "body": "Para mí pesa más el THC y los terpenos que la etiqueta. He probado 'sativas' que me dejaron pegado al sillón",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 12,
+          "hoursAfter": 1
+        },
+        {
+          "body": "No estoy de acuerdo del todo. La etiqueta es imperfecta pero tampoco es puro humo, hay patrones. No tiremos todo a la basura",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": false,
+          "upvotes": 10,
+          "hoursAfter": 3
+        },
+        {
+          "body": "pero esos patrones que dices pueden ser por los terpenos, no porque sea indica. la palabra es lo de menos",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 7,
+          "hoursAfter": 4
+        },
+        {
+          "body": "La expectativa influye un montón. Si te dicen que te va a relajar, ya vas predispuesto",
+          "locale": "es",
+          "country": "CL",
+          "anonymous": true,
+          "upvotes": 9,
+          "hoursAfter": 6
+        },
+        {
+          "body": "La OG Kush me pega igual que cualquier 'indica' y técnicamente es híbrida, entonces quién sabe",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": true,
+          "upvotes": 6,
+          "hoursAfter": 9
+        },
+        {
+          "body": "yo creo que los dos tienen algo de razón jaja. sirve como pista pero no como promesa",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 8,
+          "hoursAfter": 14
+        }
+      ]
+    },
+    {
+      "title": "Me da ansiedad con las cepas muy fuertes, ¿alguien probó algo con más CBD?",
+      "body": "Hola, la verdad cada vez que pruebo algo fuerte me da ansiedad, el corazón acelerado y me quedo pegado pensando cosas raras. Unos amigos me dicen que busque algo con más CBD, como la Cannatonic. ¿Alguien tiene experiencia con eso? ¿Sí se nota la diferencia o es más o menos lo mismo?",
+      "category": "experiencias",
+      "locale": "es",
+      "country": "CL",
+      "strainSlug": "cannatonic",
+      "anonymous": true,
+      "daysAgo": 25,
+      "upvotes": 21,
+      "comments": [
+        {
+          "body": "A mí sí me tocó notar diferencia con una que tenía harto CBD, se sintió mucho más tranqui. Igual me dio un poco de ansiedad al principio",
+          "locale": "es",
+          "country": "CL",
+          "anonymous": false,
+          "upvotes": 9,
+          "hoursAfter": 2
+        },
+        {
+          "body": "Si te da ansiedad seguido, quizás conviene preguntarle a un médico, sobre todo si te pasa también sin consumir. No es para alarmarte, solo para descartar cosas.",
+          "locale": "es",
+          "country": "UY",
+          "anonymous": false,
+          "upvotes": 12,
+          "hoursAfter": 4
+        },
+        {
+          "body": "también puede ser la cantidad, con poquito y esperando cambia mucho",
+          "locale": "es",
+          "country": "AR",
+          "anonymous": false,
+          "upvotes": 5,
+          "hoursAfter": 7
+        },
+        {
+          "body": "cachai que también influye dónde y con quién estái? en mi casa me va bien, en un carrete lleno de gente fatal",
+          "locale": "es",
+          "country": "CL",
+          "anonymous": true,
+          "upvotes": 6,
+          "hoursAfter": 11
+        },
+        {
+          "body": "gracias, me sirvió. igual lo voy a hablar con mi doctora en el próximo control",
+          "locale": "es",
+          "country": "CL",
+          "anonymous": false,
+          "upvotes": 4,
+          "hoursAfter": 30
+        }
+      ]
+    },
+    {
+      "title": "Afinal, o que muda na prática com a decisão do STF?",
+      "body": "Galera, ainda tô confuso. Vi gente dizendo que agora é liberado até 40g e outros dizendo que nada mudou. Se a polícia me parar com um pouco pra uso próprio, o que acontece? Alguém que entende de direito consegue explicar de um jeito simples? Não quero confiar em vídeo de rede social.",
+      "category": "legal",
+      "locale": "pt",
+      "country": "BR",
+      "anonymous": false,
+      "daysAgo": 10,
+      "upvotes": 33,
+      "comments": [
+        {
+          "body": "Pelo que entendi: deixou de ser crime o porte pra uso pessoal, mas continua proibido. Não é liberado. A polícia pode apreender e você responde no administrativo, não no criminal.",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 20,
+          "hoursAfter": 1
+        },
+        {
+          "body": "E os 40g são referência, não regra fixa. Se tiver balança, saquinho separado, essas coisas, pode ser enquadrado como tráfico mesmo com menos.",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 14,
+          "hoursAfter": 3
+        },
+        {
+          "body": "e usar na rua continua proibido, mano. não vacila",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": true,
+          "upvotes": 7,
+          "hoursAfter": 5
+        },
+        {
+          "body": "Se for dúvida séria procura a Defensoria Pública, eles orientam de graça",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 11,
+          "hoursAfter": 8
+        },
+        {
+          "body": "valeu galera, ficou bem mais claro agora",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 3,
+          "hoursAfter": 20
+        }
+      ]
+    },
+    {
+      "title": "Gelato, Runtz, Sherbet... qual a diferença real entre esses nomes?",
+      "body": "Mano, toda hora vejo esses nomes em vídeo gringo e fico perdido. Pelo que li, são parentes, tipo uma família de cruzamentos que veio da Girl Scout Cookies. É isso mesmo? Existe diferença real de cheiro e de efeito ou é mais marketing? Pergunto mais por curiosidade sobre genética.",
+      "category": "cepas",
+      "locale": "pt",
+      "country": "BR",
+      "strainSlug": "gelato",
+      "anonymous": false,
+      "daysAgo": 40,
+      "upvotes": 11,
+      "comments": [
+        {
+          "body": "É mais ou menos isso. A Gelato veio de um cruzamento de Sunset Sherbet com Thin Mint Cookies, se não me engano. A Runtz seria Gelato com Zkittlez.",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 8,
+          "hoursAfter": 4
+        },
+        {
+          "body": "o cheiro costuma ser doce, frutado. mas como o pessoal falou em outro tópico, nome não garante nada",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 5,
+          "hoursAfter": 9
+        },
+        {
+          "body": "Muito marketing sim. Os nomes viraram moda e qualquer coisa vira 'runtz'",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": true,
+          "upvotes": 6,
+          "hoursAfter": 15
+        },
+        {
+          "body": "boa pergunta, eu também confundia tudo",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 2,
+          "hoursAfter": 30
+        }
+      ]
+    },
+    {
+      "title": "Alguém aqui usa óleo de cannabis com receita? Como foi o processo com a ANVISA?",
+      "body": "Minha mãe tem dor crônica e a médica dela comentou sobre óleo de cannabis como uma possibilidade. Ainda não decidimos nada. Queria saber como foi pra quem já passou por isso: se dá pra comprar em farmácia, se precisa de autorização pra importar, quanto tempo demorou. Não quero conselho de dose, isso é com a médica, só quero entender a burocracia.",
+      "category": "legal",
+      "locale": "pt",
+      "country": "BR",
+      "anonymous": true,
+      "daysAgo": 21,
+      "upvotes": 18,
+      "comments": [
+        {
+          "body": "A gente fez pela importação, com receita e cadastro no site da ANVISA. Demorou umas semanas pra sair a autorização, mas foi tranquilo.",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 9,
+          "hoursAfter": 3
+        },
+        {
+          "body": "Hoje também tem alguns produtos em farmácia, com receita específica. Pergunta pra médica qual caminho ela acha melhor no caso da sua mãe",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": true,
+          "upvotes": 7,
+          "hoursAfter": 6
+        },
+        {
+          "body": "Que bom que vocês estão fazendo com acompanhamento. Só um toque: avisa a médica de todos os remédios que ela já toma, porque pode ter interação.",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": true,
+          "upvotes": 11,
+          "hoursAfter": 9
+        },
+        {
+          "body": "Tem associações de pacientes também, mas pesquisa bem antes de entrar em qualquer uma",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 4,
+          "hoursAfter": 14
+        },
+        {
+          "body": "obrigada, ajudou muito! vou levar essas dúvidas na próxima consulta",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 3,
+          "hoursAfter": 28
+        }
+      ]
+    },
+    {
+      "title": "Insônia: alguém já tentou e se arrependeu?",
+      "body": "tô com insônia faz uns meses e um amigo falou pra eu tentar maconha antes de dormir. fiquei com o pé atrás, sinceramente. alguém aqui tentou e não curtiu? queria ouvir os dois lados antes de fazer qualquer coisa, porque só vejo gente dizendo que é maravilhoso e eu desconfio disso",
+      "category": "experiencias",
+      "locale": "pt",
+      "country": "BR",
+      "anonymous": true,
+      "daysAgo": 13,
+      "upvotes": 15,
+      "comments": [
+        {
+          "body": "Eu tentei uma época e no começo parecia ajudar, mas depois comecei a depender disso pra dormir e quando parei foi pior por umas noites. Hoje faço acompanhamento pro sono.",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 10,
+          "hoursAfter": 2
+        },
+        {
+          "body": "Insônia de meses vale muito procurar um médico, sério. Pode ser ansiedade, apneia, um monte de coisa. Não é sermão, eu demorei demais pra ir e me arrependo",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 13,
+          "hoursAfter": 4
+        },
+        {
+          "body": "Pra mim não fez diferença nenhuma, só fiquei com a boca seca kkkk",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": true,
+          "upvotes": 6,
+          "hoursAfter": 7
+        },
+        {
+          "body": "concordo com o lance do médico. e lembra que aqui no Brasil não é legalizado, tem isso também",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": true,
+          "upvotes": 5,
+          "hoursAfter": 12
+        },
+        {
+          "body": "valeu pela sinceridade, vou marcar consulta primeiro",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 3,
+          "hoursAfter": 26
+        }
+      ]
+    },
+    {
+      "title": "Galera do Brasil, bora movimentar o fórum em português?",
+      "body": "Beleza, pessoal? Vi que o fórum tem bastante gente de língua espanhola e ainda pouca gente do Brasil. Bora trocar ideia aqui sobre cultura, lei, história, tudo dentro do que é permitido. Quem é de onde? Eu sou de BH e entrei aqui porque queria um lugar com informação mais séria.",
+      "category": "comunidad",
+      "locale": "pt",
+      "country": "BR",
+      "anonymous": false,
+      "daysAgo": 2,
+      "upvotes": 20,
+      "comments": [
+        {
+          "body": "Salve, de Recife aqui! Tamo junto",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 6,
+          "hoursAfter": 1
+        },
+        {
+          "body": "Curitiba presente. Queria ver mais conteúdo sobre a história da cannabis no Brasil",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": false,
+          "upvotes": 8,
+          "hoursAfter": 3
+        },
+        {
+          "body": "saludos desde México! aquí andamos, aunque no hablemos igual jaja",
+          "locale": "es",
+          "country": "MX",
+          "anonymous": false,
+          "upvotes": 5,
+          "hoursAfter": 5
+        },
+        {
+          "body": "SP aqui. Boa iniciativa, mano",
+          "locale": "pt",
+          "country": "BR",
+          "anonymous": true,
+          "upvotes": 2,
+          "hoursAfter": 9
+        }
+      ]
+    }
+  ]
+}

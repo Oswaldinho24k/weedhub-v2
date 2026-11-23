@@ -27,7 +27,8 @@ export function TerpeneRadar({ terpenes, size = 180 }: TerpeneRadarProps) {
 
   return (
     <svg
-      viewBox={`0 0 ${size} ${size}`}
+      viewBox={`-44 0 ${size + 88} ${size}`}
+      style={{ overflow: "visible" }}
       width="100%"
       height={size}
       role="img"
@@ -39,7 +40,7 @@ export function TerpeneRadar({ terpenes, size = 180 }: TerpeneRadarProps) {
           key={ring}
           points={terpenes.map((_, i) => point(ring, i).join(",")).join(" ")}
           fill="none"
-          stroke="var(--line)"
+          stroke="var(--fg)"
           opacity={ring === 1 ? 1 : 0.5}
         />
       ))}
@@ -52,31 +53,33 @@ export function TerpeneRadar({ terpenes, size = 180 }: TerpeneRadarProps) {
             y1={cy}
             x2={x}
             y2={y}
-            stroke="var(--line)"
-            opacity={0.5}
+            stroke="var(--fg)"
+            opacity={0.3}
           />
         );
       })}
       <polygon
         points={polyPoints}
-        fill="var(--accent)"
-        opacity={0.2}
-        stroke="var(--accent)"
+        fill="var(--fluor-pink)"
+        fillOpacity={0.9}
+        stroke="var(--ink)"
+        strokeWidth={2}
       />
       {terpenes.map((t, i) => {
         const [x, y] = point(Math.max(0, Math.min(1, t.value)), i);
         const [lx, ly] = point(1.15, i);
         return (
           <g key={t.name}>
-            <circle cx={x} cy={y} r={2.5} fill="var(--accent)" />
+            <rect x={x - 3} y={y - 3} width={6} height={6} fill="var(--ink)" />
             <text
               x={lx}
               y={ly}
               fontSize="10"
-              fontFamily="var(--font-mono)"
+              fontFamily="var(--font-body)"
+              fontWeight={700}
               textAnchor="middle"
               dominantBaseline="middle"
-              fill="var(--fg-muted)"
+              fill="var(--fg)"
             >
               {t.name}
             </text>

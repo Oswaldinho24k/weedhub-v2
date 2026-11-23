@@ -37,7 +37,6 @@ export function meta(): ReturnType<Route.MetaFunction> {
     description:
       "Directorio de marcas de cannabis verificadas. Descubre quiénes producen con transparencia y calidad.",
     url: `${SITE_URL}/marcas`,
-    canonicalPath: "/marcas",
     locale: "es",
   });
 }
@@ -57,12 +56,11 @@ export default function MarcasPage() {
 
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-12">
-      <div className="mb-10">
-        <div className="kicker mb-2">Directorio</div>
-        <h1 className="display text-4xl mb-3">Marcas de Cannabis</h1>
-        <p className="text-fg-muted max-w-xl">
-          Marcas verificadas. Producción transparente, calificadas por la comunidad.
+    <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-10">
+      <div className="mb-10 wall--yellow border-[3px] border-ink p-6 md:p-8">
+        <h1 className="rotulo" style={{ fontSize: "clamp(48px, 8vw, 104px)" }}>Marcas</h1>
+        <p className="mt-3 text-lg font-semibold max-w-xl">
+          Marcas de cannabis y cáñamo de América Latina, con reseñas de la comunidad. La insignia de verificada solo aparece cuando la marca lo está.
         </p>
       </div>
 
@@ -80,7 +78,6 @@ export default function MarcasPage() {
 
       <div className="card p-8 flex flex-col md:flex-row items-start md:items-center gap-6">
         <div className="flex-1">
-          <div className="kicker mb-1">Para marcas</div>
           <h2 className="display text-xl mb-2">¿Tienes una marca de cannabis?</h2>
           <p className="text-sm text-fg-muted max-w-md">
             Crea tu perfil gratuito, obtén verificación y llega a la comunidad cannábica más grande en LATAM.

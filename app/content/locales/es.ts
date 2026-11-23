@@ -485,9 +485,9 @@ export const es = {
       "La enciclopedia de cannabis en LATAM. Reseñas con contexto real — método, momento, experiencia.",
     savedStrainsTitle: "Cepas guardadas — WeedHub",
     savedStrainsDescription: "Tu biblioteca de cepas guardadas en WeedHub.",
-    homeTitle: "WeedHub — La enciclopedia de cannabis en LATAM",
+    homeTitle: "WeedHub: la enciclopedia del cannabis en español",
     homeDescription:
-      "Informa, conecta, cultiva. La enciclopedia de cannabis en LATAM con reseñas contextuales reales — método, momento, experiencia.",
+      "Más de 3,000 cepas con THC, terpenos, efectos y momento del día, guías claras y el estatus legal del cannabis en cada país de LATAM.",
     strainsTitle: "Directorio de cepas — WeedHub",
     strainsDescription:
       "Explora cientos de cepas con filtros por tipo, efectos y terpeno dominante. Cada perfil se construye con reseñas contextuales de la comunidad.",

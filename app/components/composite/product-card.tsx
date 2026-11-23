@@ -1,3 +1,4 @@
+import { categoryLabel } from "~/lib/product-categories";
 import { Link } from "react-router";
 
 type ProductCardProps = {
@@ -45,14 +46,14 @@ export function ProductCard({
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-4xl opacity-25">
-            📦
+          <div className="h-full w-full flex items-center justify-center bg-orange text-ink" aria-hidden>
+            <span className="rotulo text-5xl">{initials(name)}</span>
           </div>
         )}
       </Link>
 
       <div className="p-4 flex flex-col gap-1 flex-1">
-        <div className="text-xs text-fg-dim">{categoryKey}</div>
+        <div className="text-xs font-bold text-fg-muted">{categoryLabel(categoryKey)}</div>
 
         <Link
           to={`/productos/${slug}`}
@@ -90,4 +91,9 @@ export function ProductCard({
       </div>
     </div>
   );
+}
+
+
+function initials(name: string) {
+  return name.replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ0-9 ]/g, " ").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 }

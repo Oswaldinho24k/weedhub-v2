@@ -1,3 +1,4 @@
+import { Icon } from "~/components/ui/icon";
 import { Link, useLoaderData, useSearchParams } from "react-router";
 import { buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -52,7 +53,6 @@ export function meta(): ReturnType<Route.MetaFunction> {
     description:
       "Encuentra dispensarios de cannabis verificados. Puntos de venta legales calificados por la comunidad.",
     url: `${SITE_URL}/dispensarios`,
-    canonicalPath: "/dispensarios",
     locale: "es",
   });
 }
@@ -76,12 +76,11 @@ export default function DispensariosPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-12">
-      <div className="mb-10">
-        <div className="kicker mb-2">Directorio</div>
-        <h1 className="display text-4xl mb-3">Dispensarios</h1>
-        <p className="text-fg-muted max-w-xl">
-          Puntos de venta de cannabis verificados, calificados por la comunidad.
+    <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-10">
+      <div className="mb-10 bg-lime text-ink border-[3px] border-ink p-6 md:p-8">
+        <h1 className="rotulo" style={{ fontSize: "clamp(48px, 8vw, 104px)" }}>Dispensarios</h1>
+        <p className="mt-3 text-lg font-semibold max-w-xl">
+          Growshops, tiendas de CBD y clubes de América Latina, con reseñas de la comunidad.
         </p>
       </div>
 
@@ -102,7 +101,7 @@ export default function DispensariosPage() {
                   borderColor: verifiedOnly ? "var(--accent)" : "var(--line-strong)",
                 }}
               >
-                {verifiedOnly && <span className="text-[10px] text-white font-bold">✓</span>}
+                {verifiedOnly && <Icon name="check" size={10} strokeWidth={3} className="text-white" />}
               </span>
               Solo verificados
             </button>
@@ -219,7 +218,7 @@ function DispensaryRow({
             {dispensary.name}
           </span>
           {dispensary.isVerified && (
-            <span className="pill accent text-xs shrink-0">✓ Verificado</span>
+            <span className="pill accent text-xs shrink-0"><Icon name="check" size={12} strokeWidth={3} /> Verificado</span>
           )}
         </div>
         <div className="text-xs text-fg-dim mt-0.5 truncate">
@@ -236,7 +235,7 @@ function DispensaryRow({
           <span className="hidden sm:block text-xs">{dispensary.reviewCount} reseñas</span>
         )}
         {dispensary.hasCoords && (
-          <span className="hidden sm:block text-xs">📍 GPS</span>
+          <span className="hidden sm:inline-flex items-center gap-1 text-xs"><Icon name="pin" size={12} /> GPS</span>
         )}
       </div>
     </Link>

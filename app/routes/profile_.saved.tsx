@@ -54,7 +54,6 @@ export default function SavedStrainsPage({ loaderData }: Route.ComponentProps) {
           <Icon name="arrowLeft" size={14} />
           {t.profileEdit.backToProfile}
         </Link>
-        <div className="kicker mt-6 mb-1">{t.profile.libraryKicker}</div>
         <h1
           className="display"
           style={{ fontSize: "clamp(40px, 6vw, 72px)", lineHeight: 1.02 }}

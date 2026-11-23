@@ -1,7 +1,7 @@
 # WeedHub — CLAUDE.md
 
 > Single source of truth for AI assistants working on this project.
-> Updated: October 2026 (session 7 — post-audit improvements)
+> Updated: 23 November 2026 (Rótulo y Cartulina redesign, es/pt only, SEO/AEO pass). See docs/FEATURES.md, docs/QA-ROADMAP.md, docs/SEO-AUDIT.md.
 
 ## What is WeedHub?
 
@@ -15,13 +15,13 @@ Spanish-language cannabis encyclopedia and community platform at **weedhub.info*
 - **Database:** MongoDB + Mongoose 9
 - **Styling:** Tailwind CSS v4 with oklch token system (dark + light theme)
 - **Build:** Vite 7, ESM (`"type": "module"`)
-- **Images:** Cloudinary (upload + transform + CDN); Pexels API as fallback for strains without custom images
+- **Images:** Cloudinary (upload + transform + CDN). No stock photos: Pexels was removed 2026-11-22 (old URLs backed up in `backups/`). Strains without a real image render a type-colored initials card (`StrainThumb`) or a cartulina (`StrainSign`).
 - **Email:** Resend (newsletter audiences)
 - **Moderation:** Anthropic Claude Haiku (optional, for strain submissions)
 - **AI Agent:** Vercel AI SDK + Claude (conversational strain recommender, streaming)
 - **Image Generation:** fal.ai + Flux Schnell (`IMAGE_GEN_API_KEY`) — admin pipeline
 - **Payments:** Stripe (B2B subscriptions for brands and dispensaries)
-- **Fonts:** Fraunces / Instrument Sans / JetBrains Mono
+- **Design world:** "Rótulo y Cartulina" (Nov 2026 redesign) — hand-painted street signs + fluorescent market cards. Self-hosted fonts in `public/fonts/`: Bowlby One (rótulo lettering), Permanent Marker (cartulina names), Archivo variable (everything else, condensed via font-stretch). Tokens in `app/app.css`; light is default, `.dark` is the night wall. Direction contract: `.impeccable/surfaces/app-routes-index-tsx.md`.
 - **Icons:** Lucide React
 - **Deploy:** Docker (node:20-alpine, multi-stage build) + Vercel (weedhub-v2)
 - **i18n:** 3 locales — es (default), en, pt. Prefix routing (`/`, `/en/`, `/pt/`)
@@ -46,7 +46,6 @@ seed/
 ├── seed-full.ts      # Seeds 870 strains + 200 users + ~1500 reviews
 └── migrate-*.ts      # Migration scripts
 scripts/
-├── fill-pexels-images.ts       # Fetches Pexels images for strains without imageUrl
 ├── gen-midjourney-prompts.ts   # Generates 870 Midjourney prompts from strains.json
 ├── upload-strain-cards.ts      # Bulk upload images to Cloudinary, updates strains.json
 └── gen-social-posts.py         # Social media post template generator
@@ -143,6 +142,14 @@ prompts/                        # Generated Midjourney prompts (gitignored)
 - `api/admin/ai` — AI moderation call
 - `sitemap.xml` — Dynamic sitemap (strains ×3 locales, glossary, guides, brands, dispensaries, magazine articles, community posts)
 
+## Data caveats (Nov 2026)
+
+- Seed batch 2026-11-23 (`seed/seed-content.mjs`, removable with `--delete`): brands/products/dispensaries (fictional, unverified), magazine articles, forum threads, condition votes, quick ratings, saved strains, 14 users from BR/CO/AR/CL/UY. QA accounts via `seed/qa-accounts.mjs`.
+- Locales served: es + pt only. `/en/*` 301s to Spanish (`app/routes/en-redirect.tsx`); English strings remain in content files but are not served.
+- All 1,570 reviews and 201 users were seeded on 2026-04-20 (`seed/data/reviews.json`); they are not real community activity. Owner decided to keep them for now. Don't write copy that calls them "real" or cites "miles de reseñas".
+- Strain `effects` mix English and Spanish values; always go through `app/lib/effect-labels.ts` (`effectLabels`, `storedValuesFor`).
+- No strain has `descriptions.pt`/`.en`; strain pages use `app/lib/strain-summary.ts` (data-built summary + FAQ) so pt/en pages aren't empty duplicates.
+
 ## Key Conventions
 
 ### Language
@@ -170,11 +177,9 @@ Key routes export `ErrorBoundary` for contained error handling: `strains.$slug`,
 - Per-strain: edit dialog → "Generar con IA" button
 - Bulk: `/admin/generate-images` — Top 100 queue, 5 parallel, real-time progress
 
-**Pexels fallback (active):** `scripts/fill-pexels-images.ts` populates `imageUrl` for strains without images. Run: `npm run images:pexels`.
-
 **Midjourney pipeline (deprecated):** prompts exist in `scripts/gen-midjourney-prompts.ts` but the flow is replaced by the AI pipeline above.
 
-`StrainThumb` renders `<img>` if `imageUrl` exists, falls back to procedural SVG placeholder.
+`StrainThumb` renders `<img>` if `imageUrl` exists, otherwise a type-colored card with the strain's initials.
 
 ### Seeding
 ```bash
@@ -182,8 +187,6 @@ npm run seed              # Quick seed (~50 strains)
 npm run seed:full         # Full seed (870 strains + 200 users + ~1500 reviews)
 npm run seed:effects      # Seed effects collection
 npm run seed:csv          # Import from cannabis.csv
-npm run images:pexels     # Populate imageUrl from Pexels for strains without images
-npm run images:pexels:dry # Preview what would be updated
 ```
 
 ### Stripe B2B Flow
@@ -202,7 +205,7 @@ Users can follow other users. `profile.$username.tsx` shows follower/following c
 ### Done ✅
 
 **Core platform:**
-- Full strain encyclopedia (870 strains, search, filter, detail pages, AggregateRating schema)
+- Full strain encyclopedia (3,036 strains, search, filter, detail pages, AggregateRating schema)
 - Review system (6-category ratings, consumption context, effects tracking, helpful votes)
 - Auth (session-based, role system: user/admin/moderator)
 - User profiles with gamification (8+ badges, 5-level progression, points)
@@ -226,7 +229,7 @@ Users can follow other users. `profile.$username.tsx` shows follower/following c
 
 **SEO:**
 - `buildMeta()` with hreflang (es, pt-BR, en, x-default) on all localized routes
-- Sitemap with hreflang variants: strains (870×3), glossary, guides, brands, dispensaries, magazine articles, community posts
+- Sitemap with hreflang variants: strains (3,036×2, es/pt), glossary, guides, brands, dispensaries, magazine articles, community posts
 - JSON-LD: WebSite, Organization (homepage), Product + AggregateRating (strains), Article + BreadcrumbList (magazine, guides), CollectionPage (magazine list), LocalBusiness (dispensaries)
 - Locale-aware meta descriptions on all routes
 - robots.txt: blocks `/api`, `/admin`, `/auth`, `/onboarding`, `/profile/edit`, `/logout`
@@ -264,7 +267,6 @@ Users can follow other users. `profile.$username.tsx` shows follower/following c
 
 **Images:**
 - AI image generation pipeline — fal.ai + Flux Schnell, per-strain + bulk Top 100
-- `fill-pexels-images.ts` script — Pexels fallback for strains without custom images
 
 **UI / Design System:**
 - Full DS Button refactor — zero legacy `btn btn-*` classes across all 40+ route files
@@ -379,9 +381,6 @@ CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 
-# Images fallback
-PEXELS_API_KEY=         # Pexels API key for strain image fallback
-
 # Email (Resend) — sender: contacto@weedhub.info (domain verified ✅)
 RESEND_API_KEY=
 RESEND_AUDIENCE_ID=
@@ -413,8 +412,6 @@ npm run dev              # Dev server at localhost:5173
 npm run build            # Production build
 npm run typecheck        # Type check (runs react-router typegen + tsc)
 npm run seed:full        # Full database seed (870 strains + 200 users + ~1500 reviews)
-npm run images:pexels    # Populate imageUrl from Pexels for strains without images
-npm run images:pexels:dry  # Dry run — preview what would be updated
 
 # Stripe dev (get webhook secret for local testing)
 stripe listen --forward-to localhost:5173/api/stripe/webhook

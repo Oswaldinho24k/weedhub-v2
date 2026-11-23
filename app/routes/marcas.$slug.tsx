@@ -1,3 +1,5 @@
+import { categoryLabel } from "~/lib/product-categories";
+import { Icon } from "~/components/ui/icon";
 import { Form, Link, useLoaderData, useSearchParams } from "react-router";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -8,7 +10,7 @@ import { ProductModel } from "~/models/product.server";
 import { ReviewModel } from "~/models/review.server";
 import { getUserFromSession } from "~/lib/auth.server";
 import { buildMeta, SITE_URL } from "~/lib/seo";
-import { PLAN_PRICES, PLAN_NAMES } from "~/lib/stripe.server";
+import { PLAN_PRICES, PLAN_NAMES } from "~/lib/plans";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   await connectDB();
@@ -90,7 +92,6 @@ export function meta({ data }: Route.MetaArgs): ReturnType<Route.MetaFunction> {
       `Perfil de ${brand.name} en WeedHub — productos, calificaciones y más.`,
     url: `${SITE_URL}/marcas/${brand.slug}`,
     image: brand.logo || brand.coverImage || undefined,
-    canonicalPath: `/marcas/${brand.slug}`,
     locale: "es",
   });
 }
@@ -156,7 +157,7 @@ export default function MarcaSlugPage() {
             className="rounded-xl px-5 py-4 mb-6 flex items-center gap-3"
             style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
           >
-            <span className="text-lg">✓</span>
+            <Icon name="check" size={18} strokeWidth={3} />
             <div>
               <div className="font-semibold text-sm">¡Perfil creado exitosamente!</div>
               <div className="text-xs opacity-80 mt-0.5">
@@ -170,7 +171,7 @@ export default function MarcaSlugPage() {
             className="rounded-xl px-5 py-4 mb-6 flex items-center gap-3"
             style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
           >
-            <span className="text-lg">✦</span>
+            <Icon name="sparkle" size={18} />
             <div>
               <div className="font-semibold text-sm">
                 ¡{TIER_LABELS[brand.tier]} activado!
@@ -212,7 +213,7 @@ export default function MarcaSlugPage() {
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <h1 className="display text-3xl">{brand.name}</h1>
                   {brand.isVerified && (
-                    <span className="pill accent">✓ Verificada</span>
+                    <span className="pill accent"><Icon name="check" size={12} strokeWidth={3} /> Verificada</span>
                   )}
                   {brand.tier === "enterprise" && (
                     <span
@@ -295,11 +296,11 @@ export default function MarcaSlugPage() {
                           <img src={p.coverImage} alt={p.name}
                             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                         ) : (
-                          <div className="h-full w-full flex items-center justify-center text-3xl opacity-30">📦</div>
+                          <div className="h-full w-full flex items-center justify-center bg-orange text-ink" aria-hidden><span className="rotulo text-3xl">{p.name.split(/\s+/).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()}</span></div>
                         )}
                       </div>
                       <div className="p-3">
-                        <div className="text-xs text-fg-dim mb-0.5">{p.categoryKey}</div>
+                        <div className="text-xs font-bold text-fg-muted mb-0.5">{categoryLabel(p.categoryKey)}</div>
                         <div className="text-sm font-medium truncate group-hover:text-accent transition-colors">
                           {p.name}
                         </div>

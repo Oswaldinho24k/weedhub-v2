@@ -173,7 +173,7 @@ export async function action({ params, request }: Route.ActionArgs) {
   return redirect(`/strains/${strain.slug}?reviewed=1`);
 }
 
-const MOODS = ["😶", "🙁", "😐", "🙂", "🤩", "🤯"]; // idx 0..5
+const MOODS = ["Sin calificar", "Mala", "Regular", "Buena", "Muy buena", "Excelente"]; // idx 0..5
 
 export default function ReviewPage({ loaderData }: Route.ComponentProps) {
   const { strain, existingReview, positiveEffects, negativeEffects } = loaderData;
@@ -261,7 +261,7 @@ export default function ReviewPage({ loaderData }: Route.ComponentProps) {
           <div className="text-center">
             <h1 className="display text-4xl md:text-5xl mb-3">{t.review.ratingTitle}</h1>
             <p className="text-fg-muted mb-8">{t.review.ratingBody}</p>
-            <div className="text-6xl mb-6" aria-hidden>
+            <div className="rotulo text-[44px] mb-6" aria-live="polite">
               {MOODS[Math.max(0, Math.min(5, Math.round(overall)))]}
             </div>
             <div className="flex justify-center mb-10">

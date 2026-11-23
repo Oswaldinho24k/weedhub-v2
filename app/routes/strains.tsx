@@ -12,10 +12,18 @@ import { FilterSheet } from "~/components/composite/filter-sheet";
 import { Icon } from "~/components/ui/icon";
 import { cn } from "~/lib/utils";
 import { Button, buttonVariants } from "~/components/ui/button";
-import { useT } from "~/lib/i18n-context";
+import { useT, useHref } from "~/lib/i18n-context";
+import { StrainSign } from "~/components/composite/strain-sign";
 import { buildMeta, SITE_URL } from "~/lib/seo";
+import { storedValuesFor } from "~/lib/effect-labels";
 
-const PER_PAGE = 20;
+const PER_PAGE = 24;
+
+const DIR_COPY = {
+  es: { sorts: { reviews: "Ordenadas por número de reseñas.", rating: "Ordenadas por calificación.", name: "Ordenadas de la A a la Z.", newest: "Las más recientes primero.", trending: "Las más comentadas últimamente.", momento: "Ordenadas por afinidad con ese momento del día." }, sub: "Filtra por momento del día, efecto o terpeno.", moment: "Momento del día", moments: { manana: "Mañana", tarde: "Tarde", noche: "Noche" }, sortLabel: "Ordenar" },
+  pt: { sorts: { reviews: "Ordenadas por número de avaliações.", rating: "Ordenadas por nota.", name: "Ordenadas de A a Z.", newest: "As mais recentes primeiro.", trending: "As mais comentadas recentemente.", momento: "Ordenadas por afinidade com esse momento do dia." }, sub: "Filtre por momento do dia, efeito ou terpeno.", moment: "Momento do dia", moments: { manana: "Manhã", tarde: "Tarde", noche: "Noite" }, sortLabel: "Ordenar" },
+  en: { sorts: { reviews: "Sorted by number of reviews.", rating: "Sorted by rating.", name: "Sorted A to Z.", newest: "Newest first.", trending: "Most discussed lately.", momento: "Sorted by fit for that time of day." }, sub: "Filter by time of day, effect or terpene.", moment: "Time of day", moments: { manana: "Morning", tarde: "Afternoon", noche: "Night" }, sortLabel: "Sort" },
+} as const;
 
 export function meta({ data }: Route.MetaArgs) {
   const locale = data?.locale || "es";
@@ -35,11 +43,15 @@ export function meta({ data }: Route.MetaArgs) {
     }
   }
 
+  const page = data?.page ?? 1;
+  const onlyPage = page > 1 && filters && !filters.search && !filters.type && !filters.effects && !filters.terpene && !filters.momento;
+  const pageSuffix = page > 1 ? (locale === "pt" ? ` — página ${page}` : ` — página ${page}`) : "";
   return buildMeta({
-    title: dict.meta.strainsTitle,
-    description,
-    url: `${SITE_URL}${prefix}/strains`,
-    canonicalPath: "/strains",
+    title: `${dict.meta.strainsTitle.replace(/ — WeedHub$/, "")}${pageSuffix} — WeedHub`,
+    description: page > 1 ? `${description} Página ${page}.` : description,
+    // Facets canonicalize to the base list; plain pagination self-canonicalizes.
+    url: `${SITE_URL}${prefix}/strains${onlyPage ? `?page=${page}` : ""}`,
+    canonicalPath: onlyPage ? undefined : "/strains",
     locale,
   });
 }
@@ -56,14 +68,18 @@ export async function loader({ request }: Route.LoaderArgs) {
   const autoflowering = url.searchParams.get("autoflowering") || "";
   const feminized = url.searchParams.get("feminized") || "";
   const climate = url.searchParams.get("climate") || "";
-  const sort = url.searchParams.get("sort") || "name";
+  const momento = url.searchParams.get("momento") || "";
+  const sort = url.searchParams.get("sort") || (momento ? `momento-${momento}` : "reviews");
   const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
 
   const filter: any = { isArchived: false };
 
   if (search) filter.$text = { $search: search };
   if (type && ["sativa", "indica", "hybrid"].includes(type)) filter.type = type;
-  if (effectsParam) filter.effects = { $all: effectsParam.split(",") };
+  if (effectsParam) {
+    filter.$and = effectsParam.split(",").filter(Boolean).map((e) => ({ effects: { $in: storedValuesFor(e) } }));
+  }
+  if (momento && ["manana", "tarde", "noche"].includes(momento)) filter[`momento.${momento}`] = { $gte: 50 };
   if (terpene) filter["terpenes.name"] = terpene;
   if (difficulty && ["Baja", "Moderada", "Alta"].includes(difficulty)) filter.difficulty = difficulty;
   if (condition) filter.helpsWithConditions = condition;
@@ -78,6 +94,9 @@ export async function loader({ request }: Route.LoaderArgs) {
     reviews: { reviewCount: -1 },
     newest: { createdAt: -1 },
     trending: { lastReviewedAt: -1 },
+    "momento-manana": { "momento.manana": -1, reviewCount: -1 },
+    "momento-tarde": { "momento.tarde": -1, reviewCount: -1 },
+    "momento-noche": { "momento.noche": -1, reviewCount: -1 },
   };
   const sortQuery = search
     ? { score: { $meta: "textScore" }, ...sortMap[sort] }
@@ -88,7 +107,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const [strains, total, topEffects, topTerpenes] = await Promise.all([
     StrainModel.find(filter)
-      .select("name slug type imageUrl colorHint dominantTerpene effects averageRatings reviewCount")
+      .select("name slug type imageUrl colorHint dominantTerpene effects averageRatings reviewCount cannabinoidProfile momento")
       .sort(sortQuery)
       .skip((page - 1) * PER_PAGE)
       .limit(PER_PAGE)
@@ -118,7 +137,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     total,
     page,
     totalPages: Math.ceil(total / PER_PAGE),
-    filters: { search, type, effects: effectsParam, terpene, difficulty, condition, autoflowering, feminized, climate, sort },
+    filters: { search, type, momento, effects: effectsParam, terpene, difficulty, condition, autoflowering, feminized, climate, sort },
     effectFilters: topEffects.map((e) => ({ key: e.key, label: (e as any)[labelKey] || e.labelEn })),
     terpeneFilters: topTerpenes.map((t: any) => t._id as string),
   };
@@ -126,9 +145,6 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function StrainsPage({ loaderData }: Route.ComponentProps) {
   const { strains, total, page, totalPages, filters, effectFilters, terpeneFilters } = loaderData;
-  const [showGrowFilters, setShowGrowFilters] = useState(
-    !!(filters.autoflowering || filters.feminized || filters.climate || filters.condition)
-  );
   const t = useT();
   const [searchParams, setSearchParams] = useSearchParams();
   const view = (searchParams.get("view") as "grid" | "list") || "grid";
@@ -153,6 +169,16 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
     searchDebounce.current = setTimeout(() => updateFilter("search", value), 300);
   }
 
+  const loc = (["es", "pt", "en"].includes(loaderData.locale) ? loaderData.locale : "es") as keyof typeof DIR_COPY;
+  const href = useHref();
+  function pageHref(p: number) {
+    const next = new URLSearchParams(searchParams);
+    if (p > 1) next.set("page", String(p));
+    else next.delete("page");
+    const q = next.toString();
+    return q ? `?${q}` : ".";
+  }
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -174,44 +200,59 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Hero strip */}
-      <section className="mx-auto max-w-[1200px] px-6 pt-14 pb-10">
-        <div className="kicker mb-4">{t.directory.heroKicker}</div>
-        <h1
-          className="display max-w-[18ch]"
-          style={{ fontSize: "clamp(40px, 6.2vw, 84px)", lineHeight: 1.02 }}
-        >
-          {total.toLocaleString()} {t.directory.heroHeadlineA}.{" "}
-          <span className="display-wonk tnum" style={{ color: "var(--accent)" }}>
-            {(total * 145).toLocaleString()}
-          </span>{" "}
-          {t.directory.heroHeadlineB}
-        </h1>
-        <div className="mt-8 flex items-center gap-3 max-w-[720px]">
-          <div className="flex-1 flex items-center gap-3 bg-raised border border-line rounded-md px-4 h-12 focus-within:border-accent transition-colors">
-            <Icon name="search" size={16} className="text-fg-dim" />
-            <input
-              className="flex-1 bg-transparent text-sm placeholder:text-fg-dim outline-none"
-              placeholder={t.directory.searchPlaceholder}
-              value={searchValue}
-              onChange={(e) => onSearchChange(e.target.value)}
-              autoFocus={searchParams.get("focus") === "search"}
-            />
+      {/* Wall header */}
+      <section className="wall">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 pt-10 pb-10 grid gap-6 lg:grid-cols-[1fr_520px] lg:items-end">
+          <div>
+            <h1 className="display text-yellow" style={{ fontSize: "clamp(52px, 8vw, 104px)" }}>
+              <span className="tnum">{total.toLocaleString()}</span> {t.directory.heroHeadlineA}
+            </h1>
+            <p className="mt-3 text-lg text-white/90 max-w-[46ch]">
+              {DIR_COPY[loc].sorts[(filters.sort.startsWith("momento") ? "momento" : filters.sort) as keyof (typeof DIR_COPY)["es"]["sorts"]] ?? ""} {DIR_COPY[loc].sub}
+            </p>
+          </div>
+          <div>
+            <label htmlFor="dir-search" className="sr-only">{t.directory.searchPlaceholder}</label>
+            <div className="flex items-center gap-3 bg-white text-ink border-[3px] border-ink px-4 h-14 focus-within:shadow-[0_0_0_4px_var(--fluor-yellow)]">
+              <Icon name="search" size={20} />
+              <input
+                id="dir-search"
+                type="search"
+                className="flex-1 bg-transparent text-lg font-semibold placeholder:text-[#5f5e57] outline-none"
+                placeholder={t.directory.searchPlaceholder}
+                value={searchValue}
+                onChange={(e) => onSearchChange(e.target.value)}
+                autoFocus={searchParams.get("focus") === "search"}
+              />
+            </div>
+            <Link
+              to="/strains/sugerir"
+              className="inline-flex items-center gap-2 mt-3 text-[15px] font-bold text-white hover:text-yellow underline decoration-2 underline-offset-4"
+            >
+              <Icon name="plus" size={14} />
+              {t.suggest.ctaNotFound}
+            </Link>
           </div>
         </div>
-        <Link
-          to="/strains/sugerir"
-          className="inline-flex items-center gap-2 mt-4 text-sm text-fg-muted hover:text-fg transition-colors"
-        >
-          <Icon name="plus" size={14} />
-          {t.suggest.ctaNotFound}
-          <Icon name="arrowRight" size={12} />
-        </Link>
       </section>
 
       {/* Sticky filter bar */}
-      <section className="sticky top-16 z-30 bg-[color-mix(in_oklch,var(--bg)_90%,transparent)] backdrop-blur border-y border-line">
-        <div className="mx-auto max-w-[1200px] px-6 py-3 flex items-center gap-4 flex-wrap">
+      <section className="sticky top-14 z-30 bg-bg border-b-[3px] border-ink">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-3 flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5" role="group" aria-label={DIR_COPY[loc].moment}>
+            {(["manana", "tarde", "noche"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                aria-pressed={filters.momento === m}
+                className={cn("chip", filters.momento === m && (m === "noche" ? "on-accent" : "on"))}
+                onClick={() => updateFilter("momento", filters.momento === m ? "" : m)}
+              >
+                <Icon name={m === "manana" ? "sun" : m === "tarde" ? "cup" : "moon"} size={13} />
+                {DIR_COPY[loc].moments[m]}
+              </button>
+            ))}
+          </div>
           <FilterSheet
             filters={filters}
             effectFilters={effectFilters}
@@ -220,22 +261,14 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
             total={total}
           />
 
-          {/* Grow filters toggle */}
-          <button
-            type="button"
-            onClick={() => setShowGrowFilters((v) => !v)}
-            className={cn("chip ml-auto", showGrowFilters && "on")}
-          >
-            <Icon name="sprout" size={12} />
-            Cultivo
-          </button>
+          {/* Grow filters hidden: only 24 of 3,036 strains have grow data (params still work via URL). */}
 
           <div className="flex items-center gap-4">
-            <span className="mono text-xs text-fg-dim tnum">
+            <span className="text-sm font-bold [font-stretch:85%] text-fg-muted tnum">
               {total} {total === 1 ? t.directory.resultsSingular : t.directory.resultsPlural}
             </span>
 
-            <div className="flex border border-line rounded-md overflow-hidden">
+            <div className="flex border-2 border-ink overflow-hidden">
               <ViewToggle active={view === "grid"} onClick={() => updateFilter("view", "")}>
                 <Icon name="grid" size={14} />
               </ViewToggle>
@@ -250,7 +283,8 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
             <select
               value={filters.sort}
               onChange={(e) => updateFilter("sort", e.target.value)}
-              className="mono text-xs bg-raised border border-line rounded-md px-2 py-1.5 focus:outline-none focus:border-accent"
+              aria-label={DIR_COPY[loc].sortLabel}
+              className="text-sm font-bold bg-raised border-2 border-ink px-2 py-1.5 focus:outline-none focus:shadow-[0_0_0_3px_var(--fluor-yellow)]"
             >
               <option value="name">{t.directory.sortName}</option>
               <option value="rating">{t.directory.sortRating}</option>
@@ -262,65 +296,10 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
         </div>
       </section>
 
-      {/* Grow filters — secondary bar */}
-      {showGrowFilters && (
-        <section className="border-b border-line bg-sunken">
-          <div className="mx-auto max-w-[1200px] px-6 py-3 flex items-center gap-6 flex-wrap text-sm">
-            <div className="flex items-center gap-2">
-              <span className="kicker text-xs">Clima</span>
-              {(["tropical", "mediterráneo", "continental", "frío"] as const).map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  className={cn("chip", filters.climate === c && "on")}
-                  aria-pressed={filters.climate === c}
-                  onClick={() => updateFilter("climate", filters.climate === c ? "" : c)}
-                >
-                  {c.charAt(0).toUpperCase() + c.slice(1)}
-                </button>
-              ))}
-            </div>
-            <div className="w-px h-5 bg-line" />
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className={cn("chip", filters.autoflowering === "1" && "on")}
-                aria-pressed={filters.autoflowering === "1"}
-                onClick={() => updateFilter("autoflowering", filters.autoflowering === "1" ? "" : "1")}
-              >
-                Autofloreciente
-              </button>
-              <button
-                type="button"
-                className={cn("chip", filters.feminized === "1" && "on")}
-                aria-pressed={filters.feminized === "1"}
-                onClick={() => updateFilter("feminized", filters.feminized === "1" ? "" : "1")}
-              >
-                Feminizada
-              </button>
-            </div>
-            <div className="w-px h-5 bg-line" />
-            <div className="flex items-center gap-2">
-              <span className="kicker text-xs">Condición</span>
-              <select
-                value={filters.condition}
-                onChange={(e) => updateFilter("condition", e.target.value)}
-                className="mono text-xs bg-raised border border-line rounded-md px-2 py-1.5 focus:outline-none focus:border-accent"
-              >
-                <option value="">Todas</option>
-                {CONDITIONS.map((c: any) => (
-                  <option key={c.slug} value={c.slug}>{c.emoji} {c.labelEs}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </section>
-      )}
 
-      <section className="mx-auto max-w-[1200px] px-6 py-10">
+      <section className="mx-auto max-w-[1280px] px-4 sm:px-6 py-10">
         {strains.length === 0 ? (
           <div className="text-center py-20">
-            <div className="kicker mb-3">{t.directory.emptyKicker}</div>
             <h2 className="display text-3xl mb-3">{t.directory.emptyTitle}</h2>
             <p className="text-fg-muted mb-6">{t.directory.emptyBody}</p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
@@ -343,35 +322,47 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {strains.map((strain: any) => (
-              <StrainCard key={strain._id} strain={strain} />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 pt-2">
+            {strains.map((strain: any, i: number) => (
+              <StrainSign
+                key={strain._id}
+                strain={strain}
+                to={href(`/strains/${strain.slug}`)}
+                locale={loc}
+                style={{ animationDelay: `${Math.min(i, 12) * 30}ms` }}
+              />
             ))}
           </div>
         )}
 
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-4 mt-14">
-            <Button
-              variant="ghost"
-              disabled={page <= 1}
-              onClick={() => updateFilter("page", String(page - 1))}
-            >
-              <Icon name="chevronLeft" size={14} />
-              {t.directory.previous}
-            </Button>
-            <span className="mono text-xs text-fg-muted tnum">
+          <nav aria-label="Paginación" className="flex justify-center items-center gap-4 mt-14">
+            {page > 1 ? (
+              <Link to={pageHref(page - 1)} rel="prev" className={buttonVariants({ variant: "ghost" })}>
+                <Icon name="chevronLeft" size={14} />
+                {t.directory.previous}
+              </Link>
+            ) : (
+              <span className={buttonVariants({ variant: "ghost" })} aria-disabled="true" data-disabled>
+                <Icon name="chevronLeft" size={14} />
+                {t.directory.previous}
+              </span>
+            )}
+            <span className="text-base font-extrabold [font-stretch:85%] tnum">
               {page} / {totalPages}
             </span>
-            <Button
-              variant="ghost"
-              disabled={page >= totalPages}
-              onClick={() => updateFilter("page", String(page + 1))}
-            >
-              {t.directory.next}
-              <Icon name="chevronRight" size={14} />
-            </Button>
-          </div>
+            {page < totalPages ? (
+              <Link to={pageHref(page + 1)} rel="next" className={buttonVariants({ variant: "ghost" })}>
+                {t.directory.next}
+                <Icon name="chevronRight" size={14} />
+              </Link>
+            ) : (
+              <span className={buttonVariants({ variant: "ghost" })} aria-disabled="true" data-disabled>
+                {t.directory.next}
+                <Icon name="chevronRight" size={14} />
+              </span>
+            )}
+          </nav>
         )}
       </section>
     </div>

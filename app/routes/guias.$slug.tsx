@@ -151,7 +151,6 @@ export default function GuiaDetailPage({ loaderData }: Route.ComponentProps) {
 export function ErrorBoundary() {
   return (
     <div className="mx-auto max-w-[760px] px-6 py-24 text-center">
-      <div className="kicker mb-3" style={{ color: "var(--warm)" }}>Error</div>
       <h1 className="display text-3xl mb-4">Guía no encontrada</h1>
       <p className="text-fg-muted mb-8">Esta guía no existe.</p>
       <a href="/guias" className={buttonVariants({ variant: "primary" })}>Ver todas las guías</a>

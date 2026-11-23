@@ -20,11 +20,15 @@ import { getUserFromSession } from "~/lib/auth.server";
 export function meta({ data }: Route.MetaArgs) {
   const name = data?.user?.username ? `@${data.user.username}` : "Perfil";
   const level = data?.user?.levelName ? ` · ${data.user.levelName}` : "";
-  return buildMeta({
-    title: `${name}${level} — WeedHub`,
-    description: `${data?.user?.stats?.reviewCount ?? 0} reseñas publicadas por ${name} en WeedHub.`,
-    url: `${SITE_URL}/profile/${data?.user?.username || ""}`,
-  });
+  return [
+    ...buildMeta({
+      title: `${name}${level} — WeedHub`,
+      description: `${data?.user?.stats?.reviewCount ?? 0} reseñas publicadas por ${name} en WeedHub.`,
+      url: `${SITE_URL}/profile/${data?.user?.username || ""}`,
+    }),
+    // Member profiles are thin and personal: keep them out of search results.
+    { name: "robots", content: "noindex, follow" },
+  ];
 }
 
 const EXPERT_BADGES: Record<string, string> = {
@@ -172,7 +176,6 @@ export default function PublicProfilePage({ loaderData }: Route.ComponentProps) 
   const points = user.points ?? 0;
   const levelColor = LEVEL_COLOR[user.levelName] || "var(--accent)";
   const levelColorDark = LEVEL_COLOR_DARK[user.levelName] || "var(--accent)";
-  const levelEmoji = LEVEL_EMOJI[user.levelName] || "🌱";
   const showcaseBadge = getShowcaseBadge(user.earnedBadges as any);
   const earnedBadgeIds = new Set(user.earnedBadges?.map((eb) => eb.badgeId) ?? []);
   const progress = user.nextLevelMinPoints
@@ -222,14 +225,14 @@ export default function PublicProfilePage({ loaderData }: Route.ComponentProps) 
                   className="pill text-xs"
                   style={{ background: levelColor, color: "white", borderColor: "transparent" }}
                 >
-                  {levelEmoji} {user.levelName}
+                  <Icon name="sprout" size={14} className="inline -mt-0.5 mr-1" />{user.levelName}
                 </span>
                 {user.expertLabel && (
                   <span
                     className="pill text-xs"
                     style={{ background: "var(--gold)", color: "oklch(22% 0.05 85)", borderColor: "transparent" }}
                   >
-                    ✦ {user.expertLabel}
+                    <Icon name="sparkle" size={12} className="inline -mt-0.5 mr-1" />{user.expertLabel}
                   </span>
                 )}
               </div>
@@ -375,7 +378,7 @@ export default function PublicProfilePage({ loaderData }: Route.ComponentProps) 
                     key={badge.id}
                     className={`card p-5 text-center transition-all ${isEarned ? "" : "opacity-40 grayscale"}`}
                   >
-                    <div className="text-3xl mb-3 leading-none">{badge.emoji || "🏅"}</div>
+                    <div className="mb-3 w-10 h-10 grid place-items-center bg-yellow text-ink border-2 border-ink"><Icon name="crown" size={20} /></div>
                     <div className="font-medium text-sm">{badge.name}</div>
                     <div className="text-[11px] text-fg-dim mt-1 leading-snug">{badge.description}</div>
                     {isEarned && earned?.earnedAt && typeof earned.earnedAt === "string" && (

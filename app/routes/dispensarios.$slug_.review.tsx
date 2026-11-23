@@ -110,7 +110,7 @@ export async function action({ params, request }: Route.ActionArgs) {
   return redirect(`/dispensarios/${dispensary.slug}?reviewed=1`);
 }
 
-const MOODS = ["😶", "🙁", "😐", "🙂", "🤩", "🤯"];
+const MOODS = ["Sin calificar", "Mala", "Regular", "Buena", "Muy buena", "Excelente"]; // idx 0..5
 
 export default function DispensarioReviewPage({ loaderData }: Route.ComponentProps) {
   const { dispensary, existingReview } = loaderData;
@@ -190,7 +190,7 @@ export default function DispensarioReviewPage({ loaderData }: Route.ComponentPro
             <p className="text-fg-muted mb-8">
               Tu experiencia ayuda a la comunidad a encontrar los mejores dispensarios.
             </p>
-            <div className="text-6xl mb-6" aria-hidden>
+            <div className="rotulo text-[44px] mb-6" aria-live="polite">
               {MOODS[Math.max(0, Math.min(5, Math.round(overall)))]}
             </div>
             <div className="flex justify-center mb-10">

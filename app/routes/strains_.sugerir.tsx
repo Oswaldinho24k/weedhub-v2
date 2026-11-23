@@ -248,7 +248,6 @@ export default function SugerirStrainPage({ loaderData }: Route.ComponentProps) 
         {t.suggest.backLink}
       </Link>
 
-      <div className="kicker mb-2">{t.suggest.kicker}</div>
       <h1 className="display text-4xl md:text-5xl mb-4">{t.suggest.title}</h1>
       <p className="text-fg-muted mb-10 max-w-[52ch]">{t.suggest.body}</p>
 

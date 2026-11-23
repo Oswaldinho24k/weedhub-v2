@@ -1,0 +1,626 @@
+{
+  "glossary": {
+    "thc": {
+      "termPt": "THC",
+      "definitionPt": "Tetra-hidrocanabinol. O principal canabinoide psicoativo da cannabis. É responsável pelos efeitos eufóricos, pela alteração sensorial e pela maior parte dos efeitos associados à 'brisa'. Liga-se aos receptores CB1 do sistema endocanabinoide, principalmente no cérebro.",
+      "examplesPt": [
+        "Uma variedade com 25% de THC é de alta potência",
+        "O THC é ativado pelo calor (descarboxilação)"
+      ]
+    },
+    "cbd": {
+      "termPt": "CBD",
+      "definitionPt": "Canabidiol. O segundo canabinoide mais abundante na cannabis. Não é psicoativo, ou seja, não dá 'brisa'. Tem propriedades ansiolíticas, anti-inflamatórias e anticonvulsivantes documentadas. Em concentrações altas, pode moderar os efeitos do THC.",
+      "examplesPt": [
+        "As variedades 1:1 têm a mesma proporção de THC:CBD",
+        "O CBD é o componente ativo do medicamento Epidiolex"
+      ]
+    },
+    "cbn": {
+      "termPt": "CBN",
+      "definitionPt": "Canabinol. Canabinoide que se forma quando o THC se oxida com o tempo ou com o calor. É levemente psicoativo e está associado a efeitos sedativos. Uma flor velha ou mal armazenada tende a ter mais CBN.",
+      "examplesPt": []
+    },
+    "cbg": {
+      "termPt": "CBG",
+      "definitionPt": "Canabigerol. Conhecido como o 'canabinoide mãe' porque o CBGA é o precursor ácido do qual derivam o THC, o CBD e o CBC. Não é psicoativo. Tem propriedades anti-inflamatórias e neuroprotetoras que estão sendo pesquisadas.",
+      "examplesPt": []
+    },
+    "cannabinoides": {
+      "termPt": "Canabinoides",
+      "definitionPt": "Compostos químicos que interagem com o sistema endocanabinoide do corpo. Os canabinoides da cannabis (fitocanabinoides) incluem THC, CBD, CBG, CBN, CBC e mais de 100 compostos identificados. Também existem os endocanabinoides (produzidos pelo próprio corpo) e os canabinoides sintéticos.",
+      "examplesPt": []
+    },
+    "sistema-endocannabinoide": {
+      "termPt": "Sistema Endocanabinoide",
+      "definitionPt": "Rede de receptores, enzimas e moléculas sinalizadoras presente no corpo humano (e em quase todos os vertebrados) que regula funções como dor, sono, humor, apetite e memória. Os receptores CB1 (principalmente no cérebro) e CB2 (no sistema imunológico) são os principais. A cannabis interage diretamente com esse sistema.",
+      "examplesPt": []
+    },
+    "perfil-cannabinoide": {
+      "termPt": "Perfil Canabinoide",
+      "definitionPt": "O conjunto de canabinoides presentes em uma variedade e suas concentrações relativas. Vai além da simples porcentagem de THC: inclui CBD, CBG, CBN e outros. Duas variedades com a mesma porcentagem de THC podem produzir efeitos muito diferentes, dependendo do perfil completo.",
+      "examplesPt": []
+    },
+    "terpenos": {
+      "termPt": "Terpenos",
+      "definitionPt": "Compostos aromáticos que dão a cada variedade seu aroma e sabor característicos. Não são exclusivos da cannabis; também estão presentes em frutas, flores e especiarias. Na cannabis, os terpenos modulam e modificam os efeitos dos canabinoides por meio do efeito entourage. Há mais de 200 terpenos identificados na cannabis.",
+      "examplesPt": []
+    },
+    "mirceno": {
+      "termPt": "Mirceno",
+      "definitionPt": "O terpeno mais comum na cannabis. Aroma terroso e herbal, com notas de manga. Está associado a efeitos relaxantes e sedativos. Uma teoria popular (embora não totalmente comprovada) sugere que o mirceno facilita a passagem dos canabinoides pela barreira hematoencefálica, potencializando a 'brisa'.",
+      "examplesPt": [
+        "A manga contém mirceno, daí o mito de comer manga antes de fumar"
+      ]
+    },
+    "limoneno": {
+      "termPt": "Limoneno",
+      "definitionPt": "Terpeno com aroma cítrico intenso, presente em limões e laranjas. Está associado a efeitos energizantes e de melhora do humor. Tem propriedades antifúngicas e antibacterianas. É comum em variedades de predominância sativa com perfil estimulante.",
+      "examplesPt": []
+    },
+    "pineno": {
+      "termPt": "Pineno",
+      "definitionPt": "Terpeno com aroma de pinho fresco. É o terpeno mais abundante na natureza. Existe em duas formas: alfa-pineno e beta-pineno. Está associado a efeitos de alerta e pode contrabalançar parcialmente os efeitos do THC sobre a memória de curto prazo. Tem propriedades broncodilatadoras.",
+      "examplesPt": []
+    },
+    "linalool": {
+      "termPt": "Linalool",
+      "definitionPt": "Terpeno floral com aroma de lavanda. Está associado a efeitos ansiolíticos e sedativos. É o principal componente da lavanda e é usado em aromaterapia. Na cannabis, contribui para efeitos calmantes e pode ajudar com a insônia e a ansiedade.",
+      "examplesPt": []
+    },
+    "cariofileno": {
+      "termPt": "Cariofileno",
+      "definitionPt": "Terpeno com aroma picante, de pimenta-do-reino e especiarias. É único porque também atua como canabinoide: liga-se diretamente aos receptores CB2 do sistema imunológico sem produzir efeitos psicoativos. Tem propriedades anti-inflamatórias documentadas. Está presente na pimenta-do-reino, no cravo e na canela.",
+      "examplesPt": []
+    },
+    "terpinoleno": {
+      "termPt": "Terpinoleno",
+      "definitionPt": "Terpeno com aroma floral, herbal e levemente cítrico. É menos comum que outros terpenos principais. Alguns estudos o associam a efeitos sedativos. Está presente em variedades como Jack Herer e Ghost Train Haze.",
+      "examplesPt": []
+    },
+    "efecto-entourage": {
+      "termPt": "Efeito Entourage",
+      "definitionPt": "Teoria segundo a qual os canabinoides, os terpenos e outros compostos da cannabis atuam de forma sinérgica, produzindo efeitos diferentes (e geralmente mais complexos e benéficos) dos de qualquer composto isolado. É a principal razão pela qual a flor inteira da cannabis pode produzir efeitos diferentes dos do THC isolado.",
+      "examplesPt": []
+    },
+    "fullspectrum": {
+      "termPt": "Full Spectrum",
+      "definitionPt": "Extrato ou produto que conserva todos os canabinoides, terpenos e outros compostos da planta, incluindo traços de THC. Diferentemente do isolado (isolate) ou do broad spectrum, busca aproveitar o efeito entourage. É comum em óleos de CBD e tinturas.",
+      "examplesPt": []
+    },
+    "broad-spectrum": {
+      "termPt": "Broad Spectrum",
+      "definitionPt": "Extrato que contém vários canabinoides e terpenos, mas com o THC removido ou reduzido a níveis indetectáveis. É uma opção intermediária entre o full spectrum e o isolado: busca parte do efeito entourage sem THC.",
+      "examplesPt": []
+    },
+    "indica": {
+      "termPt": "Índica",
+      "definitionPt": "Classificação tradicional da cannabis originária de regiões montanhosas (Afeganistão, Paquistão, Índia). Morfologicamente: plantas baixas e largas, de folhas largas e ciclo de floração curto. Culturalmente, é associada a efeitos relaxantes, sedativos e corporais, embora as evidências científicas atuais sugiram que a distinção índica/sativa não é tão determinante quanto os terpenos e o perfil canabinoide.",
+      "examplesPt": []
+    },
+    "sativa": {
+      "termPt": "Sativa",
+      "definitionPt": "Classificação tradicional da cannabis originária de regiões equatoriais (Tailândia, Colômbia, África). Morfologicamente: plantas altas e finas, de folhas estreitas e ciclo de floração longo. Culturalmente, é associada a efeitos cerebrais, energizantes e criativos. Assim como no caso da índica, a ciência moderna aponta que terpenos e canabinoides preveem melhor o efeito do que a classificação sativa/índica.",
+      "examplesPt": []
+    },
+    "hibrida": {
+      "termPt": "Híbrida",
+      "definitionPt": "Variedade resultante do cruzamento de genéticas índica e sativa. A maioria das variedades modernas é híbrida. Elas podem ser 'sativa dominante', 'índica dominante' ou equilibradas. O cruzamento permite combinar características das duas: alta produtividade, ciclos de floração controlados e perfis de efeito específicos.",
+      "examplesPt": []
+    },
+    "extracciones": {
+      "termPt": "Extrações",
+      "definitionPt": "Produtos que concentram os compostos ativos da cannabis (canabinoides e terpenos), eliminando o material vegetal. São significativamente mais potentes que a flor. Incluem: cera (wax), shatter, resina viva (live resin), rosin, óleos, tintura, hash e mais.",
+      "examplesPt": []
+    },
+    "live-resin": {
+      "termPt": "Live Resin",
+      "definitionPt": "Extrato premium feito com plantas congeladas logo após a colheita (em vez de secas e curadas). O congelamento preserva a maior quantidade possível de terpenos, o que resulta em um produto com aroma e sabor consideravelmente mais intensos e complexos do que as extrações de planta seca.",
+      "examplesPt": []
+    },
+    "rosin": {
+      "termPt": "Rosin",
+      "definitionPt": "Extração sem solventes que usa apenas calor e pressão para extrair a resina da flor, do kief ou do hash. Como não usa produtos químicos, é considerada mais pura. Pode ser feita em casa com uma chapinha de cabelo e papel-manteiga (embora as versões profissionais usem prensas especializadas).",
+      "examplesPt": [
+        "Flower rosin, hash rosin, kief rosin: pontos de partida diferentes, qualidades diferentes"
+      ]
+    },
+    "shatter": {
+      "termPt": "Shatter",
+      "definitionPt": "Concentrado de cannabis translúcido, com textura parecida com a de vidro, que se 'quebra' (daí o nome). É feito com solventes (normalmente butano, o chamado BHO). Alta potência de THC (70-90%). Sua textura característica se deve ao fato de as moléculas ficarem alinhadas, sem agitação, durante o processo.",
+      "examplesPt": []
+    },
+    "wax": {
+      "termPt": "Wax",
+      "definitionPt": "Concentrado opaco com textura cerosa ou cremosa. É BHO que foi agitado durante o processo de purga, o que rompe a estrutura molecular do shatter e cria essa textura. Potência semelhante à do shatter (70-90% de THC). É mais fácil de manusear que o shatter.",
+      "examplesPt": []
+    },
+    "bho": {
+      "termPt": "BHO",
+      "definitionPt": "Butane Hash Oil. Extração que usa butano como solvente para dissolver os compostos ativos da cannabis. Produz concentrados de alta potência (shatter, wax, budder). Exige equipamento profissional e purga adequada para eliminar resíduos de solvente. É perigoso tentar sem o equipamento adequado.",
+      "examplesPt": []
+    },
+    "hash": {
+      "termPt": "Hash / Haxixe",
+      "definitionPt": "Uma das formas de concentrado mais antigas do mundo. É feito separando e prensando os tricomas da cannabis. Existem vários tipos: haxixe prensado marroquino, charas (haxixe fresco da Índia), bubble hash (separado com água gelada) e mais. Potência variável: 20-60% de THC.",
+      "examplesPt": []
+    },
+    "kief": {
+      "termPt": "Kief",
+      "definitionPt": "Tricomas separados da flor. É a forma mais básica de concentrado: o pó dourado que se acumula no compartimento inferior dos dichavadores de 3 compartimentos. É mais potente que a flor, mas menos que as extrações com solvente. Pode ser consumido puro, adicionado ao baseado ou usado para fazer rosin ou hash.",
+      "examplesPt": []
+    },
+    "tricomas": {
+      "termPt": "Tricomas",
+      "definitionPt": "Glândulas microscópicas em forma de cogumelo que cobrem as flores e as folhas da cannabis. São a 'fábrica' onde se produzem canabinoides, terpenos e flavonoides. Sua aparência no microscópio indica a maturidade da planta: brancos/opacos = pico de THC; âmbar = THC se degradando em CBN (efeito mais sedativo).",
+      "examplesPt": []
+    },
+    "decarboxilacion": {
+      "termPt": "Descarboxilação",
+      "definitionPt": "Processo químico que ativa os canabinoides da cannabis por meio do calor. O THCA (não psicoativo) se converte em THC (psicoativo). O CBDA se converte em CBD. Acontece automaticamente ao fumar ou vaporizar. Para comestíveis, é preciso 'descarboxilar' a cannabis antes (normalmente no forno a ~115°C por 45 min).",
+      "examplesPt": []
+    },
+    "thca": {
+      "termPt": "THCA",
+      "definitionPt": "Ácido tetra-hidrocanabinólico. A forma ácida e inativa do THC presente na planta fresca. Não é psicoativo na forma crua. Converte-se em THC pelo calor (descarboxilação). Por isso, fumar cannabis produz efeitos, mas comer a flor crua não. As porcentagens de THC nos rótulos costumam incluir o THCA potencial.",
+      "examplesPt": []
+    },
+    "genetica": {
+      "termPt": "Genética",
+      "definitionPt": "O material genético de uma planta de cannabis, que determina suas características: morfologia, potência, perfil de terpenos, tempo de floração e resistência a pragas. As genéticas são preservadas como sementes (estáveis), clones ou pólen. Os bancos de sementes desenvolvem e patenteiam genéticas.",
+      "examplesPt": []
+    },
+    "cruce": {
+      "termPt": "Cruzamento",
+      "definitionPt": "A combinação de duas ou mais genéticas para criar uma nova variedade com as características desejadas. Pai × mãe = nova variedade híbrida. O processo de estabilização (fazer com que a descendência seja consistente) pode levar várias gerações de cruzamento seletivo. Exemplo: OG Kush × Sour Diesel = Headband.",
+      "examplesPt": []
+    },
+    "fenotipo": {
+      "termPt": "Fenótipo",
+      "definitionPt": "A expressão física dos genes de uma planta de acordo com o ambiente. Duas sementes com a mesma genética podem produzir fenótipos diferentes, dependendo de luz, temperatura, umidade e nutrientes. Os cultivadores selecionam o 'feno' com as melhores características para clonar e preservar.",
+      "examplesPt": []
+    },
+    "clon": {
+      "termPt": "Clone",
+      "definitionPt": "Corte (estaca) de uma planta-mãe que é enraizado para criar uma planta geneticamente idêntica. Os clones preservam o fenótipo exato da mãe, garantindo consistência. Vantagem: você sabe exatamente o que vai obter. Desvantagem: podem transmitir pragas ou doenças da mãe.",
+      "examplesPt": []
+    },
+    "cosecha": {
+      "termPt": "Colheita",
+      "definitionPt": "A etapa final do ciclo de cultivo, em que as flores são cortadas e processadas. O momento ideal é definido observando os tricomas no microscópio (brancos leitosos = mais THC; âmbar = mais CBN/sedação). Depois da colheita vêm a secagem, a cura e, opcionalmente, o trim (manicure).",
+      "examplesPt": []
+    },
+    "curado": {
+      "termPt": "Cura",
+      "definitionPt": "Processo pós-colheita de armazenamento controlado da flor seca em potes herméticos para melhorar o sabor, o aroma e a suavidade. Durante a cura, a clorofila se decompõe, os açúcares são metabolizados e os terpenos se desenvolvem. Uma cura adequada de 4-8 semanas faz uma diferença enorme na qualidade final.",
+      "examplesPt": []
+    },
+    "dab": {
+      "termPt": "Dab / Dabbing",
+      "definitionPt": "Método de consumo de concentrados que consiste em vaporizar uma pequena quantidade de extrato em uma superfície quente (o 'nail' ou 'banger') e inalar o vapor. Os efeitos são imediatos e muito intensos, devido à alta concentração de THC. Não é recomendado para iniciantes.",
+      "examplesPt": []
+    },
+    "vaporizar": {
+      "termPt": "Vaporizar",
+      "definitionPt": "Método de consumo que aquece a cannabis (flor ou concentrado) a uma temperatura que ativa os canabinoides e os terpenos, mas sem chegar à combustão. Produz vapor em vez de fumaça, o que reduz os subprodutos nocivos da queima do material vegetal. Os efeitos são comparáveis aos de fumar, mas com sabor melhor e um dano pulmonar potencialmente menor.",
+      "examplesPt": []
+    },
+    "comestibles": {
+      "termPt": "Comestíveis",
+      "definitionPt": "Alimentos ou bebidas infundidos com cannabis. O THC é metabolizado no fígado e se converte em 11-hidroxi-THC, um metabólito mais potente e de efeitos mais prolongados. O início é tardio (30 min a 2 horas) e os efeitos duram de 4 a 8 horas. Erro comum: achar que não funcionou e consumir mais antes da hora.",
+      "examplesPt": [
+        "Regra de ouro: espere 2 horas antes de tomar outra dose"
+      ]
+    },
+    "almacenamiento": {
+      "termPt": "Armazenamento",
+      "definitionPt": "As condições corretas para preservar a qualidade da cannabis: temperatura amena (15-21°C), escuro, umidade relativa de 58-62% e recipiente hermético (pote de vidro). A luz UV, o calor e o excesso de umidade degradam o THC e os terpenos e favorecem o mofo.",
+      "examplesPt": []
+    },
+    "cannabis-medicinal": {
+      "termPt": "Cannabis Medicinal",
+      "definitionPt": "Uso da cannabis ou de seus derivados para tratar condições médicas, sob supervisão ou prescrição médica. A maioria dos países que avançaram na legalização começou pelo uso medicinal. As condições mais documentadas incluem epilepsia, dor crônica, náuseas causadas por quimioterapia e espasticidade na esclerose múltipla.",
+      "examplesPt": []
+    },
+    "descriminalizacion": {
+      "termPt": "Descriminalização",
+      "definitionPt": "Política que elimina ou reduz as sanções penais para o consumo ou a posse de pequenas quantidades de cannabis, sem chegar à legalização completa. A pessoa não vai presa por portar para uso pessoal, mas a cannabis continua ilegal (sem mercado regulado, sem venda legal). É a posição de muitos países latino-americanos.",
+      "examplesPt": []
+    },
+    "legalizacion": {
+      "termPt": "Legalização",
+      "definitionPt": "O processo de tornar a cannabis legal dentro de um marco regulatório. Implica não apenas eliminar as sanções ao consumidor, mas também criar um mercado legal regulado: licenças para cultivadores, processadores e vendedores; impostos; controle de qualidade; restrições de idade. Uruguai (2013) e Canadá (2018) são os modelos de referência.",
+      "examplesPt": []
+    }
+  },
+  "legal": {
+    "MX": {
+      "countryNamePt": "México",
+      "summaryPt": "O México tem uma situação legal complexa: o uso medicinal é legal desde 2017 e a SCJN declarou inconstitucional proibir o uso recreativo pessoal, mas a regulação completa ainda depende de regulamentação federal. Vários estados avançaram mais do que o governo federal.",
+      "whatYouCanPt": [
+        "Possuir cannabis para uso pessoal (os amparos da SCJN protegem esse direito)",
+        "Usar cannabis com fins medicinais com receita de médico autorizado",
+        "Ter acesso a medicamentos derivados da cannabis (CBD/THC) em farmácias",
+        "Cultivar até 6 plantas com amparo legal em alguns estados"
+      ],
+      "whatYouCantPt": [
+        "Comprar ou vender cannabis recreativa (mercado negro ou cinza)",
+        "Consumir em espaços públicos",
+        "Importar ou exportar cannabis recreativa",
+        "Operar um dispensário recreativo sem concessão federal (ainda não regulamentado)"
+      ],
+      "keyDatePt": "Desde 2017 (medicinal) / 2021 (SCJN)",
+      "statesPt": {
+        "Mexico City (CDMX)": {
+          "namePt": "Cidade do México",
+          "notePt": "A mais permissiva do país. O consumo pessoal é amplamente tolerado."
+        },
+        "Jalisco": {
+          "namePt": "Jalisco",
+          "notePt": "Cultivo pessoal permitido com amparo."
+        },
+        "Nuevo León": {
+          "namePt": "Nuevo León",
+          "notePt": "Uso pessoal tolerado com amparo."
+        },
+        "Puebla": {
+          "namePt": "Puebla",
+          "notePt": "Avanços na regulamentação médica."
+        }
+      }
+    },
+    "CR": {
+      "countryNamePt": "Costa Rica",
+      "summaryPt": "A Costa Rica legalizou a cannabis medicinal e o cânhamo industrial em 2022. O uso recreativo continua ilegal, mas o país adotou uma postura mais de saúde pública do que punitiva.",
+      "whatYouCanPt": [
+        "Usar cannabis medicinal com receita médica",
+        "Cultivar cânhamo industrial com licença do SENASA",
+        "Ter acesso legal a produtos de CBD"
+      ],
+      "whatYouCantPt": [
+        "Possuir, usar ou vender cannabis recreativa",
+        "Cultivar plantas para uso recreativo sem autorização"
+      ],
+      "keyDatePt": "Desde 2022",
+      "statesPt": {}
+    },
+    "PA": {
+      "countryNamePt": "Panamá",
+      "summaryPt": "O Panamá aprovou o uso medicinal da cannabis em 2021, tornando-se um dos primeiros países da América Central a fazê-lo. O uso recreativo continua ilegal.",
+      "whatYouCanPt": [
+        "Usar cannabis medicinal com receita de médico autorizado",
+        "Ter acesso a medicamentos de cannabis em farmácias habilitadas"
+      ],
+      "whatYouCantPt": [
+        "Possuir ou usar cannabis recreativa",
+        "Cultivar sem licença do Ministério da Saúde"
+      ],
+      "keyDatePt": "Desde 2021",
+      "statesPt": {}
+    },
+    "GT": {
+      "countryNamePt": "Guatemala",
+      "summaryPt": "A cannabis é ilegal na Guatemala, tanto para uso recreativo quanto medicinal. A posse pode resultar em acusações criminais.",
+      "whatYouCanPt": [],
+      "whatYouCantPt": [
+        "Possuir, usar, cultivar ou comercializar cannabis de qualquer forma"
+      ],
+      "keyDatePt": "",
+      "statesPt": {}
+    },
+    "HN": {
+      "countryNamePt": "Honduras",
+      "summaryPt": "A cannabis é totalmente ilegal em Honduras. Há penas severas para posse, tráfico e cultivo.",
+      "whatYouCanPt": [],
+      "whatYouCantPt": [
+        "Possuir, usar, cultivar ou comercializar cannabis de qualquer forma"
+      ],
+      "keyDatePt": "",
+      "statesPt": {}
+    },
+    "SV": {
+      "countryNamePt": "El Salvador",
+      "summaryPt": "A cannabis é ilegal em El Salvador. Existe tolerância de fato em alguns casos de posse mínima, mas não há proteção legal.",
+      "whatYouCanPt": [],
+      "whatYouCantPt": [
+        "Possuir, usar, cultivar ou comercializar cannabis"
+      ],
+      "keyDatePt": "",
+      "statesPt": {}
+    },
+    "NI": {
+      "countryNamePt": "Nicarágua",
+      "summaryPt": "A cannabis é ilegal na Nicarágua. A aplicação da lei varia, mas o marco legal não oferece proteções.",
+      "whatYouCanPt": [],
+      "whatYouCantPt": [
+        "Possuir, usar, cultivar ou comercializar cannabis"
+      ],
+      "keyDatePt": "",
+      "statesPt": {}
+    },
+    "UY": {
+      "countryNamePt": "Uruguai",
+      "summaryPt": "O Uruguai foi o primeiro país do mundo a legalizar a cannabis recreativa, em 2013. Cidadãos e residentes podem comprar em farmácias, cultivar até 6 plantas ou entrar para um clube canábico.",
+      "whatYouCanPt": [
+        "Comprar até 40g/mês em farmácias registradas (só cidadãos/residentes)",
+        "Cultivar até 6 plantas em casa",
+        "Fazer parte de um clube canábico (até 99 plantas para 15 a 45 sócios)",
+        "Usar cannabis em espaços privados"
+      ],
+      "whatYouCantPt": [
+        "Turistas não podem comprar em farmácias (só cidadãos/residentes registrados)",
+        "Consumir em espaços públicos",
+        "Exportar cannabis"
+      ],
+      "keyDatePt": "Desde dezembro de 2013",
+      "statesPt": {}
+    },
+    "CO": {
+      "countryNamePt": "Colômbia",
+      "summaryPt": "A Colômbia foi pioneira na descriminalização da cannabis na América Latina. A dose pessoal (até 20g) não é crime. A cannabis medicinal e de exportação é um dos setores agrícolas que mais crescem no país.",
+      "whatYouCanPt": [
+        "Possuir até 20g para consumo pessoal sem consequências penais (dose pessoal)",
+        "Usar cannabis medicinal com autorização do Ministério da Saúde",
+        "O cultivo para exportação medicinal é regulamentado e está em crescimento"
+      ],
+      "whatYouCantPt": [
+        "Vender ou comercializar cannabis recreativa",
+        "Ultrapassar a dose pessoal sem risco de sanções",
+        "Consumir na presença de menores ou em espaços públicos abertos"
+      ],
+      "keyDatePt": "Desde 1994 (C-221) / 2016 (medicinal)",
+      "statesPt": {}
+    },
+    "AR": {
+      "countryNamePt": "Argentina",
+      "summaryPt": "A Argentina descriminalizou a posse para consumo pessoal em 2009 (decisão \"Arriola\" da Suprema Corte). A cannabis medicinal é legal desde 2017. Há um debate ativo sobre a legalização do uso recreativo.",
+      "whatYouCanPt": [
+        "Ter cannabis para consumo pessoal em espaços privados (decisão Arriola)",
+        "Usar cannabis medicinal com receita de médico registrado",
+        "Ter acesso ao Reprocann: programa de cultivo pessoal medicinal regulado pelo Estado",
+        "Cultivar com autorização do Reprocann (até 9 plantas por paciente/cuidador)"
+      ],
+      "whatYouCantPt": [
+        "Vender ou comercializar cannabis para uso recreativo de qualquer forma",
+        "Consumir em espaços públicos",
+        "Cultivar sem autorização do Reprocann"
+      ],
+      "keyDatePt": "Desde 2009 (descriminalização) / 2017 (medicinal)",
+      "statesPt": {}
+    },
+    "BR": {
+      "countryNamePt": "Brasil",
+      "summaryPt": "O Brasil tem cannabis medicinal legal via ANVISA desde 2019 (importação e produção local de CBD/THC). Em 2024, o STF decidiu que criminalizar a posse para uso pessoal é inconstitucional, o que representou uma mudança histórica na política de drogas.",
+      "whatYouCanPt": [
+        "Usar cannabis medicinal (CBD e THC) com prescrição médica autorizada pela ANVISA",
+        "Importar produtos de cannabis medicinal autorizados",
+        "Adquirir produtos de cannabis em farmácias habilitadas pela ANVISA",
+        "A posse para uso pessoal não pode resultar em prisão (STF 2024)"
+      ],
+      "whatYouCantPt": [
+        "Vender ou distribuir cannabis recreativa",
+        "Cultivar sem autorização da ANVISA",
+        "Usar cannabis em espaços públicos sem consequências administrativas"
+      ],
+      "keyDatePt": "Desde 2019 (ANVISA) / 2024 (STF)",
+      "statesPt": {}
+    },
+    "CL": {
+      "countryNamePt": "Chile",
+      "summaryPt": "O Chile tem cannabis medicinal legal desde 2015 e permite o autocultivo pessoal. É o país com o maior consumo per capita de cannabis da América Latina e já teve debates sérios sobre a legalização do uso recreativo.",
+      "whatYouCanPt": [
+        "Cultivar até 6 plantas em espaços privados para consumo pessoal",
+        "Usar cannabis medicinal com receita de médico autorizado",
+        "Ter acesso a produtos farmacêuticos de cannabis (CBD/THC) em farmácias"
+      ],
+      "whatYouCantPt": [
+        "Vender cannabis recreativa",
+        "Consumir em espaços públicos",
+        "Ultrapassar o limite de 6 plantas para uso pessoal"
+      ],
+      "keyDatePt": "Desde 2015",
+      "statesPt": {}
+    },
+    "PE": {
+      "countryNamePt": "Peru",
+      "summaryPt": "O Peru legalizou a cannabis medicinal em 2019, permitindo o uso, a importação e a produção de óleos de CBD/THC. O uso recreativo continua ilegal, embora a posse de pequenas quantidades para consumo pessoal seja geralmente tolerada.",
+      "whatYouCanPt": [
+        "Usar cannabis medicinal (óleos de CBD/THC) com prescrição médica",
+        "Ter acesso a produtos de cannabis em estabelecimentos de saúde autorizados"
+      ],
+      "whatYouCantPt": [
+        "Usar cannabis para fins recreativos (embora pequenas quantidades sejam toleradas de fato)",
+        "Cultivar sem autorização do MINSA",
+        "Comercializar cannabis recreativa"
+      ],
+      "keyDatePt": "Desde 2019",
+      "statesPt": {}
+    },
+    "EC": {
+      "countryNamePt": "Equador",
+      "summaryPt": "O Equador descriminalizou a posse para consumo pessoal em 2013 (até 10g). A cannabis medicinal foi aprovada em 2019. O país avançou rumo a políticas de drogas mais centradas na saúde pública.",
+      "whatYouCanPt": [
+        "Possuir até 10g para consumo pessoal sem consequências penais",
+        "Usar cannabis medicinal sob supervisão médica autorizada"
+      ],
+      "whatYouCantPt": [
+        "Vender ou distribuir cannabis para uso recreativo de qualquer forma",
+        "Cultivar sem autorização",
+        "Ultrapassar os limites da dose pessoal"
+      ],
+      "keyDatePt": "Desde 2013 (descriminalização) / 2019 (medicinal)",
+      "statesPt": {}
+    },
+    "PY": {
+      "countryNamePt": "Paraguai",
+      "summaryPt": "O Paraguai é um caso paradoxal: é um dos maiores produtores de cannabis ilícita da América do Sul, mas legalizou a produção e a exportação de cannabis medicinal em 2017. O consumo recreativo continua ilegal.",
+      "whatYouCanPt": [
+        "Produzir e exportar cannabis medicinal com licença do INTN",
+        "Usar cannabis medicinal com prescrição de médico autorizado"
+      ],
+      "whatYouCantPt": [
+        "Possuir, usar ou vender cannabis recreativa",
+        "Cultivar sem licença de exportação medicinal"
+      ],
+      "keyDatePt": "Desde 2017 (medicinal/exportação)",
+      "statesPt": {}
+    },
+    "BO": {
+      "countryNamePt": "Bolívia",
+      "summaryPt": "A cannabis é ilegal na Bolívia. A folha de coca tem status legal especial por razões culturais e históricas, mas a cannabis não tem nenhuma proteção legal.",
+      "whatYouCanPt": [],
+      "whatYouCantPt": [
+        "Possuir, usar, cultivar ou comercializar cannabis de qualquer forma"
+      ],
+      "keyDatePt": "",
+      "statesPt": {}
+    },
+    "VE": {
+      "countryNamePt": "Venezuela",
+      "summaryPt": "A cannabis é totalmente ilegal na Venezuela. As penas por posse, cultivo e tráfico são severas.",
+      "whatYouCanPt": [],
+      "whatYouCantPt": [
+        "Possuir, usar, cultivar ou comercializar cannabis de qualquer forma"
+      ],
+      "keyDatePt": "",
+      "statesPt": {}
+    },
+    "DO": {
+      "countryNamePt": "República Dominicana",
+      "summaryPt": "A cannabis é ilegal na República Dominicana. Há debate parlamentar sobre a cannabis medicinal, mas nenhuma legislação foi aprovada.",
+      "whatYouCanPt": [],
+      "whatYouCantPt": [
+        "Possuir, usar, cultivar ou comercializar cannabis"
+      ],
+      "keyDatePt": "",
+      "statesPt": {}
+    },
+    "CU": {
+      "countryNamePt": "Cuba",
+      "summaryPt": "A cannabis é totalmente ilegal em Cuba. Não há movimento legislativo conhecido rumo à regulamentação.",
+      "whatYouCanPt": [],
+      "whatYouCantPt": [
+        "Possuir, usar, cultivar ou comercializar cannabis"
+      ],
+      "keyDatePt": "",
+      "statesPt": {}
+    },
+    "PR": {
+      "countryNamePt": "Porto Rico",
+      "summaryPt": "Porto Rico (território dos EUA) tem cannabis medicinal legal desde 2015 e conta com um programa sólido de dispensários. A cannabis recreativa é legal para residentes por regulamentação local.",
+      "whatYouCanPt": [
+        "Usar cannabis medicinal com cartão de paciente",
+        "Comprar em dispensários licenciados de cannabis medicinal",
+        "O uso recreativo adulto foi aprovado localmente"
+      ],
+      "whatYouCantPt": [
+        "Consumir em espaços públicos",
+        "Levar cannabis para fora do território (voos federais)"
+      ],
+      "keyDatePt": "Desde 2015",
+      "statesPt": {}
+    },
+    "ES": {
+      "countryNamePt": "Espanha",
+      "summaryPt": "A Espanha tem uma posição única: o consumo e o cultivo em espaços privados são legais, e os clubes canábicos funcionam em uma zona cinzenta legal (especialmente no País Basco e na Catalunha). Não existe um mercado recreativo regulado, mas a realidade prática é mais permissiva que a de muitos países.",
+      "whatYouCanPt": [
+        "Consumir e cultivar cannabis em espaços privados (casa, clube canábico)",
+        "Fazer parte de um clube canábico (associações privadas sem fins lucrativos)",
+        "Uso medicinal do Sativex com receita médica"
+      ],
+      "whatYouCantPt": [
+        "Comprar ou vender cannabis em espaços públicos (tráfico de drogas)",
+        "Consumir ou portar na via pública (infração administrativa com multa)",
+        "Fazer publicidade de cannabis ou de clubes canábicos"
+      ],
+      "keyDatePt": "Situação atual desde a jurisprudência do TC (anos 90)",
+      "statesPt": {
+        "País Vasco": {
+          "namePt": "País Basco",
+          "notePt": "A região com a regulamentação mais avançada de clubes canábicos."
+        },
+        "Cataluña": {
+          "namePt": "Catalunha",
+          "notePt": "Maior densidade de clubes canábicos fora do País Basco."
+        }
+      }
+    },
+    "DE": {
+      "countryNamePt": "Alemanha",
+      "summaryPt": "A Alemanha legalizou a cannabis recreativa em abril de 2024, tornando-se o maior país da Europa a fazê-lo. Os adultos podem portar até 25g em público e cultivar até 3 plantas. Os clubes canábicos (CSC) começaram a funcionar em julho de 2024.",
+      "whatYouCanPt": [
+        "Portar até 25g em espaços públicos",
+        "Cultivar até 3 plantas em casa",
+        "Fazer parte de um clube canábico (CSC) para obter cannabis cultivada coletivamente",
+        "Adultos maiores de 18 anos podem consumir em áreas sem restrição"
+      ],
+      "whatYouCantPt": [
+        "Vender cannabis em lojas de varejo (ainda não há dispensários regulamentados)",
+        "Consumir perto de escolas, parquinhos infantis ou áreas esportivas",
+        "Menores de 18 anos terem acesso à cannabis"
+      ],
+      "keyDatePt": "Desde abril de 2024",
+      "statesPt": {}
+    },
+    "US": {
+      "countryNamePt": "Estados Unidos",
+      "summaryPt": "Os EUA não têm legalização federal: a cannabis continua ilegal em nível federal (Schedule I). No entanto, 24 estados e D.C. legalizaram o uso recreativo, e 38 estados, o medicinal. É o maior mercado legal de cannabis do mundo, mas com um mosaico legal muito fragmentado.",
+      "whatYouCanPt": [
+        "Em estados com uso recreativo legal: comprar, portar e consumir como adulto (+21)",
+        "Em estados com uso medicinal: ter acesso com cartão de paciente",
+        "Cultivar em casa em muitos estados com uso recreativo legal (normalmente até 6 plantas)"
+      ],
+      "whatYouCantPt": [
+        "Cruzar fronteiras estaduais com cannabis (crime federal)",
+        "Consumir em propriedades federais (parques nacionais, aeroportos, prédios federais)",
+        "Trabalhar no setor de cannabis com acesso ao sistema bancário federal (em processo de mudança)",
+        "Em estados sem legalização: qualquer uso recreativo é ilegal"
+      ],
+      "keyDatePt": "Colorado e Washington: primeiros a legalizar o uso recreativo (2012)",
+      "statesPt": {
+        "California": {
+          "namePt": "Califórnia",
+          "notePt": "Mercado recreativo desde 2016. O maior do mundo."
+        },
+        "Colorado": {
+          "namePt": "Colorado",
+          "notePt": "Primeiro estado a legalizar o uso recreativo (2012)."
+        },
+        "New York": {
+          "namePt": "Nova York",
+          "notePt": "Legal desde 2021, com dispensários abertos desde 2023."
+        },
+        "Texas": {
+          "namePt": "Texas",
+          "notePt": "Apenas uso medicinal muito restrito (baixo teor de THC)."
+        },
+        "Florida": {
+          "namePt": "Flórida",
+          "notePt": "Programa medicinal robusto; o uso recreativo aguarda votação."
+        },
+        "Idaho": {
+          "namePt": "Idaho",
+          "notePt": "Um dos poucos estados sem nenhuma forma de legalização."
+        }
+      }
+    },
+    "CA": {
+      "countryNamePt": "Canadá",
+      "summaryPt": "O Canadá foi o segundo país do mundo (e o primeiro do G7) a legalizar a cannabis recreativa em nível federal, em outubro de 2018. O sistema é regulado em nível federal, com implementação pelas províncias. Os adultos podem portar até 30g em público, e os preços caíram significativamente desde a legalização.",
+      "whatYouCanPt": [
+        "Portar até 30g de cannabis seca em espaços públicos",
+        "Comprar em lojas licenciadas pela província ou pelo correio (lojas federais online)",
+        "Cultivar até 4 plantas por residência para uso pessoal",
+        "Consumir produtos de cannabis: flor, comestíveis, concentrados, tópicos"
+      ],
+      "whatYouCantPt": [
+        "Vender sem licença federal (crime grave)",
+        "Dar cannabis a menores de 18 anos (ou 19, dependendo da província)",
+        "Cruzar a fronteira com cannabis (inclusive para os EUA, onde for legal em nível estadual)",
+        "Consumir em veículos ou em locais onde é proibido fumar"
+      ],
+      "keyDatePt": "Desde outubro de 2018",
+      "statesPt": {}
+    }
+  }
+}

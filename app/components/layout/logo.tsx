@@ -7,12 +7,12 @@ interface LogoProps {
 
 export function Logo({ size = 22, to = "/" }: LogoProps) {
   return (
-    <Link to={to} className="inline-flex items-center group">
-      <span className="display" style={{ fontSize: size, letterSpacing: "-0.02em" }}>
-        weed
+    <Link to={to} className="inline-flex items-center group" aria-label="WeedHub, inicio">
+      <span className="rotulo inline-flex items-center" style={{ fontSize: size, lineHeight: 1 }}>
+        <span className="text-yellow group-hover:text-pink transition-colors">Weed</span>
         <span
-          className="display-wonk"
-          style={{ color: "var(--accent)", fontStyle: "italic" }}
+          className="ml-[.12em] px-[.18em] pt-[.08em] pb-[.04em] bg-pink text-ink"
+          style={{ transform: "rotate(-3deg)", display: "inline-block" }}
         >
           hub
         </span>

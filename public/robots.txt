@@ -1,3 +1,5 @@
+# WeedHub — cannabis encyclopedia (es / pt-BR / en)
+
 User-agent: *
 Allow: /
 Disallow: /api/
@@ -6,5 +8,23 @@ Disallow: /auth
 Disallow: /onboarding
 Disallow: /profile/edit
 Disallow: /profile/saved
+Disallow: /profile/delete
 Disallow: /logout
+Disallow: /strains/*/review
+Disallow: /ds
+
+# AI search & answer engines: allowed (citations in ChatGPT, Perplexity, Claude, Gemini)
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Perplexity-User
+Allow: /
+User-agent: Claude-SearchBot
+Allow: /
+User-agent: Claude-User
+Allow: /
+
 Sitemap: https://www.weedhub.info/sitemap.xml

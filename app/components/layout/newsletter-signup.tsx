@@ -34,8 +34,8 @@ export function NewsletterSignup() {
 
   return (
     <div>
-      <div className="kicker mb-3">{t.footer.newsletter.kicker}</div>
-      <p className="text-sm text-fg-muted leading-relaxed mb-4 max-w-[32ch]">
+      <div className="font-extrabold uppercase [font-stretch:78%] text-yellow text-base mb-2">{t.footer.newsletter.kicker}</div>
+      <p className="text-sm text-white/85 leading-relaxed mb-4 max-w-[32ch]">
         {t.footer.newsletter.description}
       </p>
       <fetcher.Form
@@ -58,7 +58,7 @@ export function NewsletterSignup() {
           type="email"
           placeholder={t.footer.newsletter.placeholder}
           required
-          className="flex-1 h-10 rounded-md border border-line bg-raised px-3 text-sm focus:outline-none focus:border-accent"
+          className="flex-1 h-11 rounded-[3px] border-2 border-ink bg-white text-ink px-3 text-[15px] focus:outline-none focus:shadow-[0_0_0_3px_var(--fluor-yellow)]"
         />
         <Button
           type="submit"

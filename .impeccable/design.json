@@ -1,0 +1,506 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-23T17:44:41.084888+00:00",
+  "title": "Design System: WeedHub",
+  "extensions": {
+    "colorMeta": {
+      "cobalt": {
+        "role": "primary",
+        "displayName": "Rótulo Cobalt",
+        "canonical": "#1d3fbf",
+        "tonalRamp": [
+          "#0a1446",
+          "#0f2070",
+          "#142d8c",
+          "#1d3fbf",
+          "#4565d6",
+          "#7d93e4",
+          "#b5c2f0",
+          "#e6ebfb"
+        ]
+      },
+      "cobalt-deep": {
+        "role": "primary",
+        "displayName": "Deep Cobalt",
+        "canonical": "#142d8c",
+        "tonalRamp": [
+          "#0a1446",
+          "#0f2070",
+          "#142d8c",
+          "#1d3fbf",
+          "#4565d6",
+          "#7d93e4",
+          "#b5c2f0",
+          "#e6ebfb"
+        ]
+      },
+      "fluor-yellow": {
+        "role": "secondary",
+        "displayName": "Cartulina Yellow",
+        "canonical": "#f6e534",
+        "tonalRamp": [
+          "#3a3a1c",
+          "#6b6210",
+          "#a69a12",
+          "#d9c81c",
+          "#f6e534",
+          "#f9ee75",
+          "#fff39a",
+          "#fffbdc"
+        ]
+      },
+      "fluor-pink": {
+        "role": "secondary",
+        "displayName": "Cartulina Pink",
+        "canonical": "#ff4fa3",
+        "tonalRamp": [
+          "#4a1832",
+          "#7d0f46",
+          "#b81a68",
+          "#e83088",
+          "#ff4fa3",
+          "#ff7dbb",
+          "#ffb3d7",
+          "#ffe6f2"
+        ]
+      },
+      "fluor-green": {
+        "role": "secondary",
+        "displayName": "Cartulina Green",
+        "canonical": "#7cf08a",
+        "tonalRamp": [
+          "#123a18",
+          "#1f6229",
+          "#2f8c3c",
+          "#4fc35e",
+          "#7cf08a",
+          "#a5f5ae",
+          "#cbf9d0",
+          "#ecfdee"
+        ]
+      },
+      "fluor-orange": {
+        "role": "secondary",
+        "displayName": "Cartulina Orange",
+        "canonical": "#ff8a2a",
+        "tonalRamp": [
+          "#43200a",
+          "#7a3a0e",
+          "#b45514",
+          "#e8701c",
+          "#ff8a2a",
+          "#ffa95f",
+          "#ffcb9b",
+          "#fff0e2"
+        ]
+      },
+      "warm": {
+        "role": "tertiary",
+        "displayName": "Magenta Paint",
+        "canonical": "#c8105c",
+        "tonalRamp": [
+          "#3a0519",
+          "#650a2e",
+          "#960d45",
+          "#c8105c",
+          "#de4a85",
+          "#ec85ae",
+          "#ffd9ea",
+          "#fff1f6"
+        ]
+      },
+      "warm-soft": {
+        "role": "tertiary",
+        "displayName": "Magenta Wash",
+        "canonical": "#ffd9ea"
+      },
+      "lilac": {
+        "role": "tertiary",
+        "displayName": "Violet Paint",
+        "canonical": "#6a2bc4",
+        "tonalRamp": [
+          "#1d0b38",
+          "#341463",
+          "#4f1f96",
+          "#6a2bc4",
+          "#8d5bd6",
+          "#b98cff",
+          "#ebdfff",
+          "#f7f2ff"
+        ]
+      },
+      "lilac-soft": {
+        "role": "tertiary",
+        "displayName": "Violet Wash",
+        "canonical": "#ebdfff"
+      },
+      "gold": {
+        "role": "tertiary",
+        "displayName": "Rating Gold",
+        "canonical": "#c98a00",
+        "tonalRamp": [
+          "#3a2800",
+          "#634500",
+          "#966800",
+          "#c98a00",
+          "#e0a930",
+          "#f0c870",
+          "#f9e3b0",
+          "#fdf5e3"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Sign Ink",
+        "canonical": "#141414",
+        "tonalRamp": [
+          "#141414",
+          "#2a2a28",
+          "#3f3e39",
+          "#5f5e57",
+          "#8a8980",
+          "#cfcdc3",
+          "#ecece6",
+          "#fbfbf8"
+        ]
+      },
+      "enamel": {
+        "role": "neutral",
+        "displayName": "White Enamel",
+        "canonical": "#fbfbf8"
+      },
+      "bg-raised": {
+        "role": "neutral",
+        "displayName": "Board White",
+        "canonical": "#ffffff"
+      },
+      "bg-sunken": {
+        "role": "neutral",
+        "displayName": "Primed Wall",
+        "canonical": "#ecece6"
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Pencil Line",
+        "canonical": "#cfcdc3"
+      },
+      "fg-muted": {
+        "role": "neutral",
+        "displayName": "Faded Ink",
+        "canonical": "#3f3e39"
+      },
+      "fg-dim": {
+        "role": "neutral",
+        "displayName": "Chalk Ink",
+        "canonical": "#5f5e57"
+      },
+      "accent-soft": {
+        "role": "neutral",
+        "displayName": "Butter Wash",
+        "canonical": "#fff39a"
+      },
+      "night-bg": {
+        "role": "neutral",
+        "displayName": "Night Navy",
+        "canonical": "#0e1330",
+        "tonalRamp": [
+          "#0a0e25",
+          "#0e1330",
+          "#161d45",
+          "#1d2654",
+          "#2f3a72",
+          "#9da2c4",
+          "#c9cbe0",
+          "#f6f5ef"
+        ]
+      },
+      "night-raised": {
+        "role": "neutral",
+        "displayName": "Night Board",
+        "canonical": "#161d45"
+      },
+      "night-sunken": {
+        "role": "neutral",
+        "displayName": "Night Pit",
+        "canonical": "#0a0e25"
+      },
+      "night-elev": {
+        "role": "neutral",
+        "displayName": "Night Lift",
+        "canonical": "#1d2654"
+      },
+      "night-line": {
+        "role": "neutral",
+        "displayName": "Night Line",
+        "canonical": "#2f3a72"
+      },
+      "night-fg": {
+        "role": "neutral",
+        "displayName": "Bone",
+        "canonical": "#f6f5ef"
+      },
+      "night-fg-muted": {
+        "role": "neutral",
+        "displayName": "Night Faded Ink",
+        "canonical": "#c9cbe0"
+      },
+      "night-fg-dim": {
+        "role": "neutral",
+        "displayName": "Night Chalk",
+        "canonical": "#9da2c4"
+      },
+      "night-wall": {
+        "role": "primary",
+        "displayName": "Night Cobalt",
+        "canonical": "#1a2a8a"
+      },
+      "night-lilac": {
+        "role": "tertiary",
+        "displayName": "Night Violet",
+        "canonical": "#b98cff"
+      }
+    },
+    "typographyMeta": {
+      "masthead": {
+        "displayName": "Masthead",
+        "purpose": "Page name painted on its wall band, yellow with the rótulo drop shade; footer wordmark."
+      },
+      "display": {
+        "displayName": "Display",
+        "purpose": "Section headings, condensed Archivo 800 at width 72%."
+      },
+      "strain-name": {
+        "displayName": "Strain Name",
+        "purpose": "Permanent Marker, only for strain names on cartulinas."
+      },
+      "price": {
+        "displayName": "Price",
+        "purpose": "THC lettered like a market price; stat figures and rank numerals."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Sub-headings and data values."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Reading text at normal width."
+      },
+      "prose": {
+        "displayName": "Prose",
+        "purpose": "Long-form guides and articles, paragraphs capped at 68ch."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Painted-board lettering, uppercase."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Data, stat and form labels. Never above a heading."
+      }
+    },
+    "shadows": [
+      {
+        "name": "board-drop",
+        "value": "0 3px 0 var(--line-strong)",
+        "purpose": "Solid ink drop under every painted button at rest; 4px on hover, 0 when pressed."
+      },
+      {
+        "name": "focus-halo",
+        "value": "0 0 0 3px var(--fluor-yellow)",
+        "purpose": "Input and search-board focus; 4px on the hero search board."
+      },
+      {
+        "name": "shadow-soft",
+        "value": "0 2px 0 rgba(20,20,20,.06), 0 14px 28px -18px rgba(20,20,20,.35)",
+        "purpose": "Floating menus and toasts only. Night: 0 14px 28px -18px rgba(0,0,0,.7)."
+      },
+      {
+        "name": "rotulo-shade",
+        "value": "text-shadow: .045em .045em 0 var(--ink)",
+        "purpose": "Sign-painter drop shade on masthead lettering only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "pin-in",
+        "value": "pinIn .5s cubic-bezier(.16,1,.3,1) both",
+        "purpose": "Signs settle 10px onto the wall into their tilt. The one authored moment."
+      },
+      {
+        "name": "fade-up",
+        "value": "fadeUp .35s cubic-bezier(.16,1,.3,1) both",
+        "purpose": "Menus and dropdowns rise 6px."
+      },
+      {
+        "name": "toast-in",
+        "value": "toastIn .2s ease-out both",
+        "purpose": "Toasts slide up 20px."
+      },
+      {
+        "name": "control-feedback",
+        "value": "background .12s, color .12s, transform .08s, box-shadow .12s",
+        "purpose": "Button and chip press, lift and paint changes."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation: none",
+        "purpose": "pin-in, fade-up and toast-in are removed under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Cobalt painted board with an ink drop; the main action on the day wall.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Ver cepas</button> <button class=\"ds-btn ds-btn-primary\" disabled>Sin datos</button>",
+      "css": ":host{--cobalt:#1d3fbf;--cobalt-deep:#142d8c;--ink:#141414;--enamel:#fbfbf8;--fluor-pink:#ff4fa3;--fluor-yellow:#f6e534;--fluor-green:#7cf08a;--bg-raised:#fff;--bg-sunken:#ecece6;--line:#cfcdc3;--line-strong:#141414;--fg:#141414;--fg-dim:#5f5e57;--accent:#1d3fbf;--accent-ink:#fff;font-family:Archivo,system-ui,sans-serif;} .ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:3px;border:2px solid var(--line-strong);font-weight:800;font-stretch:78%;font-size:15px;letter-spacing:.02em;text-transform:uppercase;cursor:pointer;box-shadow:0 3px 0 var(--line-strong);transition:background .12s,color .12s,transform .08s,box-shadow .12s;} .ds-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 0 var(--line-strong);} .ds-btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 0 0 var(--line-strong);} .ds-btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px;} .ds-btn:disabled{cursor:not-allowed;box-shadow:none;background:var(--bg-sunken);color:var(--fg-dim);border-color:var(--line);border-style:dashed;} .ds-btn[aria-pressed=true]{background:var(--fg);color:var(--enamel);} .ds-btn-primary{background:var(--accent);color:var(--accent-ink);} .ds-btn-primary:hover:not(:disabled){background:var(--cobalt-deep);}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "White board that paints yellow on hover; secondary actions and toggles.",
+      "html": "<button class=\"ds-btn ds-btn-ghost\">Guardar</button> <button class=\"ds-btn ds-btn-ghost\" aria-pressed=\"true\">Guardada</button>",
+      "css": ":host{--cobalt:#1d3fbf;--cobalt-deep:#142d8c;--ink:#141414;--enamel:#fbfbf8;--fluor-pink:#ff4fa3;--fluor-yellow:#f6e534;--fluor-green:#7cf08a;--bg-raised:#fff;--bg-sunken:#ecece6;--line:#cfcdc3;--line-strong:#141414;--fg:#141414;--fg-dim:#5f5e57;--accent:#1d3fbf;--accent-ink:#fff;font-family:Archivo,system-ui,sans-serif;} .ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:3px;border:2px solid var(--line-strong);font-weight:800;font-stretch:78%;font-size:15px;letter-spacing:.02em;text-transform:uppercase;cursor:pointer;box-shadow:0 3px 0 var(--line-strong);transition:background .12s,color .12s,transform .08s,box-shadow .12s;} .ds-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 0 var(--line-strong);} .ds-btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 0 0 var(--line-strong);} .ds-btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px;} .ds-btn:disabled{cursor:not-allowed;box-shadow:none;background:var(--bg-sunken);color:var(--fg-dim);border-color:var(--line);border-style:dashed;} .ds-btn[aria-pressed=true]{background:var(--fg);color:var(--enamel);} .ds-btn-ghost{background:var(--bg-raised);color:var(--fg);} .ds-btn-ghost:hover:not(:disabled){background:var(--fluor-yellow);color:var(--ink);}"
+    },
+    {
+      "name": "Warm Button",
+      "kind": "button",
+      "refersTo": "button-warm",
+      "description": "Cartulina-pink board for search and submit.",
+      "html": "<button class=\"ds-btn ds-btn-warm\">Buscar</button>",
+      "css": ":host{--cobalt:#1d3fbf;--cobalt-deep:#142d8c;--ink:#141414;--enamel:#fbfbf8;--fluor-pink:#ff4fa3;--fluor-yellow:#f6e534;--fluor-green:#7cf08a;--bg-raised:#fff;--bg-sunken:#ecece6;--line:#cfcdc3;--line-strong:#141414;--fg:#141414;--fg-dim:#5f5e57;--accent:#1d3fbf;--accent-ink:#fff;font-family:Archivo,system-ui,sans-serif;} .ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:3px;border:2px solid var(--line-strong);font-weight:800;font-stretch:78%;font-size:15px;letter-spacing:.02em;text-transform:uppercase;cursor:pointer;box-shadow:0 3px 0 var(--line-strong);transition:background .12s,color .12s,transform .08s,box-shadow .12s;} .ds-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 0 var(--line-strong);} .ds-btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 0 0 var(--line-strong);} .ds-btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px;} .ds-btn:disabled{cursor:not-allowed;box-shadow:none;background:var(--bg-sunken);color:var(--fg-dim);border-color:var(--line);border-style:dashed;} .ds-btn[aria-pressed=true]{background:var(--fg);color:var(--enamel);} .ds-btn-warm{background:var(--fluor-pink);color:var(--ink);} .ds-btn-warm:hover:not(:disabled){background:#ff7dbb;}"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Interactive filter board; selected chips are ink.",
+      "html": "<button class=\"ds-chip\">Mañana</button> <button class=\"ds-chip\" aria-pressed=\"true\">Tarde</button> <button class=\"ds-chip ds-chip-accent\" aria-pressed=\"true\">Noche</button>",
+      "css": ":host{--cobalt:#1d3fbf;--cobalt-deep:#142d8c;--ink:#141414;--enamel:#fbfbf8;--fluor-pink:#ff4fa3;--fluor-yellow:#f6e534;--fluor-green:#7cf08a;--bg-raised:#fff;--bg-sunken:#ecece6;--line:#cfcdc3;--line-strong:#141414;--fg:#141414;--fg-dim:#5f5e57;--accent:#1d3fbf;--accent-ink:#fff;font-family:Archivo,system-ui,sans-serif;} .ds-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:3px;border:2px solid var(--line-strong);font-size:14px;font-weight:700;font-stretch:85%;color:var(--fg);background:var(--bg-raised);cursor:pointer;transition:background .12s,transform .08s;} .ds-chip:hover{background:var(--fluor-yellow);color:var(--ink);} .ds-chip:active{transform:translateY(2px);} .ds-chip:focus-visible{outline:3px solid var(--accent);outline-offset:3px;} .ds-chip[aria-pressed=true]{background:var(--fg);color:var(--enamel);} .ds-chip-accent[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);}"
+    },
+    {
+      "name": "Tag",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Small painted label for type, status and categories.",
+      "html": "<span class=\"ds-tag\">Indica</span> <span class=\"ds-tag ds-tag-accent\">Nuevo</span> <span class=\"ds-tag ds-tag-warm\">+18</span>",
+      "css": ":host{--cobalt:#1d3fbf;--cobalt-deep:#142d8c;--ink:#141414;--enamel:#fbfbf8;--fluor-pink:#ff4fa3;--fluor-yellow:#f6e534;--fluor-green:#7cf08a;--bg-raised:#fff;--bg-sunken:#ecece6;--line:#cfcdc3;--line-strong:#141414;--fg:#141414;--fg-dim:#5f5e57;--accent:#1d3fbf;--accent-ink:#fff;font-family:Archivo,system-ui,sans-serif;} .ds-tag{display:inline-flex;align-items:center;padding:3px 8px;border-radius:3px;border:1.5px solid var(--line-strong);font-size:12px;font-weight:700;font-stretch:80%;letter-spacing:.02em;text-transform:uppercase;color:var(--fg);background:var(--bg-raised);} .ds-tag-accent{background:var(--fluor-yellow);color:var(--ink);} .ds-tag-warm{background:var(--fluor-pink);color:var(--ink);}"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "White board field with a yellow focus halo.",
+      "html": "<label class=\"ds-label\" for=\"q\">¿Qué cepa buscas?</label><input id=\"q\" class=\"ds-input\" placeholder=\"Blue Dream, OG Kush…\">",
+      "css": ":host{--cobalt:#1d3fbf;--cobalt-deep:#142d8c;--ink:#141414;--enamel:#fbfbf8;--fluor-pink:#ff4fa3;--fluor-yellow:#f6e534;--fluor-green:#7cf08a;--bg-raised:#fff;--bg-sunken:#ecece6;--line:#cfcdc3;--line-strong:#141414;--fg:#141414;--fg-dim:#5f5e57;--accent:#1d3fbf;--accent-ink:#fff;font-family:Archivo,system-ui,sans-serif;} .ds-label{display:block;margin-bottom:6px;font-size:13px;font-weight:800;font-stretch:78%;letter-spacing:.03em;text-transform:uppercase;color:var(--fg);} .ds-input{display:block;width:100%;padding:9px 12px;background:var(--bg-raised);border:2px solid var(--line-strong);border-radius:3px;color:var(--fg);font:inherit;font-size:15px;outline:none;transition:box-shadow .12s;} .ds-input:focus{box-shadow:0 0 0 3px var(--fluor-yellow);} .ds-input::placeholder{color:var(--fg-dim);}"
+    },
+    {
+      "name": "Strain Sign",
+      "kind": "card",
+      "refersTo": "cartulina-indica",
+      "description": "Fluorescent cartulina for one strain: marker name, THC as a price, evidence-weighted rating, review board.",
+      "html": "<a class=\"ds-sign\" href=\"#\" style=\"--tilt:-1.5deg\"><span class=\"ds-sign-name\">Northern Lights</span><span class=\"ds-sign-price\">18<small>%</small></span><span class=\"ds-sign-meta\">THC · Indica · Relajante</span><span class=\"ds-sign-foot\"><span><b>★ 4.3</b><br>24 reseñas</span><span class=\"ds-sign-write\">Pinta tu reseña</span></span></a>",
+      "css": ":host{--cobalt:#1d3fbf;--cobalt-deep:#142d8c;--ink:#141414;--enamel:#fbfbf8;--fluor-pink:#ff4fa3;--fluor-yellow:#f6e534;--fluor-green:#7cf08a;--bg-raised:#fff;--bg-sunken:#ecece6;--line:#cfcdc3;--line-strong:#141414;--fg:#141414;--fg-dim:#5f5e57;--accent:#1d3fbf;--accent-ink:#fff;font-family:Archivo,system-ui,sans-serif;} @keyframes ds-pinIn{from{transform:translateY(-10px) rotate(var(--tilt))}to{transform:rotate(var(--tilt))}} .ds-sign{position:relative;display:flex;flex-direction:column;gap:6px;width:220px;padding:16px;background:var(--fluor-pink);color:var(--ink);border:2px solid var(--ink);border-radius:2px;text-decoration:none;transform:rotate(var(--tilt));animation:ds-pinIn .5s cubic-bezier(.16,1,.3,1) both;transition:transform .15s;} .ds-sign::before{content:'';position:absolute;top:-8px;left:50%;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--ink);} .ds-sign:hover,.ds-sign:focus-visible{transform:translateY(-4px) rotate(0);outline:none;} .ds-sign-name{font-family:'Permanent Marker',Archivo,cursive;font-size:26px;line-height:1.04;} .ds-sign-price{font-family:'Bowlby One',Archivo,sans-serif;font-size:44px;line-height:1;margin-top:8px;} .ds-sign-price small{font-size:.5em;} .ds-sign-meta{font-size:12px;font-weight:800;font-stretch:78%;text-transform:uppercase;letter-spacing:.03em;} .ds-sign-foot{display:flex;justify-content:space-between;align-items:flex-end;border-top:2px solid var(--ink);padding-top:8px;font-size:12px;font-weight:700;} .ds-sign-foot b{font-size:24px;font-weight:900;font-stretch:80%;} .ds-sign-write{background:var(--ink);color:#fff;border:2px solid var(--ink);padding:4px 6px;font-weight:800;font-stretch:78%;text-transform:uppercase;} @media (prefers-reduced-motion:reduce){.ds-sign{animation:none;}}"
+    },
+    {
+      "name": "Nav Strip",
+      "kind": "nav",
+      "refersTo": "nav-strip",
+      "description": "Sticky 56px ink strip with the painted logo and condensed uppercase links.",
+      "html": "<nav class=\"ds-nav\"><span class=\"ds-logo\"><span class=\"ds-logo-w\">Weed</span><span class=\"ds-logo-h\">hub</span></span><a href=\"#\">Cepas</a><a href=\"#\">Aprende</a><a href=\"#\">Comunidad</a></nav>",
+      "css": ":host{--cobalt:#1d3fbf;--cobalt-deep:#142d8c;--ink:#141414;--enamel:#fbfbf8;--fluor-pink:#ff4fa3;--fluor-yellow:#f6e534;--fluor-green:#7cf08a;--bg-raised:#fff;--bg-sunken:#ecece6;--line:#cfcdc3;--line-strong:#141414;--fg:#141414;--fg-dim:#5f5e57;--accent:#1d3fbf;--accent-ink:#fff;font-family:Archivo,system-ui,sans-serif;} .ds-nav{display:flex;align-items:center;gap:20px;height:56px;padding:0 16px;background:var(--ink);} .ds-logo{font-family:'Bowlby One',Archivo,sans-serif;font-size:20px;line-height:1;text-transform:uppercase;margin-right:auto;} .ds-logo-w{color:var(--fluor-yellow);} .ds-logo-h{display:inline-block;margin-left:.12em;padding:.08em .18em .04em;background:var(--fluor-pink);color:var(--ink);transform:rotate(-3deg);} .ds-nav a{font-size:15px;font-weight:800;font-stretch:80%;letter-spacing:.02em;text-transform:uppercase;color:var(--enamel);text-decoration:none;transition:color .12s;} .ds-nav a:hover{color:var(--fluor-yellow);} .ds-nav a:focus-visible{outline:3px solid var(--fluor-yellow);outline-offset:3px;}"
+    },
+    {
+      "name": "Wall Masthead",
+      "kind": "custom",
+      "refersTo": "masthead",
+      "description": "Full-bleed cobalt wall band with a shaded Bowlby One masthead.",
+      "html": "<section class=\"ds-wall\"><h1 class=\"ds-rotulo\">Top 100</h1><p>Las cepas mejor calificadas por la comunidad.</p></section>",
+      "css": ":host{--cobalt:#1d3fbf;--cobalt-deep:#142d8c;--ink:#141414;--enamel:#fbfbf8;--fluor-pink:#ff4fa3;--fluor-yellow:#f6e534;--fluor-green:#7cf08a;--bg-raised:#fff;--bg-sunken:#ecece6;--line:#cfcdc3;--line-strong:#141414;--fg:#141414;--fg-dim:#5f5e57;--accent:#1d3fbf;--accent-ink:#fff;font-family:Archivo,system-ui,sans-serif;} .ds-wall{background:var(--cobalt);color:#fff;padding:40px 24px;border-bottom:3px solid var(--ink);} .ds-rotulo{margin:0;font-family:'Bowlby One',Archivo,sans-serif;font-weight:400;font-size:96px;line-height:.86;text-transform:uppercase;color:var(--fluor-yellow);text-shadow:.045em .045em 0 var(--ink);} .ds-wall p{font-size:18px;margin-top:16px;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Rótulo y Cartulina",
+    "overview": "WeedHub is an encyclopedia lettered as a street wall: the hand-painted signs of Mexican rótulos and Brazilian abridores de letras, plus the fluorescent cartulinas a market stall pins up to announce prices. Every strain is a sign the community keeps repainting. Whole regions of a page are painted fields (cobalt by default, yellow, pink or ink per section) on a white enamel ground, and everything on them is lettered in black with a confident brush.\n\nDensity is high and legible, not airy. Pages read as a wall of boards, each with a hard 2-3px ink outline, barely rounded corners, and a slight tilt where something is pinned rather than built. Data stays honest inside the paint: a rating is lettered with the weight of its evidence, and a missing number reads \"sin datos\" instead of being invented. The world explicitly rejects the dark-green cannabis database with neon accents and equal photo cards it replaced.\n\nThe interface speaks Spanish and Portuguese as equals. English strings exist in content files but are not served.",
+    "keyCharacteristics": [
+      "Full-bleed painted wall bands own whole sections; white enamel is the ground between them.",
+      "Three lettering hands: Bowlby One for rótulo mastheads and prices, Permanent Marker for strain names, condensed Archivo for everything else.",
+      "Strains are fluorescent cartulinas, toned by type, pinned slightly askew, with THC lettered like a price.",
+      "Controls are painted boards with a solid ink drop under them and five distinct states.",
+      "One authored motion: signs settle onto the wall."
+    ],
+    "rules": [
+      {
+        "name": "The Full-Strength Fluor Rule",
+        "body": "Fluorescent tones are paint, never tint. They appear as solid fields (cartulinas, wall bands, hover paint, tags) with ink lettering on top, and never as translucent glows, gradients or colored text on white.",
+        "section": "colors"
+      },
+      {
+        "name": "The Cartulina Tone Rule",
+        "body": "A strain's cartulina tone follows its type: sativa yellow, indica pink, hybrid green, unknown blank white. Tone is never decorative randomness.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink-on-Fluor Rule",
+        "body": "Text on any fluorescent field is Sign Ink. Text on cobalt is white or yellow. Text on the ink strip is enamel, yellow on hover.",
+        "section": "colors"
+      },
+      {
+        "name": "The Three Hands Rule",
+        "body": "Bowlby One letters only mastheads, prices and rank numerals; Permanent Marker letters only strain names; every other word is Archivo. A fourth face, or a marker heading, breaks the wall.",
+        "section": "typography"
+      },
+      {
+        "name": "The Shade Is for Mastheads Rule",
+        "body": "The rótulo drop shade belongs to display lettering on a wall band. Body text, buttons and headings on the enamel ground carry none.",
+        "section": "typography"
+      },
+      {
+        "name": "The Condense, Don't Shrink Rule",
+        "body": "Hierarchy among Archivo roles comes from weight and `font-stretch` (72-85% for lettering, 100% for reading), not from adding faces or italics. Italic is not part of the system.",
+        "section": "typography"
+      },
+      {
+        "name": "The Painted Edge Rule",
+        "body": "The only offset shadow is the ink drop under a control, and only controls get it. Cards, cartulinas and wall bands stay flat; their outline is their edge.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do give each major section a painted wall band (cobalt, yellow, pink, ink) bounded by 3px ink borders, and keep white enamel as the ground between them.",
+      "Do letter strain names in Permanent Marker on a cartulina whose tone follows the strain's type.",
+      "Do letter ratings with the weight of their evidence: 10 or more reviews read large and black (24px, weight 900); fewer read smaller and lighter (18px, weight 700, 85% opacity); under 3 reviews add \"pocas reseñas\"; zero reviews read \"Sin reseñas aún\" with no stars.",
+      "Do print \"sin datos\" / \"sem dados\" (for example \"THC sin datos\") wherever a value is missing. Never estimate or fill a number.",
+      "Do give every control distinct rest, hover, pressed, active and disabled states as specified under Buttons.",
+      "Do ship every public string in Spanish and Portuguese with equal care; English is not served (`/en/*` redirects to Spanish).",
+      "Do carry active and selected visual states with class states (`.chip.on`, `aria-pressed`) or inline `style={{}}` reading CSS variables (for example `var(--accent)`); Tailwind `color-mix` arbitraries fail to compile.",
+      "Do use the condensed Archivo label voice (12px, uppercase, width 75%) only for data labels, stat labels and form labels."
+    ],
+    "donts": [
+      "Don't put a small uppercase label (kicker or eyebrow) above a heading. Headings stand on their own; the label voice is for data.",
+      "Don't set accent words in italic or a second face inside a heading.",
+      "Don't use emoji as icons; icons are inline SVG line glyphs.",
+      "Don't use stock photography. A strain without a real image is a cartulina or a type-colored initials card.",
+      "Don't use pill shapes, soft blurred shadows on boards, gradients, or translucent neon glows.",
+      "Don't add the rótulo drop shade to anything but masthead lettering on a wall band.",
+      "Don't return to dark green as a brand field; the night wall is navy and cobalt."
+    ]
+  }
+}

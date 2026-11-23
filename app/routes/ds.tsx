@@ -174,13 +174,12 @@ export default function DesignSystemPage() {
     <div className="mx-auto max-w-[1200px] px-6 py-16 space-y-24">
       {/* Header */}
       <header>
-        <div className="kicker mb-3">Design System · para handoff</div>
         <h1
           className="display"
           style={{ fontSize: "clamp(48px, 7vw, 96px)", lineHeight: 1 }}
         >
           WeedHub{" "}
-          <span className="display-wonk" style={{ color: "var(--accent)" }}>
+          <span className="display-wonk">
             DS
           </span>{" "}
           · v0.2
@@ -193,7 +192,6 @@ export default function DesignSystemPage() {
 
       {/* Color */}
       <section>
-        <div className="kicker mb-3">Color</div>
         <h2 className="display text-3xl mb-8">Tokens de color</h2>
         <div className="space-y-10">
           {COLOR_GROUPS.map((g) => (
@@ -217,7 +215,6 @@ export default function DesignSystemPage() {
 
       {/* Typography */}
       <section>
-        <div className="kicker mb-3">Tipografía</div>
         <h2 className="display text-3xl mb-8">Tres familias</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="card p-6">
@@ -260,7 +257,6 @@ export default function DesignSystemPage() {
 
       {/* Buttons */}
       <section>
-        <div className="kicker mb-3">Componentes · UI</div>
         <h2 className="display text-3xl mb-8">Button</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
@@ -296,7 +292,6 @@ export default function DesignSystemPage() {
 
       {/* Tags */}
       <section>
-        <div className="kicker mb-3">Componentes · UI</div>
         <h2 className="display text-3xl mb-8">Tag</h2>
         <Card className="space-y-6">
           <div>
@@ -339,7 +334,6 @@ export default function DesignSystemPage() {
 
       {/* Chips */}
       <section>
-        <div className="kicker mb-3">Componentes · UI</div>
         <h2 className="display text-3xl mb-8">Chip</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
@@ -365,7 +359,6 @@ export default function DesignSystemPage() {
 
       {/* Cards */}
       <section>
-        <div className="kicker mb-3">Componentes · UI</div>
         <h2 className="display text-3xl mb-8">Card</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card variant="default">
@@ -413,7 +406,6 @@ export default function DesignSystemPage() {
 
       {/* Avatars */}
       <section>
-        <div className="kicker mb-3">Componentes · UI</div>
         <h2 className="display text-3xl mb-8">Avatar</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
@@ -463,7 +455,6 @@ export default function DesignSystemPage() {
 
       {/* LevelPill + StatusPill */}
       <section>
-        <div className="kicker mb-3">Componentes · UI</div>
         <h2 className="display text-3xl mb-8">LevelPill · StatusPill</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
@@ -509,7 +500,6 @@ export default function DesignSystemPage() {
 
       {/* Fields */}
       <section>
-        <div className="kicker mb-3">Componentes · UI</div>
         <h2 className="display text-3xl mb-8">Field</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
@@ -561,7 +551,6 @@ export default function DesignSystemPage() {
 
       {/* SelectionCard */}
       <section>
-        <div className="kicker mb-3">Componentes · UI</div>
         <h2 className="display text-3xl mb-8">SelectionCard</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
@@ -577,7 +566,6 @@ export default function DesignSystemPage() {
 
       {/* Legacy CSS primitives */}
       <section>
-        <div className="kicker mb-3">Componentes · CSS legacy</div>
         <h2 className="display text-3xl mb-8">Pills &amp; chips CSS</h2>
         <p className="text-sm text-fg-muted mb-6 max-w-[56ch]">
           Clases CSS globales (<span className="mono">.pill</span>, <span className="mono">.chip</span>).
@@ -606,7 +594,6 @@ export default function DesignSystemPage() {
 
       {/* Composite components */}
       <section>
-        <div className="kicker mb-3">Componentes · Composite</div>
         <h2 className="display text-3xl mb-8">Composites</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="space-y-3">
@@ -648,7 +635,6 @@ export default function DesignSystemPage() {
       {/* Spacing + Radii */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-10">
         <div>
-          <div className="kicker mb-3">Spacing</div>
           <h2 className="display text-3xl mb-8">Escala 4px</h2>
           <div className="space-y-2">
             {SPACING.map((s) => (
@@ -663,7 +649,6 @@ export default function DesignSystemPage() {
           </div>
         </div>
         <div>
-          <div className="kicker mb-3">Radii</div>
           <h2 className="display text-3xl mb-8">Esquinas</h2>
           <div className="grid grid-cols-2 gap-4">
             {RADII.map((r) => (

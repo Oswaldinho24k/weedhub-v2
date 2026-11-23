@@ -99,7 +99,6 @@ export default function NuevoPostPage() {
         <span className="text-fg">Nuevo post</span>
       </div>
 
-      <div className="kicker mb-2">Comunidad</div>
       <h1 className="display text-3xl mb-8">Crear post</h1>
 
       {actionData && "error" in actionData && (

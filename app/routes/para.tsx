@@ -1,85 +1,79 @@
 import { Link } from "react-router";
 import type { Route } from "./+types/para";
 import { buildMeta, SITE_URL } from "~/lib/seo";
-import { CONDITIONS, CONDITION_CATEGORY_LABELS, type ConditionCategory } from "~/constants/conditions";
+import { resolveLocale } from "~/lib/locale.server";
+import { Icon } from "~/components/ui/icon";
+import { CONDITIONS, type ConditionCategory } from "~/constants/conditions";
 
-export function meta(_: Route.MetaArgs) {
-  return buildMeta({
-    title: "Cannabis para condiciones médicas — WeedHub",
-    description:
-      "Explora qué cepas de cannabis recomienda la comunidad WeedHub para ansiedad, dolor, insomnio y más. Basado en reseñas reales.",
-    url: `${SITE_URL}/para`,
-    canonicalPath: "/para",
-  });
+const UI = {
+  es: {
+    title: "Cepas por condición: lo que reporta la comunidad | WeedHub",
+    description: "Qué cepas asocian los usuarios de WeedHub con ansiedad, dolor, insomnio y más, con número de reseñas. Información de referencia, no consejo médico.",
+    h1: "Por condición",
+    lede: "Qué cepas asocia la comunidad con cada condición, según sus reseñas. Sirve para orientarte, no para tratarte.",
+    warning: "Esto no es consejo médico. El cannabis no cura ninguna de estas condiciones y puede interactuar con medicamentos. Si tienes una condición de salud, habla con un profesional antes de consumir.",
+    cats: { mental: "Salud mental", dolor: "Dolor", sueno: "Sueño", digestivo: "Digestivo", neurologico: "Neurológico", otro: "Otros" } as Record<ConditionCategory, string>,
+  },
+  pt: {
+    title: "Variedades por condição: o que a comunidade relata | WeedHub",
+    description: "Quais variedades os usuários do WeedHub associam a ansiedade, dor, insônia e mais, com número de avaliações. Informação de referência, não é aconselhamento médico.",
+    h1: "Por condição",
+    lede: "Quais variedades a comunidade associa a cada condição, segundo as avaliações. Serve para se orientar, não para se tratar.",
+    warning: "Isto não é aconselhamento médico. A cannabis não cura nenhuma destas condições e pode interagir com medicamentos. Se você tem uma condição de saúde, converse com um profissional antes de consumir.",
+    cats: { mental: "Saúde mental", dolor: "Dor", sueno: "Sono", digestivo: "Digestivo", neurologico: "Neurológico", otro: "Outros" } as Record<ConditionCategory, string>,
+  },
+} as const;
+
+const CATEGORY_ORDER: ConditionCategory[] = ["mental", "dolor", "sueno", "digestivo", "neurologico", "otro"];
+
+export async function loader({ request }: Route.LoaderArgs) {
+  return { locale: (await resolveLocale(request)) === "pt" ? "pt" : "es" } as const;
 }
 
-const CATEGORY_ORDER: ConditionCategory[] = [
-  "mental",
-  "dolor",
-  "sueno",
-  "digestivo",
-  "neurologico",
-  "otro",
-];
+export function meta({ data }: Route.MetaArgs) {
+  const loc = data?.locale ?? "es";
+  const U = UI[loc];
+  return buildMeta({ title: U.title, description: U.description, url: `${SITE_URL}${loc === "pt" ? "/pt" : ""}/para`, canonicalPath: "/para", locale: loc });
+}
 
-export default function ParaHubPage() {
-  const grouped = CATEGORY_ORDER.map((cat) => ({
-    cat,
-    label: CONDITION_CATEGORY_LABELS[cat],
-    conditions: CONDITIONS.filter((c) => c.category === cat),
-  }));
-
+export default function ParaHubPage({ loaderData }: Route.ComponentProps) {
+  const loc = loaderData.locale;
+  const U = UI[loc];
+  const prefix = loc === "pt" ? "/pt" : "";
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-16">
-      {/* Hero */}
-      <div className="mb-16 max-w-2xl">
-        <div className="kicker mb-3">Basado en reseñas de la comunidad</div>
-        <h1 className="display text-5xl mb-5">
-          Cannabis para condiciones
-        </h1>
-        <p className="text-lg text-fg-muted leading-relaxed">
-          Datos recopilados de miles de reseñas. Los porcentajes reflejan cuántos usuarios
-          reportaron que una cepa les ayudó con cada condición. No es consejo médico.
-        </p>
-      </div>
-
-      {/* Grid by category */}
-      <div className="space-y-14">
-        {grouped.map(({ cat, label, conditions }) => (
-          <div key={cat}>
-            <h2 className="display text-2xl mb-5">{label}</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {conditions.map((c) => (
-                <Link
-                  key={c.slug}
-                  to={`/para/${c.slug}`}
-                  className="card p-4 flex flex-col items-center gap-2 text-center hover:border-accent transition-colors group"
-                >
-                  <span className="text-3xl">{c.emoji}</span>
-                  <span className="text-sm font-medium text-fg group-hover:text-accent transition-colors">
-                    {c.labelEs}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Disclaimer */}
-      <div className="mt-20 p-5 card flex gap-3">
-        <div className="shrink-0 mt-0.5" style={{ color: "var(--warm)" }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-            <path d="M12 9v4"/><path d="M12 17h.01"/>
-          </svg>
+    <div>
+      <section className="wall--pink border-b-[3px] border-ink">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12">
+          <h1 className="rotulo" style={{ fontSize: "clamp(52px, 9vw, 120px)" }}>{U.h1}</h1>
+          <p className="mt-5 max-w-[56ch] text-xl font-semibold leading-snug">{U.lede}</p>
+          <p className="mt-6 max-w-[70ch] bg-white text-ink border-2 border-ink px-4 py-3 text-[15px] font-semibold flex gap-3">
+            <Icon name="alert" size={18} className="shrink-0 mt-0.5" />
+            {U.warning}
+          </p>
         </div>
-        <p className="text-sm text-fg-muted">
-          <span className="font-medium" style={{ color: "var(--warm)" }}>Aviso médico: </span>
-          Esta información es completamente educativa y se basa en experiencias reportadas por usuarios de la comunidad.
-          WeedHub no hace afirmaciones médicas. Consulta a un profesional de salud antes de usar cannabis para tratar
-          cualquier condición médica.
-        </p>
+      </section>
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12 space-y-12">
+        {CATEGORY_ORDER.map((cat) => {
+          const items = CONDITIONS.filter((c) => c.category === cat);
+          if (!items.length) return null;
+          return (
+            <section key={cat}>
+              <h2 className="display text-[clamp(30px,3.6vw,44px)] mb-5">{U.cats[cat]}</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {items.map((c) => (
+                  <Link
+                    key={c.slug}
+                    to={`${prefix}/para/${c.slug}`}
+                    className="card px-4 py-5 text-lg font-extrabold [font-stretch:85%] hover:bg-yellow hover:text-ink transition-colors flex items-center justify-between gap-2"
+                  >
+                    {loc === "pt" ? c.labelPt : c.labelEs}
+                    <Icon name="arrowRight" size={16} />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </div>
     </div>
   );

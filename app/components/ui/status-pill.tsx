@@ -24,7 +24,7 @@ const STATUS_MAP: Record<string, { label: string; style: React.CSSProperties }> 
   premium:         { label: "Presencia Verificada", style: { background: "color-mix(in oklch, var(--gold) 15%, transparent)", borderColor: "var(--gold)", color: "var(--gold)" } },
   enterprise:      { label: "Destacado",            style: { background: "var(--lilac-soft)", borderColor: "var(--lilac)", color: "var(--lilac)" } },
   // Verification
-  verified:        { label: "Verificado ✓",         style: { background: "var(--accent-soft)", borderColor: "var(--accent)", color: "var(--accent)" } },
+  verified:        { label: "Verificado",         style: { background: "var(--accent-soft)", borderColor: "var(--accent)", color: "var(--accent)" } },
   unverified:      { label: "No verificado",        style: { background: "var(--bg-elev)", borderColor: "var(--line)", color: "var(--fg-dim)" } },
 };
 

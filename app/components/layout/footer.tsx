@@ -1,5 +1,4 @@
 import { Link } from "react-router";
-import { Logo } from "./logo";
 import { NewsletterSignup } from "./newsletter-signup";
 import { useT, useHref } from "~/lib/i18n-context";
 
@@ -7,15 +6,18 @@ export function Footer() {
   const t = useT();
   const href = useHref();
   const year = new Date().getFullYear();
-  const madeIn = t.footer.madeIn.replace("{flag}", "🇲🇽");
+  const madeIn = t.footer.madeIn.replace("{flag}", "México");
 
   return (
-    <footer className="border-t border-line mt-20">
-      <div className="mx-auto max-w-[1200px] px-6 py-16">
+    <footer className="wall mt-20 overflow-hidden">
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 pt-14 pb-6">
+        <div className="inline-flex items-center gap-3 mb-12 bg-yellow text-ink border-2 border-ink px-4 py-2 -rotate-1">
+          <span className="rotulo text-2xl">+18</span>
+          <span className="font-extrabold uppercase [font-stretch:80%] text-sm leading-tight">{t.footer.ageGate}<br />{t.footer.responsibleUse}</span>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr_1fr] gap-12">
           <div>
-            <Logo size={20} />
-            <p className="text-sm text-fg-muted mt-4 max-w-xs leading-relaxed mb-8">
+            <p className="text-lg font-semibold max-w-xs leading-snug mb-6">
               {t.footer.tagline}
             </p>
             <NewsletterSignup />
@@ -23,8 +25,8 @@ export function Footer() {
 
           <FooterColumn title={t.nav.strains}>
             <FooterLink to={href("/strains")}>{t.nav.directory}</FooterLink>
-            <FooterLink to="/top-100">{t.nav.top100}</FooterLink>
-            <FooterLink to="/para">{t.nav.conditions}</FooterLink>
+            <FooterLink to={href("/top-100")}>{t.nav.top100}</FooterLink>
+            <FooterLink to={href("/para")}>{t.nav.conditions}</FooterLink>
             <FooterLink to="/strains/sugerir">Sugerir cepa</FooterLink>
           </FooterColumn>
 
@@ -32,26 +34,26 @@ export function Footer() {
             <FooterLink to="/magazine">{t.nav.magazine}</FooterLink>
             <FooterLink to={href("/guias")}>{t.nav.guides}</FooterLink>
             <FooterLink to={href("/glosario")}>{t.nav.glossary}</FooterLink>
-            <FooterLink to="/mapa-verde">{t.nav.greenMap}</FooterLink>
+            <FooterLink to={href("/mapa-verde")}>{t.nav.greenMap}</FooterLink>
           </FooterColumn>
 
           <FooterColumn title={t.footer.companyTitle}>
             <FooterLink to="/marcas">Marcas</FooterLink>
             <FooterLink to="/planes">Planes</FooterLink>
-            <FooterLink to={href("/editorial")}>{t.footer.about}</FooterLink>
+            <FooterLink to={href("/sobre")}>{t.footer.about}</FooterLink>
             <FooterLink to="/auth?mode=register">{t.footer.joinUs}</FooterLink>
-            <hr className="border-line my-1" />
+            <hr className="border-white/30 my-1" />
             <FooterLink to={href("/terminos")}>{t.footer.terms}</FooterLink>
             <FooterLink to={href("/privacidad")}>{t.footer.privacy}</FooterLink>
-            <span className="block text-sm text-fg-dim">{t.footer.ageGate}</span>
           </FooterColumn>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-line flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-          <p className="text-xs text-fg-dim mono">
-            © {year} WEEDHUB · {t.footer.responsibleUse}
-          </p>
-          <p className="text-xs text-fg-dim">{madeIn}</p>
+        <div aria-hidden className="rotulo rotulo-shade text-yellow mt-16 select-none whitespace-nowrap leading-none" style={{ fontSize: "min(16.2vw, 212px)", marginLeft: "-0.03em" }}>
+          WEEDHUB
+        </div>
+        <div className="mt-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 text-sm font-semibold text-white/85">
+          <p>© {year} WeedHub</p>
+          <p>{madeIn}</p>
         </div>
       </div>
     </footer>
@@ -67,7 +69,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <div className="kicker mb-3">{title}</div>
+      <div className="font-extrabold uppercase [font-stretch:78%] text-yellow text-base mb-3">{title}</div>
       <nav className="flex flex-col gap-2">{children}</nav>
     </div>
   );
@@ -83,7 +85,7 @@ function FooterLink({
   return (
     <Link
       to={to}
-      className="text-sm text-fg-muted hover:text-fg transition-colors"
+      className="text-[15px] font-medium text-white/90 hover:text-yellow hover:underline underline-offset-4 decoration-2 transition-colors"
     >
       {children}
     </Link>

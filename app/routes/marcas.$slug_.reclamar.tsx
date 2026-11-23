@@ -93,7 +93,6 @@ export default function ReclamarPage() {
         <span className="text-fg">Reclamar</span>
       </div>
 
-      <div className="kicker mb-2">Reclamación de perfil</div>
       <h1 className="display text-3xl mb-3">Reclamar {brand.name}</h1>
       <p className="text-fg-muted mb-8">
         Cuéntanos quién eres y por qué tienes derecho a administrar este perfil. Revisamos cada solicitud manualmente.

@@ -113,7 +113,6 @@ export default function AgregarDispensarioPage() {
         <span className="text-fg">Agregar</span>
       </div>
 
-      <div className="kicker mb-2">Registro gratuito</div>
       <h1 className="display text-3xl mb-3">Agregar mi dispensario</h1>
       <p className="text-fg-muted mb-8">
         Registra tu punto de venta para que la comunidad te encuentre. Revisamos cada solicitud antes de publicar.

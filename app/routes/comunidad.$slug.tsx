@@ -1,3 +1,4 @@
+import { Icon } from "~/components/ui/icon";
 import { Form, Link, useLoaderData, useActionData, useFetcher, useNavigation } from "react-router";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -124,7 +125,6 @@ export function meta({ data }: Route.MetaArgs): ReturnType<Route.MetaFunction> {
     title: `${data.post.title} | WeedHub Comunidad`,
     description: data.post.body.slice(0, 160),
     url: `${SITE_URL}/comunidad/${data.post.slug}`,
-    canonicalPath: `/comunidad/${data.post.slug}`,
     locale: "es",
   });
 }
@@ -189,7 +189,7 @@ export default function ComunidadSlugPage() {
         <h1 className="display text-2xl md:text-3xl mb-4 leading-tight">{post.title}</h1>
 
         <div className="text-sm text-fg-dim mb-6">
-          {post.publishedAs === "anonymous" ? "👤" : "@"}{post.handle}
+          {post.publishedAs === "anonymous" ? <Icon name="user" size={12} className="inline -mt-0.5 mr-0.5" /> : "@"}{post.handle}
         </div>
 
         <div className="text-fg-muted leading-relaxed whitespace-pre-wrap border-t border-line pt-6">
@@ -212,7 +212,7 @@ export default function ComunidadSlugPage() {
             </button>
           </voteFetcher.Form>
           <span className="text-sm text-fg-dim">
-            💬 {post.commentCount} {post.commentCount === 1 ? "comentario" : "comentarios"}
+            <Icon name="message" size={13} className="inline -mt-0.5 mr-1" />{post.commentCount} {post.commentCount === 1 ? "comentario" : "comentarios"}
           </span>
           <Link to="/comunidad" className="text-xs text-fg-dim hover:text-fg ml-auto transition-colors">
             ← Volver
@@ -329,7 +329,7 @@ function CommentCard({
   return (
     <div className="card p-4">
       <div className="flex items-center gap-2 mb-2 text-xs text-fg-dim">
-        <span>{comment.publishedAs === "anonymous" ? "👤" : "@"}{comment.handle}</span>
+        <span>{comment.publishedAs === "anonymous" ? <Icon name="user" size={12} className="inline -mt-0.5 mr-0.5" /> : "@"}{comment.handle}</span>
         <span>·</span>
         <span>{date}</span>
       </div>
