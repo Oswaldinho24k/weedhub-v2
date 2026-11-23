@@ -142,6 +142,15 @@ prompts/                        # Generated Midjourney prompts (gitignored)
 - `api/admin/ai` — AI moderation call
 - `sitemap.xml` — Dynamic sitemap (strains ×3 locales, glossary, guides, brands, dispensaries, magazine articles, community posts)
 
+## Launch scope (23 Nov 2026, narrowed)
+
+- **Spanish only.** `SUPPORTED_LOCALES = ["es"]`; `/pt/*` and `/en/*` 301 to Spanish (`app/routes/en-redirect.tsx`). pt translations stay in the DB (`*Pt` fields) for a future relaunch.
+- **Feature flags** in `app/lib/features.ts` (constants): everything is on in dev, only `true` flags show in production. Off today: `foro`, `negocios` (marcas/dispensarios/productos), `pagos` (planes + Stripe), `top100`, `porCondicion` (/para). Hidden routes 404 and leave nav, sitemap and llms.txt. Business inquiries go to contacto@weedhub.info (manual).
+- **Seed hidden, not deleted.** `seed/hide-seed.mjs` marks seed docs `source: "seed"`; the `hideSeed` mongoose plugin (`app/lib/seed-filter.server.ts`) filters them from every query unless `.setOptions({ includeSeed: true })`. Strain aggregates were snapshotted to `seedSnapshot` and reset. `--restore` undoes everything.
+- **Editorial review.** `app/services/content-review.server.ts` (service) → `/admin/revision` (UI route) + review actions in `app/lib/admin-actions.server.ts` (agent). Records carry `revision.{status,reviewedAt,reviewedBy}`; only a human approves in the UI; agent edits reset to "pendiente". Strain `editorialNote` is public only when approved. Drafts: `npx tsx --env-file .env scripts/generate-editorial-notes.ts`.
+- Admin agent model: `claude-opus-5-5`, effort medium, full chat history. Needs `ANTHROPIC_API_KEY`.
+- Dev gotcha: models are registered with `mongoose.models.X || model(...)`; after changing a schema, restart the dev server or updates silently drop new fields.
+
 ## Data caveats (Nov 2026)
 
 - Seed batch 2026-11-23 (`seed/seed-content.mjs`, removable with `--delete`): brands/products/dispensaries (fictional, unverified), magazine articles, forum threads, condition votes, quick ratings, saved strains, 14 users from BR/CO/AR/CL/UY. QA accounts via `seed/qa-accounts.mjs`.

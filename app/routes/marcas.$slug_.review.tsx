@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { useState } from "react";
 import { Form, Link, redirect, useNavigation } from "react-router";
 import type { Route } from "./+types/marcas.$slug_.review";
@@ -31,6 +32,7 @@ export function meta({ data }: Route.MetaArgs) {
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {
+  requireFeature("negocios");
   const user = await requireUser(request);
   await connectDB();
 
@@ -61,6 +63,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 export async function action({ params, request }: Route.ActionArgs) {
+  requireFeature("negocios");
   const user = await requireUser(request);
   await connectDB();
 

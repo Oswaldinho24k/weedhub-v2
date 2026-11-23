@@ -20,9 +20,9 @@ import { storedValuesFor } from "~/lib/effect-labels";
 const PER_PAGE = 24;
 
 const DIR_COPY = {
-  es: { sorts: { reviews: "Ordenadas por número de reseñas.", rating: "Ordenadas por calificación.", name: "Ordenadas de la A a la Z.", newest: "Las más recientes primero.", trending: "Las más comentadas últimamente.", momento: "Ordenadas por afinidad con ese momento del día." }, sub: "Filtra por momento del día, efecto o terpeno.", moment: "Momento del día", moments: { manana: "Mañana", tarde: "Tarde", noche: "Noche" }, sortLabel: "Ordenar" },
-  pt: { sorts: { reviews: "Ordenadas por número de avaliações.", rating: "Ordenadas por nota.", name: "Ordenadas de A a Z.", newest: "As mais recentes primeiro.", trending: "As mais comentadas recentemente.", momento: "Ordenadas por afinidade com esse momento do dia." }, sub: "Filtre por momento do dia, efeito ou terpeno.", moment: "Momento do dia", moments: { manana: "Manhã", tarde: "Tarde", noche: "Noite" }, sortLabel: "Ordenar" },
-  en: { sorts: { reviews: "Sorted by number of reviews.", rating: "Sorted by rating.", name: "Sorted A to Z.", newest: "Newest first.", trending: "Most discussed lately.", momento: "Sorted by fit for that time of day." }, sub: "Filter by time of day, effect or terpene.", moment: "Time of day", moments: { manana: "Morning", tarde: "Afternoon", noche: "Night" }, sortLabel: "Sort" },
+  es: { sorts: { populares: "Las más conocidas primero.", reviews: "Ordenadas por número de reseñas.", rating: "Ordenadas por calificación.", name: "Ordenadas de la A a la Z.", newest: "Las más recientes primero.", trending: "Las más comentadas últimamente.", momento: "Ordenadas por afinidad con ese momento del día." }, sub: "Filtra por momento del día, efecto o terpeno.", moment: "Momento del día", moments: { manana: "Mañana", tarde: "Tarde", noche: "Noche" }, sortLabel: "Ordenar" },
+  pt: { sorts: { populares: "As mais conhecidas primeiro.", reviews: "Ordenadas por número de avaliações.", rating: "Ordenadas por nota.", name: "Ordenadas de A a Z.", newest: "As mais recentes primeiro.", trending: "As mais comentadas recentemente.", momento: "Ordenadas por afinidade com esse momento do dia." }, sub: "Filtre por momento do dia, efeito ou terpeno.", moment: "Momento do dia", moments: { manana: "Manhã", tarde: "Tarde", noche: "Noite" }, sortLabel: "Ordenar" },
+  en: { sorts: { populares: "Best known first.", reviews: "Sorted by number of reviews.", rating: "Sorted by rating.", name: "Sorted A to Z.", newest: "Newest first.", trending: "Most discussed lately.", momento: "Sorted by fit for that time of day." }, sub: "Filter by time of day, effect or terpene.", moment: "Time of day", moments: { manana: "Morning", tarde: "Afternoon", noche: "Night" }, sortLabel: "Sort" },
 } as const;
 
 export function meta({ data }: Route.MetaArgs) {
@@ -69,7 +69,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const feminized = url.searchParams.get("feminized") || "";
   const climate = url.searchParams.get("climate") || "";
   const momento = url.searchParams.get("momento") || "";
-  const sort = url.searchParams.get("sort") || (momento ? `momento-${momento}` : "reviews");
+  const sort = url.searchParams.get("sort") || (momento ? `momento-${momento}` : "populares");
   const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
 
   const filter: any = { isArchived: false };
@@ -91,7 +91,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   const sortMap: Record<string, any> = {
     name: { name: 1 },
     rating: { "averageRatings.overall": -1 },
-    reviews: { reviewCount: -1 },
+    populares: { "seedSnapshot.reviewCount": -1, name: 1 },
+    reviews: { reviewCount: -1, "seedSnapshot.reviewCount": -1 },
     newest: { createdAt: -1 },
     trending: { lastReviewedAt: -1 },
     "momento-manana": { "momento.manana": -1, reviewCount: -1 },
@@ -286,6 +287,7 @@ export default function StrainsPage({ loaderData }: Route.ComponentProps) {
               aria-label={DIR_COPY[loc].sortLabel}
               className="text-sm font-bold bg-raised border-2 border-ink px-2 py-1.5 focus:outline-none focus:shadow-[0_0_0_3px_var(--fluor-yellow)]"
             >
+              <option value="populares">Más conocidas</option>
               <option value="name">{t.directory.sortName}</option>
               <option value="rating">{t.directory.sortRating}</option>
               <option value="reviews">{t.directory.sortReviews}</option>

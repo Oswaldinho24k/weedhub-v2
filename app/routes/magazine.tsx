@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Link, useLoaderData, useSearchParams } from "react-router";
 import type { Route } from "./+types/magazine";
 import { connectDB } from "~/lib/db.server";
@@ -26,6 +27,7 @@ const CATEGORY_LABELS: Record<ArticleCategory, string> = {
 };
 
 export async function loader({ request }: Route.LoaderArgs) {
+  requireFeature("magazine");
   const locale = await resolveLocale(request);
   await connectDB();
   const url = new URL(request.url);

@@ -1,3 +1,4 @@
+import { hideSeed } from "~/lib/seed-filter.server";
 import mongoose, { Schema, type Document } from "mongoose";
 
 export type PostCategory =
@@ -50,6 +51,8 @@ postSchema.index({ slug: 1 }, { unique: true });
 postSchema.index({ status: 1, category: 1, createdAt: -1 });
 postSchema.index({ userId: 1, createdAt: -1 });
 postSchema.index({ upvoteCount: -1, createdAt: -1 });
+
+postSchema.plugin(hideSeed);
 
 export const PostModel =
   (mongoose.models.Post as mongoose.Model<IPost>) ||

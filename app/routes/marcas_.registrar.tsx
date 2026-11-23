@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Form, Link, redirect, useActionData, useNavigation } from "react-router";
 import type { Route } from "./+types/marcas_.registrar";
 import { requireUser } from "~/lib/auth.server";
@@ -12,6 +13,7 @@ export function meta() {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
+  requireFeature("negocios");
   await requireUser(request);
   return {};
 }
@@ -28,6 +30,7 @@ function toSlug(name: string) {
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  requireFeature("negocios");
   const user = await requireUser(request);
   await connectDB();
 

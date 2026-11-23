@@ -1,3 +1,4 @@
+import { hideSeed } from "~/lib/seed-filter.server";
 import mongoose, { Schema, type Document } from "mongoose";
 
 export interface IDispensary extends Document {
@@ -71,6 +72,8 @@ dispensarySchema.index({ city: 1, status: 1 });
 dispensarySchema.index({ country: 1, status: 1 });
 dispensarySchema.index({ brandId: 1 });
 dispensarySchema.index({ lat: 1, lng: 1 });
+
+dispensarySchema.plugin(hideSeed);
 
 export const DispensaryModel =
   (mongoose.models.Dispensary as mongoose.Model<IDispensary>) ||

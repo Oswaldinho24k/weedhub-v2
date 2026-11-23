@@ -34,7 +34,9 @@
 
 **Cuentas de prueba:** `qa-usuario@weedhub.info` (usuario) y `qa-admin@weedhub.info` (admin). Se resetean o borran con `seed/qa-accounts.mjs` (`--delete`).
 
-**Idiomas servidos:** español y portugués. `/en/*` redirige con 301 a español.
+**Idiomas servidos:** solo español. `/pt/*` y `/en/*` redirigen con 301 (las traducciones pt siguen en la base).
+
+**Lanzamiento acotado (23 nov):** foro, marcas/dispensarios/productos, planes/pagos, top-100 y `/para` están **ocultos en producción** por feature flags (`app/lib/features.ts`) y visibles en desarrollo. Todo el contenido seed está **oculto, no borrado** (`seed/hide-seed.mjs`). Revisión editorial registro por registro en `/admin/revision`.
 
 ---
 

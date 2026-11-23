@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Icon } from "~/components/ui/icon";
 import { Link } from "react-router";
 import type { Route } from "./+types/planes";
@@ -223,4 +224,10 @@ export default function PlanesPage() {
       </div>
     </div>
   );
+}
+
+
+export function loader() {
+  requireFeature("pagos");
+  return null;
 }

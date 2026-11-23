@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { useState } from "react";
 import { Link } from "react-router";
 import { StrainCard } from "~/components/composite/strain-card";
@@ -364,4 +365,10 @@ function StepCard({
       </div>
     </div>
   );
+}
+
+
+export function loader() {
+  requireFeature("recomendador");
+  return null;
 }

@@ -6,7 +6,7 @@ export const BRAND_IMAGE = `${SITE_URL}/brand.svg`;
 type LocaleKey = "es" | "pt" | "en";
 
 const OG_LOCALE: Record<LocaleKey, { primary: string; alternates: string[] }> = {
-  es: { primary: "es_MX", alternates: ["es_ES", "pt_BR"] },
+  es: { primary: "es_MX", alternates: ["es_ES"] },
   pt: { primary: "pt_BR", alternates: ["es_MX"] },
   en: { primary: "es_MX", alternates: ["pt_BR"] },
 };
@@ -68,9 +68,7 @@ export function buildMeta({
     { tagName: "link", rel: "canonical", href: url },
     ...(canonicalPath
       ? [
-          { tagName: "link", rel: "alternate", hrefLang: "es", href: `${SITE_URL}${canonicalPath}` },
-          { tagName: "link", rel: "alternate", hrefLang: "pt-BR", href: `${SITE_URL}/pt${canonicalPath}` },
-          { tagName: "link", rel: "alternate", hrefLang: "x-default", href: `${SITE_URL}${canonicalPath}` },
+          // Spanish only for now: no hreflang alternates (pt content kept in DB for a future relaunch).
         ]
       : []),
   ];

@@ -1,3 +1,4 @@
+import { featureOn } from "~/lib/features";
 import { Link } from "react-router";
 import { NewsletterSignup } from "./newsletter-signup";
 import { useT, useHref } from "~/lib/i18n-context";
@@ -25,21 +26,28 @@ export function Footer() {
 
           <FooterColumn title={t.nav.strains}>
             <FooterLink to={href("/strains")}>{t.nav.directory}</FooterLink>
-            <FooterLink to={href("/top-100")}>{t.nav.top100}</FooterLink>
-            <FooterLink to={href("/para")}>{t.nav.conditions}</FooterLink>
+            {featureOn("top100") && <FooterLink to={href("/top-100")}>{t.nav.top100}</FooterLink>}
+            {featureOn("porCondicion") && <FooterLink to={href("/para")}>{t.nav.conditions}</FooterLink>}
+            {featureOn("recomendador") && <FooterLink to="/recomendar">{t.nav.findMyStrain}</FooterLink>}
             <FooterLink to="/strains/sugerir">Sugerir cepa</FooterLink>
           </FooterColumn>
 
           <FooterColumn title={t.nav.learn}>
-            <FooterLink to="/magazine">{t.nav.magazine}</FooterLink>
+            {featureOn("magazine") && <FooterLink to="/magazine">{t.nav.magazine}</FooterLink>}
             <FooterLink to={href("/guias")}>{t.nav.guides}</FooterLink>
             <FooterLink to={href("/glosario")}>{t.nav.glossary}</FooterLink>
             <FooterLink to={href("/mapa-verde")}>{t.nav.greenMap}</FooterLink>
           </FooterColumn>
 
           <FooterColumn title={t.footer.companyTitle}>
-            <FooterLink to="/marcas">Marcas</FooterLink>
-            <FooterLink to="/planes">Planes</FooterLink>
+            {featureOn("negocios") && <FooterLink to="/marcas">Marcas</FooterLink>}
+            {featureOn("pagos") ? (
+              <FooterLink to="/planes">Planes</FooterLink>
+            ) : (
+              <a href="mailto:contacto@weedhub.info?subject=Marca%20o%20negocio%20en%20WeedHub" className="text-[15px] font-medium text-white/90 hover:text-yellow hover:underline underline-offset-4 decoration-2">
+                ¿Tienes una marca? Escríbenos
+              </a>
+            )}
             <FooterLink to={href("/sobre")}>{t.footer.about}</FooterLink>
             <FooterLink to="/auth?mode=register">{t.footer.joinUs}</FooterLink>
             <hr className="border-white/30 my-1" />

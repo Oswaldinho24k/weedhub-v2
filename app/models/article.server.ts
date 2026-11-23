@@ -1,3 +1,4 @@
+import { revisionSchemaDef, editorialNoteSchema, type IRevision } from "~/models/revision.server";
 import mongoose, { Schema, type Document } from "mongoose";
 
 export type ArticleCategory =
@@ -12,6 +13,7 @@ export type ArticleCategory =
 export type ArticleLocale = "es" | "en" | "pt";
 
 export interface IArticle extends Document {
+  revision?: IRevision;
   title: string;
   slug: string;
   excerpt: string;
@@ -41,6 +43,7 @@ export interface IArticle extends Document {
 
 const articleSchema = new Schema<IArticle>(
   {
+    revision: revisionSchemaDef,
     title: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     excerpt: { type: String, required: true, trim: true },

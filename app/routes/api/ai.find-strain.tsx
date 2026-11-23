@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { storedValuesFor } from "~/lib/effect-labels";
 import type { Route } from "./+types/ai.find-strain";
 import { connectDB } from "~/lib/db.server";
@@ -14,6 +15,7 @@ function getClient(): Anthropic | null {
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  requireFeature("recomendador");
   const body = await request.json();
   const { effects = [], experienceLevel = "regular", method = "any", condition } = body;
 

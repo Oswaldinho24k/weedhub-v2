@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Link, useLoaderData } from "react-router";
 import { buttonVariants } from "~/components/ui/button";
 import { marked } from "marked";
@@ -12,6 +13,7 @@ import { ShareButton } from "~/components/ui/share-button";
 marked.setOptions({ breaks: true });
 
 export async function loader({ request, params }: Route.LoaderArgs) {
+  requireFeature("magazine");
   const locale = await resolveLocale(request);
   await connectDB();
 

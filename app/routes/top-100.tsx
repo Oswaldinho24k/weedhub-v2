@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { resolveLocale } from "~/lib/locale.server";
 import { StrainSign } from "~/components/composite/strain-sign";
 import { effectLabels } from "~/lib/effect-labels";
@@ -57,6 +58,7 @@ export function meta({ data }: Route.MetaArgs) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
+  requireFeature("top100");
   const locale = (await resolveLocale(request)) === "pt" ? "pt" : "es";
   await connectDB();
 

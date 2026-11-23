@@ -50,7 +50,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     getUserFromSession(request),
   ]);
 
-  if (!user) throw new Response("Usuario no encontrado", { status: 404 });
+  // Seed (placeholder) accounts are not public.
+  if (!user || (user as any).source === "seed") throw new Response("Usuario no encontrado", { status: 404 });
 
   const sessionUserId = sessionUser ? String(sessionUser._id) : null;
   const isOwnProfile = sessionUserId === String(user._id);

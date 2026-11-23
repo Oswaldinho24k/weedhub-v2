@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Icon } from "~/components/ui/icon";
 import { Form, Link, useLoaderData, useActionData, useFetcher, useNavigation } from "react-router";
 import { Button, buttonVariants } from "~/components/ui/button";
@@ -12,6 +13,7 @@ import { buildMeta, SITE_URL } from "~/lib/seo";
 import { sendNewCommentEmail } from "~/lib/email.server";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
+  requireFeature("foro");
   await connectDB();
   const user = await getUserFromSession(request);
 
@@ -71,6 +73,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
+  requireFeature("foro");
   await connectDB();
   const form = await request.formData();
   const intent = String(form.get("intent"));

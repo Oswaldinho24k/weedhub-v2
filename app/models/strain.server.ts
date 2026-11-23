@@ -1,3 +1,4 @@
+import { revisionSchemaDef, editorialNoteSchema, type IRevision } from "~/models/revision.server";
 import mongoose, { Schema, type Document } from "mongoose";
 
 export interface TimeCurvePoint {
@@ -15,6 +16,8 @@ export interface Momento {
 }
 
 export interface IStrain extends Document {
+  revision?: IRevision;
+  editorialNote?: { text?: string; status?: "pendiente" | "aprobado" | "rechazado"; generatedAt?: Date; model?: string };
   name: string;
   slug: string;
   aliases?: string[];
@@ -85,6 +88,8 @@ export interface IStrain extends Document {
 
 const strainSchema = new Schema<IStrain>(
   {
+    revision: revisionSchemaDef,
+    editorialNote: { type: editorialNoteSchema, default: undefined },
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true },
     aliases: { type: [String], default: [] },

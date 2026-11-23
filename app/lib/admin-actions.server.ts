@@ -5,6 +5,16 @@ import { EffectModel } from "~/models/effect.server";
 import { UserModel } from "~/models/user.server";
 import { ReviewModel } from "~/models/review.server";
 import { GlossaryTermModel } from "~/models/glossary-term.server";
+import {
+  reviewStats,
+  listQueue,
+  getRecord,
+  updateRecord,
+  incompleteStrains,
+  generateEditorialNote,
+  isCollectionKey,
+  COLLECTIONS,
+} from "~/services/content-review.server";
 
 export type ActionResult = { success: boolean; data?: unknown; error?: string };
 
@@ -477,6 +487,88 @@ export const adminActions: Record<string, AdminAction> = {
       if (!user) return { success: false, error: `User '${args.username}' not found` };
       return { success: true, data: { username: user.username, role: user.role } };
     },
+  },
+
+  // ── Content review (services/content-review.server.ts) ─────────────────────
+  // The agent can read, propose edits and draft editorial notes. It can NOT approve
+  // or reject: that is a human decision made in /admin/revision.
+
+  review_stats: {
+    description: `Resumen de la revisión editorial: cuántas cepas, términos del glosario, países del Mapa Verde y artículos están pendientes, aprobados o rechazados, y cuántas notas de la redacción esperan aprobación.
+Úsala primero cuando te pregunten "cómo vamos" o qué revisar.`,
+    inputSchema: { type: "object", properties: {}, required: [] },
+    execute: async () => ({ success: true, data: await reviewStats() }),
+  },
+
+  list_review_queue: {
+    description: `Lista registros de una colección por estado de revisión (cepas, glosario, mapa-verde, articulos).
+Devuelve id, título y estado; usa get_record con el id para ver el contenido completo. Las cepas salen ordenadas por popularidad.`,
+    inputSchema: {
+      type: "object",
+      properties: {
+        collection: { type: "string", enum: Object.keys(COLLECTIONS) },
+        status: { type: "string", enum: ["pendiente", "aprobado", "rechazado", "todos"], description: "Default: pendiente" },
+        q: { type: "string", description: "Filtro por nombre o título (opcional)" },
+        page: { type: "number" },
+      },
+      required: ["collection"],
+    },
+    execute: async (args) => {
+      if (!isCollectionKey(args.collection)) return { success: false, error: "Colección inválida" };
+      const data = await listQueue({ collection: args.collection, status: (args.status as any) ?? "pendiente", q: args.q as string | undefined, page: Number(args.page) || 1 });
+      return { success: true, data };
+    },
+  },
+
+  get_record: {
+    description: `Trae un registro completo (campos editables, estado de revisión, nota de la redacción y contexto como terpenos o fuentes).
+Llama list_review_queue o search_strains antes para obtener el id.`,
+    inputSchema: {
+      type: "object",
+      properties: { collection: { type: "string", enum: Object.keys(COLLECTIONS) }, id: { type: "string" } },
+      required: ["collection", "id"],
+    },
+    execute: async (args) => {
+      if (!isCollectionKey(args.collection)) return { success: false, error: "Colección inválida" };
+      const rec = await getRecord(args.collection, String(args.id));
+      return rec ? { success: true, data: rec } : { success: false, error: "No encontrado" };
+    },
+  },
+
+  propose_record_edit: {
+    description: `Corrige campos de un registro (usa los paths que devuelve get_record, ej. "summary", "cannabinoidProfile.thc.max", "effects").
+El registro vuelve a "pendiente" para que la persona lo revise y apruebe. No inventes datos: solo corrige con información que tengas en el registro o que te dé el usuario.`,
+    inputSchema: {
+      type: "object",
+      properties: {
+        collection: { type: "string", enum: Object.keys(COLLECTIONS) },
+        id: { type: "string" },
+        values: { type: "object", description: "Mapa path -> nuevo valor. Listas como arreglos de strings." },
+      },
+      required: ["collection", "id", "values"],
+    },
+    execute: async (args) => {
+      if (!isCollectionKey(args.collection)) return { success: false, error: "Colección inválida" };
+      const r = await updateRecord(args.collection, String(args.id), (args.values as Record<string, unknown>) ?? {}, "agente");
+      return r.ok ? { success: true, data: r } : { success: false, error: r.error };
+    },
+  },
+
+  generate_editorial_note: {
+    description: `Escribe con IA la "Nota de la redacción" de una cepa (2-3 oraciones) usando solo sus datos. Queda en estado pendiente hasta que la persona la apruebe en /admin/revision.
+Úsala para cepas populares sin nota. No la uses para reescribir notas ya aprobadas salvo que el usuario lo pida.`,
+    inputSchema: { type: "object", properties: { id: { type: "string", description: "id de la cepa" } }, required: ["id"] },
+    execute: async (args) => {
+      const r = await generateEditorialNote(String(args.id));
+      return r.ok ? { success: true, data: { text: r.text, status: "pendiente" } } : { success: false, error: r.error };
+    },
+  },
+
+  find_incomplete_strains: {
+    description: `Lista cepas con huecos de datos (sin THC, sin terpenos, sin descripción o sin genética), las más populares primero.
+Úsala para decidir qué fichas completar. No completa nada por sí sola.`,
+    inputSchema: { type: "object", properties: { limit: { type: "number", description: "Default 20, máx 100" } }, required: [] },
+    execute: async (args) => ({ success: true, data: await incompleteStrains(Number(args.limit) || 20) }),
   },
 };
 

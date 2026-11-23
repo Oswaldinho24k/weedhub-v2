@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Link, useLoaderData } from "react-router";
 import { buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -7,6 +8,7 @@ import { BrandModel } from "~/models/brand.server";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
 export async function loader({ request }: Route.LoaderArgs) {
+  requireFeature("negocios");
   await connectDB();
 
   const brands = await BrandModel.find({ status: "active" })

@@ -1,3 +1,4 @@
+import { hideSeed } from "~/lib/seed-filter.server";
 import mongoose, { Schema, type Document } from "mongoose";
 
 export type ReviewEntityType = "strain" | "product" | "brand" | "dispensary";
@@ -119,6 +120,8 @@ reviewSchema.index({ userId: 1, createdAt: -1 });
 reviewSchema.index({ status: 1 });
 reviewSchema.index({ publishedAs: 1 });
 reviewSchema.index({ reviewType: 1 });
+
+reviewSchema.plugin(hideSeed);
 
 export const ReviewModel =
   (mongoose.models.Review as mongoose.Model<IReview>) ||

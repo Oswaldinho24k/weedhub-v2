@@ -9,6 +9,8 @@ import { STATUS_LABEL, STATUS_DOT_STYLE, statusLabel } from "~/lib/legal-status-
 import { Icon } from "~/components/ui/icon";
 import { getGuides } from "~/content/guides";
 import { EFFECTS } from "~/lib/effect-labels";
+import { CLASSIC_STRAINS } from "~/lib/classics";
+import { featureOn } from "~/lib/features";
 import { useT, useHref, useLocale } from "~/lib/i18n-context";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 import { resolveLocale } from "~/lib/locale.server";
@@ -31,14 +33,14 @@ export function meta({ data }: Route.MetaArgs) {
 
 const COPY = {
   es: {
-    lede: "La enciclopedia del cannabis en español y português.",
-    langs: ["español", "português"],
-    sub: (s: number, r: number) => `${s.toLocaleString("es-MX")} cepas y ${r.toLocaleString("es-MX")} reseñas con contexto: método, momento y experiencia.`,
+    lede: "La enciclopedia del cannabis en español.",
+    langs: ["español"],
+    sub: (s: number, _r: number) => `${s.toLocaleString("es-MX")} cepas con su genética, THC, terpenos, efectos y el momento del día en que suelen elegirse.`,
     searchTitle: "¿Qué cepa buscas?",
     searchPlaceholder: "Nombre, efecto o aroma",
     searchCta: "Buscar",
     quick: "O busca por efecto",
-    wallTitle: "Las más reseñadas",
+    wallTitle: "Clásicas para empezar",
     wallCta: "Ver las 3,000+ cepas",
     momentTitle: "¿Para qué momento?",
     momentBody: "Cada cepa trae cuándo la recomienda la comunidad. Elige tu momento.",
@@ -127,11 +129,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   await connectDB();
 
   const [topStrains, totalStrains, totalReviews, recentReviews, legal] = await Promise.all([
-    StrainModel.find({ isArchived: false, reviewCount: { $gt: 0 } })
-      .sort({ reviewCount: -1, "averageRatings.overall": -1 })
-      .limit(10)
+    StrainModel.find({ isArchived: false, slug: { $in: CLASSIC_STRAINS.slice(0, 10) as unknown as string[] } })
       .select("name slug type cannabinoidProfile effects reviewCount averageRatings")
-      .lean(),
+      .lean()
+      .then((rows) => [...rows].sort((a: any, b: any) => CLASSIC_STRAINS.indexOf(a.slug) - CLASSIC_STRAINS.indexOf(b.slug))),
     StrainModel.countDocuments({ isArchived: false }),
     ReviewModel.countDocuments({ status: "published" }),
     ReviewModel.find({
@@ -273,7 +274,7 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
         <section className="mx-auto max-w-[1280px] px-4 sm:px-6 -mt-6 pb-16 relative z-10">
           <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
             <h2 className="inline-block bg-ink text-yellow px-3 py-1.5 text-xl font-extrabold uppercase [font-stretch:78%] -rotate-1">{c.wallTitle}</h2>
-            <Link to={href("/strains?sort=reviews")} className={buttonVariants({ variant: "ghost" })}>
+            <Link to={href("/strains")} className={buttonVariants({ variant: "ghost" })}>
               {c.wallCta}
               <Icon name="arrowRight" size={16} />
             </Link>
@@ -421,6 +422,7 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
             ))}
           </ol>
         </div>
+        {featureOn("recomendador") && (
         <aside className="wall border-[3px] border-ink p-7 flex flex-col gap-4 self-start lg:rotate-[1deg]">
           <h2 className="display text-[40px] text-yellow">{c.recommendTitle}</h2>
           <p className="text-lg text-white/90">{c.recommendBody}</p>
@@ -429,6 +431,7 @@ export default function LandingPage({ loaderData }: Route.ComponentProps) {
             <Icon name="arrowRight" size={16} />
           </Link>
         </aside>
+        )}
       </section>
     </div>
   );

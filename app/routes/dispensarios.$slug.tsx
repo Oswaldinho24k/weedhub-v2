@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Icon } from "~/components/ui/icon";
 import { Form, Link, useLoaderData, useSearchParams } from "react-router";
 import { Button, buttonVariants } from "~/components/ui/button";
@@ -11,6 +12,7 @@ import { buildMeta, SITE_URL } from "~/lib/seo";
 import { PLAN_PRICES } from "~/lib/plans";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
+  requireFeature("negocios");
   await connectDB();
 
   const [dispensary, sessionUser] = await Promise.all([

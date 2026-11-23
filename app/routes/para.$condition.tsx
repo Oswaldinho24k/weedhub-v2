@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { data, useLoaderData, Link } from "react-router";
 import { buttonVariants } from "~/components/ui/button";
 import { buildMeta, SITE_URL } from "~/lib/seo";
@@ -35,6 +36,7 @@ const UI = {
 } as const;
 
 export async function loader({ params, request }: Route.LoaderArgs) {
+  requireFeature("porCondicion");
   const locale = (await resolveLocale(request)) === "pt" ? "pt" : "es";
   const condition = CONDITIONS_BY_SLUG[params.condition];
   if (!condition) throw data("Not found", { status: 404 });

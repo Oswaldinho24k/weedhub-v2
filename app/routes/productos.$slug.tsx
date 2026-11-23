@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { categoryLabel } from "~/lib/product-categories";
 import { Icon } from "~/components/ui/icon";
 import { Link, useLoaderData } from "react-router";
@@ -9,6 +10,7 @@ import { ReviewModel } from "~/models/review.server";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
 export async function loader({ params }: Route.LoaderArgs) {
+  requireFeature("negocios");
   await connectDB();
 
   const product = await ProductModel.findOne({ slug: params.slug, status: "active" })

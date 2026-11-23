@@ -17,6 +17,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 const NAV_ITEMS: { to: string; label: string; icon: IconName; end?: boolean }[] = [
   { to: "/admin", label: "Dashboard", icon: "settings", end: true },
+  { to: "/admin/revision", label: "Revisión", icon: "checkCircle" },
   { to: "/admin/strains", label: "Cepas", icon: "leaf" },
   { to: "/admin/generate-images", label: "Imágenes IA", icon: "camera" },
   { to: "/admin/reviews", label: "Reseñas", icon: "edit" },
@@ -154,10 +155,10 @@ function AdminChat({ onClose }: { onClose: () => void }) {
           <div className="text-xs text-fg-dim space-y-2">
             <p>Ejemplos de lo que puedes preguntar:</p>
             {[
-              "¿Cuántas cepas hay en total?",
-              "Busca la cepa Blue Dream",
-              "Lista los efectos positivos",
-              "¿Cuántos usuarios hay de México?",
+              "¿Cómo va la revisión?",
+              "¿Qué cepas populares tienen datos incompletos?",
+              "Genera la nota de la redacción de Sour Diesel",
+              "Revisa el país México del Mapa Verde y dime qué falta",
             ].map((ex) => (
               <button
                 key={ex}

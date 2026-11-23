@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Icon } from "~/components/ui/icon";
 import { Link, useLoaderData, useSearchParams } from "react-router";
 import { buttonVariants } from "~/components/ui/button";
@@ -8,6 +9,7 @@ import { DispensaryModel } from "~/models/dispensary.server";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
 export async function loader({ request }: Route.LoaderArgs) {
+  requireFeature("negocios");
   await connectDB();
   const url = new URL(request.url);
   const cityFilter = url.searchParams.get("city") || "";

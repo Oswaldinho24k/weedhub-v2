@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Link } from "react-router";
 import type { Route } from "./+types/para";
 import { buildMeta, SITE_URL } from "~/lib/seo";
@@ -27,6 +28,7 @@ const UI = {
 const CATEGORY_ORDER: ConditionCategory[] = ["mental", "dolor", "sueno", "digestivo", "neurologico", "otro"];
 
 export async function loader({ request }: Route.LoaderArgs) {
+  requireFeature("porCondicion");
   return { locale: (await resolveLocale(request)) === "pt" ? "pt" : "es" } as const;
 }
 

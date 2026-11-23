@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Form, Link, useActionData, useNavigation } from "react-router";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -17,6 +18,7 @@ const COUNTRIES = [
 ];
 
 export async function action({ request }: Route.ActionArgs) {
+  requireFeature("negocios");
   await connectDB();
   const form = await request.formData();
 

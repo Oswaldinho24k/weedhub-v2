@@ -39,9 +39,10 @@ function publicRoutes(prefix: "" | "pt") {
 export default [
   // Public content — three locales
   ...publicRoutes(""),
-  ...publicRoutes("pt"),
-  // English is not served: /en and /en/* 301 to the Spanish URL
+  // Only Spanish is served: /en, /pt and their subpaths 301 to the Spanish URL
   route("en", "routes/en-redirect.tsx", { id: "en-root" }),
+  route("pt", "routes/en-redirect.tsx", { id: "pt-root" }),
+  route("pt/*", "routes/en-redirect.tsx", { id: "pt-splat" }),
   route("en/*", "routes/en-redirect.tsx", { id: "en-splat" }),
 
   // Account / review / admin flows — unlocalized, read locale from cookie
@@ -61,6 +62,7 @@ export default [
   route("profile/delete", "routes/profile_.delete.tsx"),
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.tsx"),
+    route("revision", "routes/admin.revision.tsx"),
     route("strains", "routes/admin.strains.tsx"),
     route("reviews", "routes/admin.reviews.tsx"),
     route("submissions", "routes/admin.submissions.tsx"),

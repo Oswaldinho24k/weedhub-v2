@@ -1,3 +1,4 @@
+import { featureOn } from "~/lib/features";
 import { Link, useNavigate } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import { Logo } from "./logo";
@@ -40,24 +41,22 @@ export function Navbar({ user, theme }: NavbarProps) {
       to: href("/strains"),
       items: [
         { to: href("/strains"), label: t.nav.directory },
-        { to: href("/top-100"), label: t.nav.top100 },
-        { to: href("/para"), label: t.nav.conditions },
-        { to: "/recomendar", label: t.nav.findMyStrain },
+        ...(featureOn("top100") ? [{ to: href("/top-100"), label: t.nav.top100 }] : []),
+        ...(featureOn("porCondicion") ? [{ to: href("/para"), label: t.nav.conditions }] : []),
+        ...(featureOn("recomendador") ? [{ to: "/recomendar", label: t.nav.findMyStrain }] : []),
       ],
     },
     {
       label: t.nav.learn,
       items: [
-        { to: "/magazine", label: t.nav.magazine },
+        ...(featureOn("magazine") ? [{ to: "/magazine", label: t.nav.magazine }] : []),
         { to: href("/guias"), label: t.nav.guides },
         { to: href("/glosario"), label: t.nav.glossary },
         { to: href("/mapa-verde"), label: t.nav.greenMap },
       ],
     },
-    {
-      label: t.nav.community,
-      to: "/comunidad",
-    },
+    ...(featureOn("foro") ? [{ label: t.nav.community, to: "/comunidad" }] : []),
+    { label: "Mapa Verde", to: href("/mapa-verde") },
   ];
 
   useEffect(() => {

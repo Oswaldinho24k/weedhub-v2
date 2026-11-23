@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Icon } from "~/components/ui/icon";
 import { Link, useLoaderData, useSearchParams } from "react-router";
 import { buttonVariants } from "~/components/ui/button";
@@ -18,6 +19,7 @@ const CATEGORIES: { key: PostCategory | "todos"; label: string }[] = [
 ];
 
 export async function loader({ request }: Route.LoaderArgs) {
+  requireFeature("foro");
   await connectDB();
   const user = await getUserFromSession(request);
   const url = new URL(request.url);

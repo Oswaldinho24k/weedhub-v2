@@ -1,3 +1,4 @@
+import { hideSeed } from "~/lib/seed-filter.server";
 import mongoose, { Schema, type Document } from "mongoose";
 
 export interface IComment extends Document {
@@ -27,6 +28,8 @@ const commentSchema = new Schema<IComment>(
 
 commentSchema.index({ postId: 1, status: 1, createdAt: 1 });
 commentSchema.index({ userId: 1, createdAt: -1 });
+
+commentSchema.plugin(hideSeed);
 
 export const CommentModel =
   (mongoose.models.Comment as mongoose.Model<IComment>) ||

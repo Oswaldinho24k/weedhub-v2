@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Form, Link, useActionData, useLoaderData, useNavigation } from "react-router";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -7,6 +8,7 @@ import { BrandModel } from "~/models/brand.server";
 import { sendClaimNotificationEmail } from "~/lib/email.server";
 
 export async function loader({ params }: Route.LoaderArgs) {
+  requireFeature("negocios");
   await connectDB();
   const brand = await BrandModel.findOne({ slug: params.slug, status: "active" })
     .lean()
@@ -23,6 +25,7 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
+  requireFeature("negocios");
   await connectDB();
   const brand = await BrandModel.findOne({ slug: params.slug }).lean().select("name slug email");
   if (!brand) throw new Response("Not Found", { status: 404 });

@@ -1,3 +1,4 @@
+import { revisionSchemaDef, editorialNoteSchema, type IRevision } from "~/models/revision.server";
 import mongoose, { Schema, type Document } from "mongoose";
 
 export type LegalStatusType =
@@ -31,6 +32,7 @@ export interface ILegalStatusSource {
 }
 
 export interface ILegalStatus extends Document {
+  revision?: IRevision;
   countryCode: string; // ISO 3166-1 alpha-2
   countryName: string; // English name
   countryNameEs: string; // Spanish name
@@ -61,6 +63,7 @@ export interface ILegalStatus extends Document {
 
 const legalStatusSchema = new Schema<ILegalStatus>(
   {
+    revision: revisionSchemaDef,
     countryCode: { type: String, required: true, unique: true, uppercase: true, trim: true },
     countryName: { type: String, required: true, trim: true },
     countryNameEs: { type: String, required: true, trim: true },

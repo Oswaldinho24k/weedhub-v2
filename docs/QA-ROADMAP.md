@@ -16,6 +16,15 @@ SEO/IA: ver [`SEO-AUDIT.md`](./SEO-AUDIT.md) para pendientes por feature.
 
 ---
 
+## Fase 0 — Revisión editorial (antes de lanzar)
+
+Todo en `/admin/revision`, registro por registro:
+- [ ] Notas de la redacción de las 30 clásicas: generarlas (requiere `ANTHROPIC_API_KEY`) y aprobarlas o editarlas.
+- [ ] Mapa Verde: 24 países (la info legal es la más sensible).
+- [ ] Glosario: 44 términos.
+- [ ] Magazine: 8 artículos.
+- [ ] Cepas: empezar por las 30 clásicas y las más conocidas (la cola ya viene en ese orden).
+
 ## Fase 1 — Descubrir cepas (lo que trae tráfico)
 
 **Qué probar**

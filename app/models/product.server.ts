@@ -1,3 +1,4 @@
+import { hideSeed } from "~/lib/seed-filter.server";
 import mongoose, { Schema, type Document } from "mongoose";
 
 export interface IProduct extends Document {
@@ -75,6 +76,8 @@ productSchema.index({ categoryKey: 1, status: 1 });
 productSchema.index({ strainId: 1 });
 productSchema.index({ isPromoted: 1, status: 1 });
 productSchema.index({ averageRating: -1 });
+
+productSchema.plugin(hideSeed);
 
 export const ProductModel =
   (mongoose.models.Product as mongoose.Model<IProduct>) ||

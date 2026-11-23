@@ -312,6 +312,12 @@ export default function StrainDetailPage({ loaderData }: Route.ComponentProps) {
 
               {/* Direct answer block (40–60 words, built from data) */}
               <p className="mt-6 text-[19px] leading-relaxed font-medium max-w-[56ch]">{summary}</p>
+              {strain.editorialNote?.status === "aprobado" && strain.editorialNote.text && (
+                <aside className="mt-6 max-w-[58ch] bg-white text-ink border-2 border-ink p-4 -rotate-[0.6deg]">
+                  <p className="text-[13px] font-extrabold uppercase [font-stretch:78%] mb-1.5">Nota de la redacción</p>
+                  <p className="text-[17px] leading-relaxed">{strain.editorialNote.text}</p>
+                </aside>
+              )}
               {strainDescription && strainDescription !== summary && strainDescription.trim() !== strain.name && strainDescription.length > 40 && (
                 <p className="mt-4 text-[16px] leading-relaxed max-w-[60ch] opacity-90">{strainDescription}</p>
               )}

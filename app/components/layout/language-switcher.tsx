@@ -11,6 +11,7 @@ import {
 } from "~/lib/i18n";
 
 export function LanguageSwitcher() {
+  if (SUPPORTED_LOCALES.length < 2) return null;
   const current = useLocale();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);

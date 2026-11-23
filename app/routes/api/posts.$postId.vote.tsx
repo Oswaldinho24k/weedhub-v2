@@ -1,9 +1,11 @@
+import { requireFeature } from "~/lib/features";
 import type { Route } from "./+types/posts.$postId.vote";
 import { connectDB } from "~/lib/db.server";
 import { requireUser } from "~/lib/auth.server";
 import { PostModel } from "~/models/post.server";
 
 export async function action({ request, params }: Route.ActionArgs) {
+  requireFeature("foro");
   const user = await requireUser(request);
   await connectDB();
 

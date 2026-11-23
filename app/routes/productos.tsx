@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Icon } from "~/components/ui/icon";
 import { Link, useLoaderData, useSearchParams } from "react-router";
 import { buttonVariants } from "~/components/ui/button";
@@ -26,6 +27,7 @@ const SORT_MAP: Record<SortKey, Record<string, unknown>> = {
 };
 
 export async function loader({ request }: Route.LoaderArgs) {
+  requireFeature("negocios");
   await connectDB();
   const url = new URL(request.url);
   const cat = url.searchParams.get("cat") || "";

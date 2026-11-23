@@ -6,8 +6,8 @@
 export const ALL_LOCALES = ["es", "pt", "en"] as const;
 export type Locale = (typeof ALL_LOCALES)[number];
 
-/** Locales actually served (iberófono: español + português). `/en/*` redirects to Spanish. */
-export const SUPPORTED_LOCALES = ["es", "pt"] as const satisfies readonly Locale[];
+/** Locales actually served: Spanish only for now. `/pt/*` and `/en/*` redirect to Spanish (pt content is kept for later). */
+export const SUPPORTED_LOCALES = ["es"] as const satisfies readonly Locale[];
 
 export const DEFAULT_LOCALE: Locale = "es";
 
@@ -34,7 +34,7 @@ export function isLocale(value: unknown): value is Locale {
  *   `/strains`     → { locale: "es", path: "/strains" }  (default)
  */
 export function parseLocalePath(pathname: string): { locale: Locale; path: string } {
-  const match = pathname.match(/^\/(pt)(\/.*|$)/);
+  const match = pathname.match(/^\/(__none__)(\/.*|$)/);
   if (match) {
     return {
       locale: match[1] as Locale,
@@ -65,7 +65,6 @@ export function detectFromAcceptLanguage(header: string | null | undefined): Loc
     return tag.trim().toLowerCase();
   });
   for (const tag of entries) {
-    if (tag.startsWith("pt")) return "pt";
     if (tag.startsWith("es")) return "es";
   }
   return DEFAULT_LOCALE;
