@@ -2,8 +2,8 @@ import { Form, useLoaderData, useActionData, useNavigation } from "react-router"
 import { useState } from "react";
 import type { Route } from "./+types/admin.articles";
 import { requireAdmin } from "~/lib/auth.server";
-import { connectDB } from "~/lib/db.server";
-import { ArticleModel, type ArticleCategory } from "~/models/article.server";
+import type { ArticleCategory } from "~/models/article.server";
+import { listArticles, createArticle, updateArticle, setArticlePublished, deleteArticle, draftArticle } from "~/services/articles.server";
 import { Icon } from "~/components/ui/icon";
 import { Button } from "~/components/ui/button";
 
@@ -38,11 +38,7 @@ type SerializedArticle = {
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAdmin(request);
-  await connectDB();
-  const articles = await ArticleModel.find({})
-    .sort({ createdAt: -1 })
-    .limit(100)
-    .lean();
+  const articles = await listArticles({ limit: 100 });
   return {
     articles: articles.map((a) => ({
       _id: String(a._id),
@@ -59,76 +55,54 @@ export async function loader({ request }: Route.LoaderArgs) {
       tags: (a.tags || []).join(", "),
       metaTitle: a.metaTitle || "",
       metaDescription: a.metaDescription || "",
-      publishedAt: a.publishedAt?.toISOString() || null,
-      createdAt: (a.createdAt as Date)?.toISOString(),
+      publishedAt: a.publishedAt ? new Date(a.publishedAt).toISOString() : null,
+      createdAt: a.createdAt ? new Date(a.createdAt).toISOString() : "",
     })) as SerializedArticle[],
   };
 }
 
+// HTTP adapter only: all logic lives in services/articles.server.ts (same functions the AI agent uses).
 export async function action({ request }: Route.ActionArgs) {
-  await requireAdmin(request);
-  await connectDB();
+  const user = await requireAdmin(request);
+  const by = user.username;
   const form = await request.formData();
   const intent = String(form.get("intent"));
-
-  const parseArticleFields = () => ({
-    slug: String(form.get("slug") || "")
-      .toLowerCase()
-      .trim(),
-    title: String(form.get("title") || "").trim(),
-    excerpt: String(form.get("excerpt") || "").trim(),
-    body: String(form.get("body") || "").trim(),
-    coverImage: String(form.get("coverImage") || "").trim(),
-    category: String(form.get("category") || "cultura") as ArticleCategory,
-    locale: String(form.get("locale") || "es"),
-    tags: String(form.get("tags") || "")
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean),
-    author: {
-      name: String(form.get("authorName") || "WeedHub").trim(),
-      role: String(form.get("authorRole") || "").trim(),
-    },
-    metaTitle: String(form.get("metaTitle") || "").trim(),
-    metaDescription: String(form.get("metaDescription") || "").trim(),
+  const id = String(form.get("id") || "");
+  const field = (k: string) => (form.has(k) ? String(form.get(k)) : undefined);
+  const fields = () => ({
+    title: field("title"),
+    excerpt: field("excerpt"),
+    body: field("body"),
+    coverImage: field("coverImage"),
+    category: field("category"),
+    locale: field("locale"),
+    tags: field("tags"),
+    authorName: field("authorName"),
+    authorRole: field("authorRole"),
+    metaTitle: field("metaTitle"),
+    metaDescription: field("metaDescription"),
   });
 
   if (intent === "create") {
-    const fields = parseArticleFields();
-    if (!fields.slug || !fields.title || !fields.body)
-      return { error: "Slug, título y cuerpo son requeridos" };
-    const existing = await ArticleModel.findOne({ slug: fields.slug });
-    if (existing) return { error: `El slug "${fields.slug}" ya existe` };
-    await ArticleModel.create({ ...fields, status: "draft" });
-    return { success: "Artículo creado como borrador" };
+    const r = await createArticle({ slug: field("slug"), ...fields() }, { actor: "admin", by });
+    return r.ok ? { success: "Artículo creado como borrador" } : { error: r.error };
   }
-
+  if (intent === "ai-draft") {
+    const r = await draftArticle({ title: field("title") ?? "", brief: field("brief") ?? "", notes: field("notes"), category: field("category") || undefined });
+    return r.ok ? { success: `Borrador creado (${r.slug}), pendiente de revisión. Revísalo en /admin/revision?c=articulos` } : { error: r.error };
+  }
   if (intent === "edit") {
-    const id = String(form.get("id"));
-    const fields = parseArticleFields();
-    if (!fields.title || !fields.body)
-      return { error: "Título y cuerpo son requeridos" };
-    await ArticleModel.findByIdAndUpdate(id, fields);
-    return { success: "Artículo actualizado" };
+    const r = await updateArticle(id, fields(), "admin", by);
+    return r.ok ? { success: "Artículo actualizado" } : { error: r.error };
   }
-
   if (intent === "publish") {
-    const id = String(form.get("id"));
-    const article = await ArticleModel.findById(id);
-    if (article) {
-      article.status = article.status === "published" ? "draft" : "published";
-      if (article.status === "published" && !article.publishedAt)
-        article.publishedAt = new Date();
-      await article.save();
-    }
-    return { success: "Estado actualizado" };
+    const r = await setArticlePublished(id);
+    return r.ok ? { success: r.status === "published" ? "Artículo publicado" : "Artículo regresado a borrador" } : { error: r.error };
   }
-
   if (intent === "delete") {
-    await ArticleModel.findByIdAndDelete(String(form.get("id")));
-    return { success: "Artículo eliminado" };
+    const r = await deleteArticle(id);
+    return r.ok ? { success: "Artículo eliminado" } : { error: r.error };
   }
-
   return { error: "Intent desconocido" };
 }
 
@@ -185,6 +159,38 @@ export default function AdminArticlesPage({ loaderData }: Route.ComponentProps) 
         >
           {actionData.success}
         </div>
+      )}
+
+      {/* AI draft: same service the agent uses (draftArticle) */}
+      {mode === "list" && (
+        <Form method="post" className="card p-4 flex flex-wrap items-end gap-3 bg-yellow/30">
+          <input type="hidden" name="intent" value="ai-draft" />
+          <label className="flex-1 min-w-[200px]">
+            <span className="label">Borrador con IA: título</span>
+            <input name="title" required placeholder="Ej. ¿Qué es el rosin y cómo se hace?" className="input w-full" />
+          </label>
+          <label className="w-40">
+            <span className="label">Categoría</span>
+            <select name="category" defaultValue="" className="input w-full">
+              <option value="">Que la IA elija</option>
+              {CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </label>
+          <label className="basis-full">
+            <span className="label">Brief (de qué trata y qué debe responder)</span>
+            <textarea name="brief" required rows={2} className="input w-full !h-auto py-2" placeholder="Ej. explicar qué es, cómo se diferencia de otros extractos y qué cuidar al comprarlo" />
+          </label>
+          <label className="flex-1 min-w-[220px]">
+            <span className="label">Notas y datos (opcional)</span>
+            <input name="notes" placeholder="Datos que sí quieres que use; la IA no inventa cifras ni leyes" className="input w-full" />
+          </label>
+          <Button type="submit" variant="primary" disabled={submitting}>
+            <Icon name="sparkle" size={14} /> {submitting ? "Redactando..." : "Crear borrador"}
+          </Button>
+          <p className="basis-full text-xs font-semibold text-fg-muted">Se guarda como borrador, pendiente de revisión, firmado por Redacción WeedHub. Lo revisas en Revisión y lo publicas aquí.</p>
+        </Form>
       )}
 
       {(mode === "create" || mode === "edit") && (

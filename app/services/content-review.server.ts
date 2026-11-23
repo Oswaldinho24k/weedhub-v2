@@ -1,7 +1,7 @@
 /**
  * Content review: the one place that lists, edits and validates the information WeedHub
  * produces (strains, glossary, Mapa Verde, magazine). Used by the admin UI route
- * (routes/admin.revision.tsx) and by the admin AI agent (lib/admin-actions.server.ts).
+ * (routes/admin.revision.tsx) and by the admin AI agent (ai/actions/content-review.server.ts).
  *
  * Rules
  * - Every record carries `revision: { status, reviewedAt, reviewedBy, note }`.
@@ -10,7 +10,7 @@
  * - Any edit made by the agent sends the record back to "pendiente".
  * - Strain editorial notes are only public when their own status is "aprobado".
  */
-import Anthropic from "@anthropic-ai/sdk";
+import { generateText, CONTENT_MODEL } from "~/ai/generate.server";
 import type { Model } from "mongoose";
 import { connectDB } from "~/lib/db.server";
 import { StrainModel } from "~/models/strain.server";
@@ -332,7 +332,6 @@ Reglas:
 - Devuelve solo el texto de la nota, sin título ni comillas.`;
 
 export async function generateEditorialNote(strainId: string) {
-  if (!process.env.ANTHROPIC_API_KEY) return { ok: false as const, error: "ANTHROPIC_API_KEY no configurada" };
   await connectDB();
   const s: any = await StrainModel.findById(strainId).lean();
   if (!s) return { ok: false as const, error: "Cepa no encontrada" };
@@ -351,25 +350,14 @@ export async function generateEditorialNote(strainId: string) {
     descripcionExistente: s.descriptionEs || undefined,
   };
 
-  const client = new Anthropic();
-  const res = await client.messages.create({
-    model: "claude-opus-5-5",
-    max_tokens: 4000,
-    output_config: { effort: "medium" },
-    system: NOTE_SYSTEM,
-    messages: [{ role: "user", content: `Datos de la cepa (JSON):\n${JSON.stringify(data)}` }],
-  });
-  if (res.stop_reason === "refusal") return { ok: false as const, error: "El modelo no generó la nota" };
-  const text = res.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("")
-    .trim();
+  const r = await generateText({ system: NOTE_SYSTEM, prompt: `Datos de la cepa (JSON):\n${JSON.stringify(data)}`, maxTokens: 4000 });
+  if (!r.ok) return r;
+  const text = r.text;
   if (!text) return { ok: false as const, error: "Respuesta vacía" };
 
   await StrainModel.updateOne(
     { _id: s._id },
-    { $set: { editorialNote: { text, status: "pendiente", generatedAt: new Date(), model: "claude-opus-5-5" } } }
+    { $set: { editorialNote: { text, status: "pendiente", generatedAt: new Date(), model: CONTENT_MODEL } } }
   );
   return { ok: true as const, text };
 }

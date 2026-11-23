@@ -1,9 +1,8 @@
 import { Form, useActionData, useNavigation } from "react-router";
 import { useState } from "react";
 import type { Route } from "./+types/admin.users";
-import { connectDB } from "~/lib/db.server";
 import { requireAdmin } from "~/lib/auth.server";
-import { UserModel } from "~/models/user.server";
+import { listUsers, setUserRole, resetUserPoints } from "~/services/users.server";
 import { countryFlag, countryLabel } from "~/constants/locations";
 import { formatDate, cn } from "~/lib/utils";
 import { Icon } from "~/components/ui/icon";
@@ -11,65 +10,29 @@ import { Button } from "~/components/ui/button";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAdmin(request);
-  await connectDB();
-
-  const url = new URL(request.url);
-  const search = url.searchParams.get("q") || "";
-
-  const filter: Record<string, unknown> = {};
-  if (search) filter.username = { $regex: search, $options: "i" };
-
-  const [users, total, adminCount] = await Promise.all([
-    UserModel.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(100)
-      .select("username anonymousHandle country role stats earnedBadges onboardingCompleted createdAt")
-      .lean(),
-    UserModel.countDocuments(),
-    UserModel.countDocuments({ role: "admin" }),
-  ]);
-
-  return {
-    users: users.map((u) => ({
-      _id: String(u._id),
-      username: u.username,
-      anonymousHandle: u.anonymousHandle,
-      country: u.country,
-      role: u.role,
-      reviewCount: u.stats?.reviewCount ?? 0,
-      joinedAt: u.stats?.joinedAt?.toISOString() ?? u.createdAt?.toISOString(),
-      badges: u.earnedBadges?.length ?? 0,
-      onboardingCompleted: u.onboardingCompleted,
-    })),
-    total,
-    adminCount,
-    search,
-  };
+  const search = new URL(request.url).searchParams.get("q") || "";
+  const { users, total, adminCount } = await listUsers({ q: search, limit: 100 });
+  return { users, total, adminCount, search };
 }
 
+// HTTP adapter only: all logic lives in services/users.server.ts (same functions the AI agent uses).
 export async function action({ request }: Route.ActionArgs) {
   await requireAdmin(request);
-  await connectDB();
-
   const formData = await request.formData();
   const intent = String(formData.get("intent"));
   const userId = String(formData.get("userId"));
 
   if (intent === "set-role") {
-    const role = String(formData.get("role")) as "user" | "admin";
-    const user = await UserModel.findByIdAndUpdate(userId, { role }, { new: true }).select("username role");
-    if (!user) return { error: "Usuario no encontrado" };
-    return { success: true, message: `@${user.username} ahora es ${role === "admin" ? "administrador" : "usuario"}` };
+    const role = String(formData.get("role"));
+    const r = await setUserRole(userId, role);
+    if (!r.ok) return { error: r.error };
+    return { success: true, message: `@${r.username} ahora es ${r.role === "admin" ? "administrador" : "usuario"}` };
   }
 
   if (intent === "reset-points") {
-    const user = await UserModel.findByIdAndUpdate(
-      userId,
-      { points: 0, earnedBadges: [] },
-      { new: true }
-    ).select("username");
-    if (!user) return { error: "Usuario no encontrado" };
-    return { success: true, message: `Puntos y badges de @${user.username} reiniciados` };
+    const r = await resetUserPoints(userId);
+    if (!r.ok) return { error: r.error };
+    return { success: true, message: `Puntos y badges de @${r.username} reiniciados` };
   }
 
   return { error: "Acción no válida" };

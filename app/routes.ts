@@ -63,6 +63,7 @@ export default [
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.tsx"),
     route("revision", "routes/admin.revision.tsx"),
+    route("generate-images", "routes/admin.generate-images.tsx"),
     route("strains", "routes/admin.strains.tsx"),
     route("reviews", "routes/admin.reviews.tsx"),
     route("submissions", "routes/admin.submissions.tsx"),
@@ -94,6 +95,7 @@ export default [
   route("magazine/:slug", "routes/magazine.$slug.tsx"),
   route("magazine.rss", "routes/magazine[.]rss.tsx"),
   route("llms.txt", "routes/llms[.]txt.tsx"),
+  route("mcp", "routes/mcp.tsx"),
 
   // Rankings y editoriales
 
@@ -130,5 +132,6 @@ export default [
   route("api/locale", "routes/api/locale.tsx"),
   route("api/strain-search", "routes/api/strain-search.tsx"),
   route("api/admin/ai", "routes/api/admin.ai.tsx"),
+  route("api/admin/generate-strain-image", "routes/api.admin.generate-strain-image.ts"),
   route("sitemap.xml", "routes/sitemap[.]xml.tsx"),
 ] satisfies RouteConfig;

@@ -9,26 +9,15 @@ type SerializedEffect = {
   rejectionReason?: string; createdAt?: string;
   submittedBy?: { username?: string; handle?: string } | null;
 };
-import { connectDB } from "~/lib/db.server";
 import { requireAdmin } from "~/lib/auth.server";
-import { EffectModel } from "~/models/effect.server";
+import { getEffectsBoard, createEffect, updateEffect, approveEffect, rejectEffect, mergeEffect } from "~/services/effects.server";
 import { Icon } from "~/components/ui/icon";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAdmin(request);
-  await connectDB();
-
-  const [pending, approved] = await Promise.all([
-    EffectModel.find({ status: "pending" })
-      .sort({ createdAt: -1 })
-      .populate("submittedBy", "username anonymousHandle")
-      .lean(),
-    EffectModel.find({ status: "approved" })
-      .sort({ category: 1, usageCount: -1 })
-      .lean(),
-  ]);
+  const { pending, approved } = await getEffectsBoard();
 
   const serialize = (e: any) => ({
     _id: String(e._id),
@@ -53,79 +42,35 @@ export async function loader({ request }: Route.LoaderArgs) {
   };
 }
 
+// HTTP adapter only: all logic lives in services/effects.server.ts (same functions the AI agent uses).
 export async function action({ request }: Route.ActionArgs) {
   await requireAdmin(request);
-  await connectDB();
-
   const form = await request.formData();
   const intent = String(form.get("intent"));
-  const effectId = String(form.get("effectId"));
+  const effectId = String(form.get("effectId") || "");
+  const field = (k: string) => (form.has(k) ? String(form.get(k)) : undefined);
+  const labels = () => ({ labelEn: field("labelEn"), labelEs: field("labelEs"), labelPt: field("labelPt"), category: field("category") });
 
   if (intent === "approve") {
-    const labelEn = String(form.get("labelEn")).trim();
-    const labelEs = String(form.get("labelEs")).trim();
-    const labelPt = String(form.get("labelPt")).trim();
-    const category = String(form.get("category")) as "positive" | "negative";
-
-    if (!labelEn || !labelEs || !labelPt) {
-      return { error: "Todos los labels son requeridos" };
-    }
-
-    await EffectModel.findByIdAndUpdate(effectId, {
-      labelEn, labelEs, labelPt, category,
-      status: "approved",
-    });
-    return { success: "Efecto aprobado" };
+    const r = await approveEffect(effectId, labels());
+    return r.ok ? { success: "Efecto aprobado" } : { error: r.error };
   }
-
   if (intent === "reject") {
-    const reason = String(form.get("reason") || "").trim();
-    await EffectModel.findByIdAndUpdate(effectId, {
-      status: "rejected",
-      rejectionReason: reason || undefined,
-    });
-    return { success: "Efecto rechazado" };
+    const r = await rejectEffect(effectId, field("reason"));
+    return r.ok ? { success: "Efecto rechazado" } : { error: r.error };
   }
-
   if (intent === "merge") {
-    const targetKey = String(form.get("targetKey")).trim();
-    // Mark as rejected with a note pointing to the canonical key
-    await EffectModel.findByIdAndUpdate(effectId, {
-      status: "rejected",
-      rejectionReason: `Merged into: ${targetKey}`,
-    });
-    return { success: `Fusionado con "${targetKey}"` };
+    const r = await mergeEffect(effectId, field("targetKey") ?? "");
+    return r.ok ? { success: `Fusionado con "${r.into}"` } : { error: r.error };
   }
-
   if (intent === "edit") {
-    const labelEn = String(form.get("labelEn")).trim();
-    const labelEs = String(form.get("labelEs")).trim();
-    const labelPt = String(form.get("labelPt")).trim();
-    const category = String(form.get("category")) as "positive" | "negative";
-    await EffectModel.findByIdAndUpdate(effectId, { labelEn, labelEs, labelPt, category });
-    return { success: "Efecto actualizado" };
+    const r = await updateEffect(effectId, labels());
+    return r.ok ? { success: "Efecto actualizado" } : { error: r.error };
   }
-
   if (intent === "create") {
-    const key = String(form.get("key") || "").toLowerCase().trim();
-    const labelEs = String(form.get("labelEs") || "").trim();
-    const labelEn = String(form.get("labelEn") || "").trim();
-    const labelPt = String(form.get("labelPt") || "").trim();
-    const category = String(form.get("category") || "positive") as "positive" | "negative";
-
-    if (!key || !labelEs || !labelEn || !labelPt) {
-      return { error: "Todos los campos son requeridos" };
-    }
-
-    const existing = await EffectModel.findOne({ key });
-    if (existing) {
-      return { error: `Ya existe un efecto con key '${key}'` };
-    }
-
-    await EffectModel.create({ key, labelEs, labelEn, labelPt, category, status: "approved", source: "system" });
-    return { success: `Efecto '${labelEs}' creado` };
+    const r = await createEffect({ key: field("key"), ...labels() }, "admin");
+    return r.ok ? { success: `Efecto '${r.labelEs}' creado` } : { error: r.error };
   }
-
   return { error: "Acción desconocida" };
 }
 

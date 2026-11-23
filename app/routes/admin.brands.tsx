@@ -2,98 +2,53 @@ import { useState } from "react";
 import { Form, useLoaderData, useActionData, useSearchParams } from "react-router";
 import type { Route } from "./+types/admin.brands";
 import { requireAdmin } from "~/lib/auth.server";
-import { connectDB } from "~/lib/db.server";
-import { BrandModel } from "~/models/brand.server";
-import { sendBrandVerifiedEmail } from "~/lib/email.server";
+import { listBrands, createBrand, setBrandStatus, setBrandTier, deleteBrand } from "~/services/businesses.server";
+
+const PAGE_SIZE = 25; // keep in sync with services/businesses.server.ts (client-safe copy)
 import { Icon } from "~/components/ui/icon";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
-const PAGE_SIZE = 25;
-
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAdmin(request);
-  await connectDB();
   const url = new URL(request.url);
   const q = url.searchParams.get("q") || "";
   const status = url.searchParams.get("status") || "";
+  const includeSeed = url.searchParams.get("includeSeed") === "1";
   const page = Math.max(1, Number(url.searchParams.get("page") || 1));
-
-  const filter: Record<string, unknown> = {};
-  if (q) filter.name = { $regex: q, $options: "i" };
-  if (status) filter.status = status;
-
-  const [brands, total] = await Promise.all([
-    BrandModel.find(filter)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * PAGE_SIZE)
-      .limit(PAGE_SIZE)
-      .lean(),
-    BrandModel.countDocuments(filter),
-  ]);
-
-  return { brands, total, page, q, status };
+  const { brands, total } = await listBrands({ q, status, page, includeSeed });
+  return { brands, total, page, q, status, includeSeed };
 }
 
+// HTTP adapter only: all logic lives in services/businesses.server.ts (same functions the AI agent uses).
 export async function action({ request }: Route.ActionArgs) {
   await requireAdmin(request);
-  await connectDB();
   const form = await request.formData();
-  const intent = form.get("intent") as string;
+  const intent = String(form.get("intent"));
+  const id = String(form.get("id") || "");
+  const field = (k: string) => (form.has(k) ? String(form.get(k)) : undefined);
 
   if (intent === "create") {
-    const name = String(form.get("name") || "").trim();
-    if (!name) return { error: "El nombre es obligatorio" };
-    const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    const existing = await BrandModel.findOne({ slug });
-    if (existing) return { error: `El slug "${slug}" ya existe` };
-    await BrandModel.create({
-      name,
-      slug,
-      description: form.get("description") ? String(form.get("description")) : undefined,
-      country: String(form.get("country") || "MX").toUpperCase(),
-      city: form.get("city") ? String(form.get("city")) : undefined,
-      website: form.get("website") ? String(form.get("website")) : undefined,
-      instagram: form.get("instagram") ? String(form.get("instagram")) : undefined,
-      email: form.get("email") ? String(form.get("email")) : undefined,
-    });
-    return { success: `Marca "${name}" creada` };
+    const r = await createBrand({ name: field("name"), description: field("description"), country: field("country"), city: field("city"), website: field("website"), instagram: field("instagram"), email: field("email") });
+    return r.ok ? { success: `Marca "${r.name}" creada` } : { error: r.error };
   }
-
   if (intent === "set-tier") {
-    const id = String(form.get("id"));
-    const tier = String(form.get("tier")) as "free" | "premium" | "enterprise";
-    const willVerify = tier !== "free";
-    const brand = await BrandModel.findById(id).select("name email isVerified").lean();
-    const now = new Date();
-    await BrandModel.findByIdAndUpdate(id, {
-      tier,
-      isVerified: willVerify,
-      verifiedAt: willVerify ? now : undefined,
-    });
-    if (brand && willVerify && !brand.isVerified && brand.email) {
-      sendBrandVerifiedEmail(brand.email, brand.name);
-    }
-    return { success: "Tier actualizado" };
+    const r = await setBrandTier(id, String(form.get("tier")));
+    return r.ok ? { success: "Tier actualizado" } : { error: r.error };
   }
-
   if (intent === "set-status") {
-    const id = String(form.get("id"));
-    const status = String(form.get("status")) as "active" | "pending" | "suspended";
-    await BrandModel.findByIdAndUpdate(id, { status });
-    return { success: "Estado actualizado" };
+    const r = await setBrandStatus(id, String(form.get("status")));
+    return r.ok ? { success: "Estado actualizado" } : { error: r.error };
   }
-
   if (intent === "delete") {
-    await BrandModel.findByIdAndDelete(String(form.get("id")));
-    return { success: "Marca eliminada" };
+    const r = await deleteBrand(id);
+    return r.ok ? { success: "Marca eliminada" } : { error: r.error };
   }
-
   return { error: "Intent desconocido" };
 }
 
 export default function AdminBrands() {
-  const { brands, total, page, q, status } = useLoaderData<typeof loader>();
+  const { brands, total, page, q, status, includeSeed } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showCreate, setShowCreate] = useState(false);
@@ -143,6 +98,14 @@ export default function AdminBrands() {
           <option value="active">Activa</option>
           <option value="suspended">Suspendida</option>
         </select>
+        <label className="flex items-center gap-1.5 text-sm text-fg-muted">
+          <input
+            type="checkbox"
+            defaultChecked={includeSeed}
+            onChange={(e) => setSearchParams((p) => { if (e.target.checked) p.set("includeSeed", "1"); else p.delete("includeSeed"); p.set("page", "1"); return p; })}
+          />
+          Incluir seed
+        </label>
       </div>
 
       {/* Create form */}
@@ -214,7 +177,7 @@ export default function AdminBrands() {
                 >
                   <td className="px-4 py-3">
                     <div className="font-medium">{brand.name}</div>
-                    <div className="text-xs text-fg-dim mono">{brand.slug}</div>
+                    <div className="text-xs text-fg-dim mono">{brand.slug}{(brand as { source?: string }).source === "seed" && <span className="pill text-xs ml-1">seed</span>}</div>
                   </td>
                   <td className="px-4 py-3 text-fg-muted">{brand.country}</td>
                   <td className="px-4 py-3">

@@ -12,6 +12,7 @@ Disallow: /profile/delete
 Disallow: /logout
 Disallow: /strains/*/review
 Disallow: /ds
+Disallow: /mcp
 
 # AI search & answer engines: allowed (citations in ChatGPT, Perplexity, Claude, Gemini)
 User-agent: OAI-SearchBot

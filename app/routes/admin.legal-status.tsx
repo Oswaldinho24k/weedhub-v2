@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Form, useLoaderData, useActionData } from "react-router";
 import type { Route } from "./+types/admin.legal-status";
 import { requireAdmin } from "~/lib/auth.server";
-import { connectDB } from "~/lib/db.server";
-import { LegalStatusModel, type LegalStatusType } from "~/models/legal-status.server";
+import type { LegalStatusType } from "~/models/legal-status.server";
+import { listCountries, createCountry, updateCountry, setCountryActive } from "~/services/legal-status.server";
 import { STATUS_LABEL, STATUS_PILL, STATUS_PILL_STYLE } from "~/lib/legal-status-ui";
 import { Icon } from "~/components/ui/icon";
 import { Button } from "~/components/ui/button";
@@ -11,72 +11,55 @@ import { cn } from "~/lib/utils";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAdmin(request);
-  await connectDB();
-  const countries = await LegalStatusModel.find({}).sort({ sortOrder: 1, countryNameEs: 1 }).lean();
+  const countries = await listCountries();
   return { countries };
 }
 
+// HTTP adapter only: all logic lives in services/legal-status.server.ts (same functions the AI agent uses).
 export async function action({ request }: Route.ActionArgs) {
-  await requireAdmin(request);
-  await connectDB();
+  const user = await requireAdmin(request);
+  const by = user.username;
   const form = await request.formData();
-  const intent = form.get("intent") as string;
+  const intent = String(form.get("intent"));
+  const id = String(form.get("id") || "");
+  const field = (k: string) => (form.has(k) ? String(form.get(k)) : undefined);
 
   if (intent === "create") {
-    const countryCode = String(form.get("countryCode") || "").toUpperCase().trim();
-    if (!countryCode) return { error: "El código de país es obligatorio" };
-    const existing = await LegalStatusModel.findOne({ countryCode });
-    if (existing) return { error: `El país "${countryCode}" ya existe` };
-    await LegalStatusModel.create({
-      countryCode,
-      countryName: String(form.get("countryName") || ""),
-      countryNameEs: String(form.get("countryNameEs") || ""),
-      flag: String(form.get("flag") || "🏳️"),
-      region: String(form.get("region") || "other"),
-      nationalStatus: String(form.get("nationalStatus") || "illegal") as LegalStatusType,
-      summary: String(form.get("summary") || ""),
-      whatYouCan: String(form.get("whatYouCan") || "").split("\n").map((s) => s.trim()).filter(Boolean),
-      whatYouCant: String(form.get("whatYouCant") || "").split("\n").map((s) => s.trim()).filter(Boolean),
-      keyDate: form.get("keyDate") ? String(form.get("keyDate")) : undefined,
-      keyLaw: form.get("keyLaw") ? String(form.get("keyLaw")) : undefined,
-      lastReviewedAt: new Date(),
-    });
-    return { success: `País "${countryCode}" creado` };
+    const r = await createCountry(
+      {
+        countryCode: field("countryCode"),
+        countryName: field("countryName"),
+        countryNameEs: field("countryNameEs"),
+        flag: field("flag"),
+        region: field("region"),
+        nationalStatus: field("nationalStatus"),
+        summary: field("summary"),
+        whatYouCan: field("whatYouCan"),
+        whatYouCant: field("whatYouCant"),
+        keyDate: field("keyDate"),
+        keyLaw: field("keyLaw"),
+      },
+      { actor: "admin", by }
+    );
+    return r.ok ? { success: `País "${r.countryCode}" creado` } : { error: r.error };
   }
-
   if (intent === "update-status") {
-    const id = String(form.get("id"));
-    const nationalStatus = String(form.get("nationalStatus")) as LegalStatusType;
-    await LegalStatusModel.findByIdAndUpdate(id, {
-      nationalStatus,
-      lastReviewedAt: new Date(),
-    });
-    return { success: "Estado actualizado" };
+    const r = await updateCountry(id, { nationalStatus: field("nationalStatus") }, "admin", by);
+    return r.ok ? { success: "Estado actualizado" } : { error: r.error };
   }
-
   if (intent === "update-summary") {
-    const id = String(form.get("id"));
-    await LegalStatusModel.findByIdAndUpdate(id, {
-      summary: String(form.get("summary") || ""),
-      whatYouCan: String(form.get("whatYouCan") || "").split("\n").map((s) => s.trim()).filter(Boolean),
-      whatYouCant: String(form.get("whatYouCant") || "").split("\n").map((s) => s.trim()).filter(Boolean),
-      keyDate: form.get("keyDate") ? String(form.get("keyDate")) : undefined,
-      keyLaw: form.get("keyLaw") ? String(form.get("keyLaw")) : undefined,
-      lastReviewedAt: new Date(),
-    });
-    return { success: "Información actualizada" };
+    const r = await updateCountry(
+      id,
+      { summary: field("summary"), whatYouCan: field("whatYouCan"), whatYouCant: field("whatYouCant"), keyDate: field("keyDate"), keyLaw: field("keyLaw") },
+      "admin",
+      by
+    );
+    return r.ok ? { success: "Información actualizada" } : { error: r.error };
   }
-
   if (intent === "toggle") {
-    const id = String(form.get("id"));
-    const country = await LegalStatusModel.findById(id);
-    if (country) {
-      country.isActive = !country.isActive;
-      await country.save();
-    }
-    return { success: "Visibilidad actualizada" };
+    const r = await setCountryActive(id);
+    return r.ok ? { success: "Visibilidad actualizada" } : { error: r.error };
   }
-
   return { error: "Intent desconocido" };
 }
 

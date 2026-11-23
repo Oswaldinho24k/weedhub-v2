@@ -1,160 +1,37 @@
 import { Form, Link, useActionData, useNavigation } from "react-router";
 import { useState } from "react";
 import type { Route } from "./+types/admin.submissions";
-import { connectDB } from "~/lib/db.server";
 import { requireAdmin } from "~/lib/auth.server";
-import { StrainSubmissionModel } from "~/models/strain-submission.server";
-import { StrainModel } from "~/models/strain.server";
-import {
-  findStrainByNameOrAlias,
-  fuzzyStrainSuggestions,
-} from "~/lib/strain-search.server";
-import { normalizeStrainSlug } from "~/lib/strain-name";
-import { awardPoints } from "~/services/gamification.service.server";
-import { slugify } from "~/lib/utils";
+import { listSubmissions, approveSubmission, rejectSubmission, mergeSubmissionAsAlias } from "~/services/strains.server";
 import { Icon } from "~/components/ui/icon";
 import { Button } from "~/components/ui/button";
 import { formatDate } from "~/lib/utils";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAdmin(request);
-  await connectDB();
-
-  const submissions = await StrainSubmissionModel.find({
-    status: { $in: ["pending", "rejected_auto"] },
-  })
-    .sort({ createdAt: -1 })
-    .limit(100)
-    .populate("submittedBy", "username anonymousHandle")
-    .populate("potentialDuplicateStrainId", "name slug")
-    .lean();
-
-  // Attach fuzzy suggestions per submission
-  const withSuggestions = await Promise.all(
-    submissions.map(async (s) => {
-      const exact = await findStrainByNameOrAlias(s.name);
-      const fuzzy = exact ? [] : await fuzzyStrainSuggestions(s.name, 3);
-      return {
-        _id: String(s._id),
-        name: s.name,
-        type: s.type,
-        lineage: s.lineage,
-        description: s.description,
-        sourceUrl: s.sourceUrl,
-        reasoning: s.reasoning,
-        photo: s.photo,
-        status: s.status,
-        moderationNotes: s.moderationNotes,
-        userOverrodeDuplicate: s.userOverrodeDuplicate,
-        createdAt: s.createdAt.toISOString(),
-        submittedBy: s.submittedBy
-          ? {
-              username: (s.submittedBy as any).username,
-              anonymousHandle: (s.submittedBy as any).anonymousHandle,
-            }
-          : null,
-        submittedById: String(s.submittedBy?._id || s.submittedBy),
-        exactMatch: exact
-          ? {
-              name: exact.strain.name,
-              slug: exact.strain.slug,
-              matchedAlias: exact.matchedAlias,
-            }
-          : null,
-        fuzzy: fuzzy.map((f) => ({
-          name: f.strain.name,
-          slug: f.strain.slug,
-          distance: f.distance,
-        })),
-      };
-    })
-  );
-
-  return { submissions: withSuggestions };
+  return { submissions: await listSubmissions() };
 }
 
+// HTTP adapter only: all logic lives in services/strains.server.ts (same functions the AI agent uses).
 export async function action({ request }: Route.ActionArgs) {
   const admin = await requireAdmin(request);
-  await connectDB();
   const form = await request.formData();
   const intent = String(form.get("intent"));
   const submissionId = String(form.get("submissionId"));
-
-  const sub = await StrainSubmissionModel.findById(submissionId);
-  if (!sub) return { error: "Sugerencia no encontrada." };
+  const reviewerId = String(admin._id);
 
   if (intent === "approve") {
-    const thcMax = Number(form.get("thcMax") || 0);
-    const cbdMax = Number(form.get("cbdMax") || 0);
-
-    const slug = slugify(sub.name);
-    const exists = await StrainModel.findOne({ slug });
-    if (exists) {
-      return { error: `Ya existe una cepa con slug ${slug}. Usa "Merge as alias".` };
-    }
-
-    const strain = await StrainModel.create({
-      name: sub.name,
-      slug,
-      type: sub.type === "unknown" ? "hybrid" : sub.type,
-      description: sub.description || sub.reasoning,
-      descriptionEs: sub.description || sub.reasoning,
-      lineage: sub.lineage,
-      cannabinoidProfile: {
-        thc: { min: 0, max: thcMax },
-        cbd: { min: 0, max: cbdMax },
-      },
-      effects: [],
-      flavors: [],
-      imageUrl: sub.photo,
-      isArchived: false,
-    });
-
-    sub.status = "approved";
-    sub.reviewedBy = admin._id as any;
-    sub.reviewedAt = new Date();
-    sub.linkedStrainId = strain._id as any;
-    await sub.save();
-
-    await awardPoints(String(sub.submittedBy), 10);
-    return { success: `Cepa "${sub.name}" creada y aprobada. +10 pts al usuario.` };
+    const r = await approveSubmission(submissionId, { thcMax: String(form.get("thcMax") || 0), cbdMax: String(form.get("cbdMax") || 0) }, reviewerId);
+    return r.ok ? { success: r.message } : { error: r.error };
   }
-
   if (intent === "reject") {
-    const reason = String(form.get("reason") || "").trim();
-    sub.status = "rejected";
-    sub.reviewedBy = admin._id as any;
-    sub.reviewedAt = new Date();
-    sub.rejectionReason = reason || undefined;
-    await sub.save();
-    return { success: "Sugerencia rechazada." };
+    const r = await rejectSubmission(submissionId, String(form.get("reason") || ""), reviewerId);
+    return r.ok ? { success: r.message } : { error: r.error };
   }
-
   if (intent === "merge-alias") {
-    const targetStrainId = String(form.get("targetStrainId") || "");
-    const target = await StrainModel.findById(targetStrainId);
-    if (!target) return { error: "Cepa destino no encontrada." };
-
-    const aliases = target.aliases || [];
-    if (!aliases.some((a) => normalizeStrainSlug(a) === normalizeStrainSlug(sub.name))) {
-      aliases.push(sub.name);
-    }
-    target.aliases = aliases;
-    target.aliasSlugs = aliases.map((a) => normalizeStrainSlug(a));
-    await target.save();
-
-    sub.status = "merged_as_alias";
-    sub.reviewedBy = admin._id as any;
-    sub.reviewedAt = new Date();
-    sub.linkedStrainId = target._id as any;
-    await sub.save();
-
-    await awardPoints(String(sub.submittedBy), 5);
-    return {
-      success: `"${sub.name}" agregado como alias de ${target.name}. +5 pts al usuario.`,
-    };
+    const r = await mergeSubmissionAsAlias(submissionId, String(form.get("targetStrainId") || ""), reviewerId);
+    return r.ok ? { success: r.message } : { error: r.error };
   }
-
   return { error: "Acción inválida." };
 }
 

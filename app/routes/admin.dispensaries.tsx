@@ -2,100 +2,68 @@ import { useState } from "react";
 import { Form, useLoaderData, useActionData, useSearchParams } from "react-router";
 import type { Route } from "./+types/admin.dispensaries";
 import { requireAdmin } from "~/lib/auth.server";
-import { connectDB } from "~/lib/db.server";
-import { DispensaryModel } from "~/models/dispensary.server";
-import { BrandModel } from "~/models/brand.server";
+import { listDispensaries, listBrandOptions, createDispensary, setDispensaryStatus, setDispensaryVerified, deleteDispensary } from "~/services/businesses.server";
+
+const PAGE_SIZE = 25; // keep in sync with services/businesses.server.ts (client-safe copy)
 import { Icon } from "~/components/ui/icon";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
-const PAGE_SIZE = 25;
-
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAdmin(request);
-  await connectDB();
   const url = new URL(request.url);
   const q = url.searchParams.get("q") || "";
   const status = url.searchParams.get("status") || "";
+  const includeSeed = url.searchParams.get("includeSeed") === "1";
   const page = Math.max(1, Number(url.searchParams.get("page") || 1));
 
-  const filter: Record<string, unknown> = {};
-  if (q) filter.$or = [
-    { name: { $regex: q, $options: "i" } },
-    { city: { $regex: q, $options: "i" } },
-  ];
-  if (status) filter.status = status;
-
-  const [dispensaries, total, brands] = await Promise.all([
-    DispensaryModel.find(filter)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * PAGE_SIZE)
-      .limit(PAGE_SIZE)
-      .lean(),
-    DispensaryModel.countDocuments(filter),
-    BrandModel.find({ status: "active" }).select("name slug").sort({ name: 1 }).lean(),
+  const [{ dispensaries, total }, brands] = await Promise.all([
+    listDispensaries({ q, status, page, includeSeed }),
+    listBrandOptions({ status: "active", includeSeed }),
   ]);
 
-  return { dispensaries, total, page, q, status, brands };
+  return { dispensaries, total, page, q, status, includeSeed, brands };
 }
 
+// HTTP adapter only: all logic lives in services/businesses.server.ts (same functions the AI agent uses).
 export async function action({ request }: Route.ActionArgs) {
   await requireAdmin(request);
-  await connectDB();
   const form = await request.formData();
-  const intent = form.get("intent") as string;
+  const intent = String(form.get("intent"));
+  const id = String(form.get("id") || "");
+  const field = (k: string) => (form.has(k) ? String(form.get(k)) : undefined);
 
   if (intent === "create") {
-    const name = String(form.get("name") || "").trim();
-    const address = String(form.get("address") || "").trim();
-    const city = String(form.get("city") || "").trim();
-    if (!name || !address || !city) return { error: "Nombre, dirección y ciudad son obligatorios" };
-    const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    const existing = await DispensaryModel.findOne({ slug });
-    if (existing) return { error: `El slug "${slug}" ya existe` };
-    await DispensaryModel.create({
-      name,
-      slug,
-      address,
-      city,
-      state: form.get("state") ? String(form.get("state")) : undefined,
-      country: String(form.get("country") || "MX").toUpperCase(),
-      phone: form.get("phone") ? String(form.get("phone")) : undefined,
-      website: form.get("website") ? String(form.get("website")) : undefined,
-      instagram: form.get("instagram") ? String(form.get("instagram")) : undefined,
-      brandId: form.get("brandId") ? String(form.get("brandId")) : undefined,
+    const r = await createDispensary({
+      name: field("name"),
+      address: field("address"),
+      city: field("city"),
+      state: field("state"),
+      country: field("country"),
+      phone: field("phone"),
+      website: field("website"),
+      instagram: field("instagram"),
+      brandId: field("brandId"),
     });
-    return { success: `Dispensario "${name}" creado` };
+    return r.ok ? { success: `Dispensario "${r.name}" creado` } : { error: r.error };
   }
-
   if (intent === "set-status") {
-    const id = String(form.get("id"));
-    const status = String(form.get("status")) as "active" | "pending" | "suspended";
-    await DispensaryModel.findByIdAndUpdate(id, { status });
-    return { success: "Estado actualizado" };
+    const r = await setDispensaryStatus(id, String(form.get("status")));
+    return r.ok ? { success: "Estado actualizado" } : { error: r.error };
   }
-
   if (intent === "verify") {
-    const id = String(form.get("id"));
-    const disp = await DispensaryModel.findById(id);
-    if (disp) {
-      disp.isVerified = !disp.isVerified;
-      if (disp.isVerified) disp.tier = "premium";
-      await disp.save();
-    }
-    return { success: "Verificación actualizada" };
+    const r = await setDispensaryVerified(id);
+    return r.ok ? { success: "Verificación actualizada" } : { error: r.error };
   }
-
   if (intent === "delete") {
-    await DispensaryModel.findByIdAndDelete(String(form.get("id")));
-    return { success: "Dispensario eliminado" };
+    const r = await deleteDispensary(id);
+    return r.ok ? { success: "Dispensario eliminado" } : { error: r.error };
   }
-
   return { error: "Intent desconocido" };
 }
 
 export default function AdminDispensaries() {
-  const { dispensaries, total, page, q, status, brands } = useLoaderData<typeof loader>();
+  const { dispensaries, total, page, q, status, includeSeed, brands } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showCreate, setShowCreate] = useState(false);
@@ -144,6 +112,14 @@ export default function AdminDispensaries() {
           <option value="active">Activo</option>
           <option value="suspended">Suspendido</option>
         </select>
+        <label className="flex items-center gap-1.5 text-sm text-fg-muted">
+          <input
+            type="checkbox"
+            defaultChecked={includeSeed}
+            onChange={(e) => setSearchParams((p) => { if (e.target.checked) p.set("includeSeed", "1"); else p.delete("includeSeed"); p.set("page", "1"); return p; })}
+          />
+          Incluir seed
+        </label>
       </div>
 
       {showCreate && (
@@ -225,7 +201,7 @@ export default function AdminDispensaries() {
                 >
                   <td className="px-4 py-3">
                     <div className="font-medium">{disp.name}</div>
-                    <div className="text-xs text-fg-dim mono">{disp.slug}</div>
+                    <div className="text-xs text-fg-dim mono">{disp.slug}{(disp as { source?: string }).source === "seed" && <span className="pill text-xs ml-1">seed</span>}</div>
                   </td>
                   <td className="px-4 py-3 text-fg-muted">{disp.city}</td>
                   <td className="px-4 py-3 text-fg-muted">{disp.country}</td>
