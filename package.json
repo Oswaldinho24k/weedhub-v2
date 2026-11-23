@@ -5,7 +5,7 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
-    "start": "react-router-serve ./build/server/index.js",
+    "start": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "seed": "npx tsx seed/index.ts",
     "seed:effects": "npx tsx seed/effects.ts",
@@ -19,14 +19,13 @@
     "seed:glossary": "npx tsx seed/glossary.ts",
     "seed:grow": "npx tsx seed/grow-data.ts",
     "seed:genetics": "npx tsx seed/genetics.ts",
-    "seed:categories": "npx tsx seed/product-categories.ts",
-    "images:pexels": "npx tsx --env-file .env scripts/fill-pexels-images.ts",
-    "images:pexels:dry": "npx tsx --env-file .env scripts/fill-pexels-images.ts --dry-run"
+    "seed:categories": "npx tsx seed/product-categories.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
     "@react-router/node": "7.12.0",
     "@react-router/serve": "7.12.0",
+    "@sentry/react-router": "^11.4.0",
     "@vercel/analytics": "^2.0.1",
     "arctic": "^3.7.0",
     "bcryptjs": "^3.0.3",
@@ -48,6 +47,7 @@
   },
   "devDependencies": {
     "@react-router/dev": "7.12.0",
+    "@sentry/vite-plugin": "^5.4.0",
     "@tailwindcss/vite": "^4.1.13",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22",
