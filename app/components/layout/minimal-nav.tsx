@@ -9,8 +9,8 @@ interface MinimalNavProps {
 
 export function MinimalNav({ theme, right }: MinimalNavProps) {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-[color-mix(in_oklch,var(--bg)_85%,transparent)] backdrop-blur">
-      <div className="mx-auto max-w-[1200px] px-6 h-14 flex items-center justify-between">
+    <header className="sticky top-0 z-40 wall--ink">
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 h-14 flex items-center justify-between">
         <Logo size={18} />
         <div className="flex items-center gap-3">
           {right}

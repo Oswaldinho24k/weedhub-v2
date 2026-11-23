@@ -1,3 +1,4 @@
+import { hideSeed } from "~/lib/seed-filter.server";
 import mongoose, { Schema, type Document } from "mongoose";
 
 export interface ISavedStrain extends Document {
@@ -24,6 +25,8 @@ const savedStrainSchema = new Schema<ISavedStrain>(
 
 savedStrainSchema.index({ userId: 1, strainId: 1 }, { unique: true });
 savedStrainSchema.index({ userId: 1, createdAt: -1 });
+
+savedStrainSchema.plugin(hideSeed);
 
 export const SavedStrainModel =
   (mongoose.models.SavedStrain as mongoose.Model<ISavedStrain>) ||

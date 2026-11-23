@@ -1,3 +1,4 @@
+import { hideSeed } from "~/lib/seed-filter.server";
 import mongoose, { Schema, type Document } from "mongoose";
 
 export interface IQuickRating extends Document {
@@ -22,6 +23,8 @@ const quickRatingSchema = new Schema<IQuickRating>(
 // One quick rating per user per strain
 quickRatingSchema.index({ userId: 1, strainId: 1 }, { unique: true });
 quickRatingSchema.index({ strainId: 1 });
+
+quickRatingSchema.plugin(hideSeed);
 
 export const QuickRatingModel =
   (mongoose.models.QuickRating as mongoose.Model<IQuickRating>) ||

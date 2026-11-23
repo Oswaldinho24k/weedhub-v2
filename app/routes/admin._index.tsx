@@ -1,61 +1,35 @@
 import type { Route } from "./+types/admin._index";
-import { connectDB } from "~/lib/db.server";
-import { StrainModel } from "~/models/strain.server";
-import { ReviewModel } from "~/models/review.server";
-import { UserModel } from "~/models/user.server";
+import { requireAdmin } from "~/lib/auth.server";
+import { dashboardStats } from "~/services/users.server";
 import {
   countryLabel,
   countryFlag,
   ACQUISITION_SOURCES,
 } from "~/constants/locations";
 
-const SOURCE_LABELS = Object.fromEntries(
+const SOURCE_LABELS: Record<string, string> = Object.fromEntries(
   ACQUISITION_SOURCES.map((s) => [s.value, s.label])
 );
 
-export async function loader() {
-  await connectDB();
-  const [
-    strainCount,
-    reviewCount,
-    userCount,
-    flaggedCount,
-    countryAgg,
-    sourceAgg,
-  ] = await Promise.all([
-    StrainModel.countDocuments(),
-    ReviewModel.countDocuments(),
-    UserModel.countDocuments(),
-    ReviewModel.countDocuments({ status: "flagged" }),
-    UserModel.aggregate<{ _id: string; count: number }>([
-      { $match: { country: { $exists: true, $ne: null } } },
-      { $group: { _id: "$country", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 5 },
-    ]),
-    UserModel.aggregate<{ _id: string; count: number }>([
-      { $match: { acquisitionSource: { $exists: true, $ne: null } } },
-      { $group: { _id: "$acquisitionSource", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 5 },
-    ]),
-  ]);
-
+// HTTP adapter only: numbers come from services/users.server.ts (same as the dashboard_stats action).
+export async function loader({ request }: Route.LoaderArgs) {
+  await requireAdmin(request);
+  const s = await dashboardStats();
   return {
-    strainCount,
-    reviewCount,
-    userCount,
-    flaggedCount,
-    countryAgg: countryAgg.map((c) => ({
-      code: c._id,
-      label: countryLabel(c._id),
-      flag: countryFlag(c._id),
+    strainCount: s.strainCount,
+    reviewCount: s.reviewCount,
+    userCount: s.userCount,
+    flaggedCount: s.flaggedCount,
+    countryAgg: s.topCountries.map((c) => ({
+      code: c.code,
+      label: countryLabel(c.code),
+      flag: countryFlag(c.code),
       count: c.count,
     })),
-    sourceAgg: sourceAgg.map((s) => ({
-      value: s._id,
-      label: SOURCE_LABELS[s._id] || s._id,
-      count: s.count,
+    sourceAgg: s.topSources.map((src) => ({
+      value: src.value,
+      label: SOURCE_LABELS[src.value] || src.value,
+      count: src.count,
     })),
   };
 }

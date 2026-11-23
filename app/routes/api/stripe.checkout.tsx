@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import type { Route } from "./+types/stripe.checkout";
 import { redirect } from "react-router";
 import { requireUser } from "~/lib/auth.server";
@@ -7,6 +8,7 @@ import { DispensaryModel } from "~/models/dispensary.server";
 import { createCheckoutSession } from "~/lib/stripe.server";
 
 export async function action({ request }: Route.ActionArgs) {
+  requireFeature("pagos");
   await requireUser(request);
   await connectDB();
 
@@ -46,5 +48,6 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export async function loader() {
+  requireFeature("pagos");
   return new Response("Method Not Allowed", { status: 405 });
 }

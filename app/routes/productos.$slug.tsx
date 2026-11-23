@@ -1,3 +1,6 @@
+import { requireFeature } from "~/lib/features";
+import { categoryLabel } from "~/lib/product-categories";
+import { Icon } from "~/components/ui/icon";
 import { Link, useLoaderData } from "react-router";
 import { useState } from "react";
 import type { Route } from "./+types/productos.$slug";
@@ -7,6 +10,7 @@ import { ReviewModel } from "~/models/review.server";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 
 export async function loader({ params }: Route.LoaderArgs) {
+  requireFeature("negocios");
   await connectDB();
 
   const product = await ProductModel.findOne({ slug: params.slug, status: "active" })
@@ -69,10 +73,9 @@ export function meta({ data }: Route.MetaArgs): ReturnType<Route.MetaFunction> {
     title: `${product.name} — ${brand.name} | WeedHub`,
     description:
       product.description ||
-      `${product.name} de ${brand.name}. ${product.categoryKey}. Calificado por la comunidad WeedHub.`,
+      `${product.name} de ${brand.name}. ${categoryLabel(product.categoryKey)}. Con reseñas de la comunidad WeedHub.`,
     url: `${SITE_URL}/productos/${product.slug}`,
     image: product.coverImage || undefined,
-    canonicalPath: `/productos/${product.slug}`,
     locale: "es",
   });
 }
@@ -156,7 +159,7 @@ export default function ProductoSlugPage() {
                 to={`/productos?cat=${product.categoryKey}`}
                 className="hover:text-fg transition-colors capitalize"
               >
-                {product.categoryKey}
+                {categoryLabel(product.categoryKey)}
               </Link>
             </>
           )}
@@ -178,8 +181,8 @@ export default function ProductoSlugPage() {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="h-full w-full flex items-center justify-center text-6xl opacity-20">
-                  📦
+                <div className="h-full w-full flex items-center justify-center bg-orange text-ink" aria-hidden>
+                  <span className="rotulo text-8xl">{product.name.split(/\s+/).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()}</span>
                 </div>
               )}
             </div>
@@ -205,7 +208,7 @@ export default function ProductoSlugPage() {
           {/* Info */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="pill text-xs capitalize">{product.categoryKey}</span>
+              <span className="pill text-xs">{categoryLabel(product.categoryKey)}</span>
               {product.isPromoted && <span className="pill warm text-xs">Destacado</span>}
             </div>
 
@@ -228,7 +231,7 @@ export default function ProductoSlugPage() {
               )}
               <span className="text-sm text-fg-muted">{brand.name}</span>
               {brand.isVerified && (
-                <span className="pill accent text-xs">✓</span>
+                <span className="pill accent text-xs"><Icon name="check" size={12} strokeWidth={3} /></span>
               )}
             </Link>
 

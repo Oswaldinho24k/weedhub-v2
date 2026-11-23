@@ -1,3 +1,4 @@
+import { hideSeed } from "~/lib/seed-filter.server";
 import mongoose, { Schema, type Document } from "mongoose";
 
 export interface IBrand extends Document {
@@ -73,6 +74,8 @@ brandSchema.index({ status: 1, tier: 1 });
 brandSchema.index({ isVerified: 1 });
 brandSchema.index({ country: 1 });
 brandSchema.index({ averageRating: -1 });
+
+brandSchema.plugin(hideSeed);
 
 export const BrandModel =
   (mongoose.models.Brand as mongoose.Model<IBrand>) ||

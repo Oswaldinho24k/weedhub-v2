@@ -1,62 +1,35 @@
 import { Form, useLoaderData, useActionData } from "react-router";
 import type { Route } from "./+types/admin.community";
 import { requireAdmin } from "~/lib/auth.server";
-import { connectDB } from "~/lib/db.server";
-import { PostModel } from "~/models/post.server";
-import { CommentModel } from "~/models/comment.server";
+import { listPosts, removePost, restorePost, deletePost } from "~/services/moderation.server";
 import { Icon } from "~/components/ui/icon";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAdmin(request);
-  await connectDB();
-
-  const [posts, commentCount] = await Promise.all([
-    PostModel.find({})
-      .sort({ createdAt: -1 })
-      .limit(50)
-      .populate("userId", "username")
-      .lean(),
-    CommentModel.countDocuments({ status: "published" }),
-  ]);
-
-  return {
-    posts: posts.map((p) => ({
-      _id: String(p._id),
-      slug: p.slug,
-      title: p.title,
-      category: p.category,
-      status: p.status,
-      upvoteCount: p.upvoteCount,
-      commentCount: p.commentCount,
-      publishedAs: p.publishedAs,
-      username: (p.userId as any)?.username || "—",
-      createdAt: (p.createdAt as Date).toISOString(),
-    })),
-    commentCount,
-  };
+  const includeSeed = new URL(request.url).searchParams.get("includeSeed") === "1";
+  return listPosts({ limit: 50, includeSeed });
 }
 
+// HTTP adapter only: all logic lives in services/moderation.server.ts (same functions the AI agent uses).
 export async function action({ request }: Route.ActionArgs) {
   await requireAdmin(request);
-  await connectDB();
   const form = await request.formData();
   const intent = String(form.get("intent"));
   const id = String(form.get("id"));
 
   if (intent === "remove-post") {
-    await PostModel.findByIdAndUpdate(id, { status: "removed" });
-    return { success: "Post eliminado" };
+    const r = await removePost(id);
+    return r.ok ? { success: "Post eliminado" } : { error: r.error };
   }
   if (intent === "restore-post") {
-    await PostModel.findByIdAndUpdate(id, { status: "published" });
-    return { success: "Post restaurado" };
+    const r = await restorePost(id);
+    return r.ok ? { success: "Post restaurado" } : { error: r.error };
   }
   if (intent === "delete-post") {
-    await CommentModel.deleteMany({ postId: id });
-    await PostModel.findByIdAndDelete(id);
-    return { success: "Post y comentarios eliminados permanentemente" };
+    const r = await deletePost(id);
+    return r.ok ? { success: "Post y comentarios eliminados permanentemente" } : { error: r.error };
   }
 
   return { error: "Intent desconocido" };

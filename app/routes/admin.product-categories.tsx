@@ -2,60 +2,47 @@ import { useState } from "react";
 import { Form, useLoaderData, useActionData } from "react-router";
 import type { Route } from "./+types/admin.product-categories";
 import { requireAdmin } from "~/lib/auth.server";
-import { connectDB } from "~/lib/db.server";
-import { ProductCategoryModel } from "~/models/product-category.server";
+import { listCategories, createCategory, setCategoryActive, deleteCategory } from "~/services/businesses.server";
 import { Icon } from "~/components/ui/icon";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAdmin(request);
-  await connectDB();
-  const categories = await ProductCategoryModel.find({}).sort({ sortOrder: 1, labelEs: 1 }).lean();
+  const categories = await listCategories();
   return { categories };
 }
 
+// HTTP adapter only: all logic lives in services/businesses.server.ts (same functions the AI agent uses).
 export async function action({ request }: Route.ActionArgs) {
   await requireAdmin(request);
-  await connectDB();
   const form = await request.formData();
-  const intent = form.get("intent") as string;
+  const intent = String(form.get("intent"));
+  const id = String(form.get("id") || "");
+  const field = (k: string) => (form.has(k) ? String(form.get(k)) : undefined);
 
   if (intent === "create") {
-    const key = String(form.get("key") || "").toLowerCase().trim();
-    if (!key) return { error: "La clave es obligatoria" };
-    const existing = await ProductCategoryModel.findOne({ key });
-    if (existing) return { error: `La clave "${key}" ya existe` };
-    await ProductCategoryModel.create({
-      key,
-      labelEs: String(form.get("labelEs") || ""),
-      labelEn: String(form.get("labelEn") || ""),
-      labelPt: String(form.get("labelPt") || ""),
-      icon: String(form.get("icon") || "bolt"),
-      color: form.get("color") ? String(form.get("color")) : undefined,
-      sector: String(form.get("sector") || "consumo") as "consumo" | "cultivo",
+    const r = await createCategory({
+      key: field("key"),
+      labelEs: field("labelEs"),
+      labelEn: field("labelEn"),
+      labelPt: field("labelPt"),
+      icon: field("icon"),
+      color: field("color"),
+      sector: field("sector"),
       hasCannabinoidsProfile: form.get("hasCannabinoidsProfile") === "on",
-      sortOrder: Number(form.get("sortOrder") || 0),
-      isActive: true,
+      sortOrder: field("sortOrder"),
     });
-    return { success: "Categoría creada" };
+    return r.ok ? { success: "Categoría creada" } : { error: r.error };
   }
-
   if (intent === "toggle") {
-    const id = String(form.get("id"));
-    const cat = await ProductCategoryModel.findById(id);
-    if (cat) {
-      cat.isActive = !cat.isActive;
-      await cat.save();
-    }
-    return { success: "Estado actualizado" };
+    const r = await setCategoryActive(id);
+    return r.ok ? { success: "Estado actualizado" } : { error: r.error };
   }
-
   if (intent === "delete") {
-    await ProductCategoryModel.findByIdAndDelete(String(form.get("id")));
-    return { success: "Categoría eliminada" };
+    const r = await deleteCategory(id);
+    return r.ok ? { success: "Categoría eliminada" } : { error: r.error };
   }
-
   return { error: "Intent desconocido" };
 }
 

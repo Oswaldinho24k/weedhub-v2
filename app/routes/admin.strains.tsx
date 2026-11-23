@@ -1,42 +1,42 @@
 import { Form, Link, useActionData, useFetcher, useNavigation, useSearchParams, useSubmit } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/admin.strains";
-import { connectDB } from "~/lib/db.server";
-import { StrainModel } from "~/models/strain.server";
-import { slugify } from "~/lib/utils";
-import { UploadError, uploadImage, validateImage } from "~/lib/cloudinary.server";
+import { requireAdmin } from "~/lib/auth.server";
+import {
+  listStrains,
+  getStrain,
+  createStrain,
+  updateStrain,
+  setStrainArchived,
+  uploadStrainImage,
+  uploadNewStrainImage,
+} from "~/services/strains.server";
 import { MAX_IMAGE_MB } from "~/lib/upload-config";
 import { Dialog, DialogHeader, DialogFooter } from "~/components/ui/dialog";
 import { Icon } from "~/components/ui/icon";
 import { Button } from "~/components/ui/button";
 
+// HTTP adapter only: all logic lives in services/strains.server.ts (same functions the AI agent uses).
 export async function loader({ request }: Route.LoaderArgs) {
-  await connectDB();
+  await requireAdmin(request);
   const url = new URL(request.url);
   const editId = url.searchParams.get("editId");
+  const archivedParam = url.searchParams.get("archived");
 
   const [strains, editStrain] = await Promise.all([
-    StrainModel.find()
-      .sort({ name: 1 })
-      .select("name slug type reviewCount isArchived imageUrl colorHint")
-      .lean(),
-    editId ? StrainModel.findById(editId).lean() : Promise.resolve(null),
+    listStrains({
+      q: url.searchParams.get("q") ?? undefined,
+      type: url.searchParams.get("type") ?? undefined,
+      archived: archivedParam === "true" ? true : archivedParam === "false" ? false : undefined,
+    }),
+    editId ? getStrain(editId) : Promise.resolve(null),
   ]);
 
   return {
-    strains: strains.map((s) => ({
-      _id: String(s._id),
-      name: s.name,
-      slug: s.slug,
-      type: s.type,
-      reviewCount: s.reviewCount,
-      isArchived: s.isArchived,
-      imageUrl: s.imageUrl,
-      colorHint: s.colorHint,
-    })),
+    strains,
     editStrain: editStrain
       ? {
-          _id: String(editStrain._id),
+          _id: editStrain._id,
           name: editStrain.name,
           slug: editStrain.slug,
           type: editStrain.type,
@@ -51,9 +51,7 @@ export async function loader({ request }: Route.LoaderArgs) {
           difficulty: editStrain.difficulty ?? "",
           effects: (editStrain.effects ?? []).join(", "),
           flavors: (editStrain.flavors ?? []).join(", "),
-          terpenes: (editStrain.terpenes ?? [])
-            .map((t) => `${t.name}, ${t.percentage}`)
-            .join("\n"),
+          terpenes: (editStrain.terpenes ?? []).map((t) => `${t.name}, ${t.percentage}`).join("\n"),
           thcMin: editStrain.cannabinoidProfile?.thc?.min ?? 0,
           thcMax: editStrain.cannabinoidProfile?.thc?.max ?? 0,
           cbdMin: editStrain.cannabinoidProfile?.cbd?.min ?? 0,
@@ -79,208 +77,86 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  await connectDB();
-  const formData = await request.formData();
-  const intent = String(formData.get("intent"));
+  await requireAdmin(request);
+  const form = await request.formData();
+  const intent = String(form.get("intent"));
+  const strainId = String(form.get("strainId") || "");
+  const field = (k: string) => (form.has(k) ? String(form.get(k)) : undefined);
 
   if (intent === "create") {
-    const name = String(formData.get("name") || "").trim();
-    const type = String(formData.get("type") || "hybrid");
-    const description = String(formData.get("description") || "").trim();
-    const thcMin = Number(formData.get("thcMin") || 0);
-    const thcMax = Number(formData.get("thcMax") || 0);
-    const cbdMin = Number(formData.get("cbdMin") || 0);
-    const cbdMax = Number(formData.get("cbdMax") || 0);
-    const effects = String(formData.get("effects") || "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const flavors = String(formData.get("flavors") || "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const aliases = String(formData.get("aliases") || "")
-      .split(/[,\n]/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const aliasSlugs = aliases.map((a) =>
-      a
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "")
-    );
-
-    if (!name || !description) {
-      return { error: "Nombre y descripción son requeridos" };
-    }
-
-    const slug = slugify(name);
-    const existing = await StrainModel.findOne({ slug });
-    if (existing) {
-      return { error: "Ya existe una cepa con este nombre" };
-    }
-
-    let imageUrl: string | undefined;
-    const imageFile = formData.get("imageFile");
-    try {
-      if (imageFile instanceof File && validateImage(imageFile)) {
-        imageUrl = await uploadImage(imageFile, {
-          folder: "weedhub/strains",
-          transformation: "c_fill,w_1200,h_900,q_auto",
-        });
-      }
-    } catch (err) {
-      if (err instanceof UploadError) return { error: err.message };
-      throw err;
-    }
-
-    await StrainModel.create({
-      name,
-      slug,
-      aliases,
-      aliasSlugs,
-      type,
-      description,
-      cannabinoidProfile: {
-        thc: { min: thcMin, max: thcMax },
-        cbd: { min: cbdMin, max: cbdMax },
+    if (!field("name")?.trim() || !field("description")?.trim()) return { error: "Nombre y descripción son requeridos" };
+    const img = await uploadNewStrainImage(form.get("imageFile"));
+    if (!img.ok) return { error: img.error };
+    const r = await createStrain(
+      {
+        name: field("name"),
+        type: field("type") || "hybrid",
+        description: field("description"),
+        thcMin: field("thcMin"),
+        thcMax: field("thcMax"),
+        cbdMin: field("cbdMin"),
+        cbdMax: field("cbdMax"),
+        effects: field("effects"),
+        flavors: field("flavors"),
+        aliases: field("aliases"),
+        imageUrl: img.imageUrl,
       },
-      effects,
-      flavors,
-      imageUrl,
-    });
-
-    return { success: true, message: "Cepa creada exitosamente" };
+      { actor: "admin" }
+    );
+    return r.ok ? { success: true, message: "Cepa creada exitosamente" } : { error: r.error };
   }
 
   if (intent === "upload-image") {
-    const strainId = String(formData.get("strainId"));
-    const imageFile = formData.get("imageFile");
-    try {
-      if (!(imageFile instanceof File) || !validateImage(imageFile)) {
-        return { error: "No se recibió ninguna imagen." };
-      }
-      const imageUrl = await uploadImage(imageFile, {
-        folder: "weedhub/strains",
-        transformation: "c_fill,w_1200,h_900,q_auto",
-      });
-      await StrainModel.findByIdAndUpdate(strainId, { imageUrl });
-      return { success: true, message: "Imagen actualizada" };
-    } catch (err) {
-      if (err instanceof UploadError) return { error: err.message };
-      throw err;
-    }
+    const r = await uploadStrainImage(strainId, form.get("imageFile"));
+    return r.ok ? { success: true, message: "Imagen actualizada" } : { error: r.error };
   }
 
-  if (intent === "archive") {
-    const strainId = String(formData.get("strainId"));
-    await StrainModel.findByIdAndUpdate(strainId, { isArchived: true });
-    return { success: true, message: "Cepa archivada" };
-  }
-
-  if (intent === "unarchive") {
-    const strainId = String(formData.get("strainId"));
-    await StrainModel.findByIdAndUpdate(strainId, { isArchived: false });
-    return { success: true, message: "Cepa restaurada" };
+  if (intent === "archive" || intent === "unarchive") {
+    const r = await setStrainArchived(strainId, intent === "archive");
+    return r.ok ? { success: true, message: intent === "archive" ? "Cepa archivada" : "Cepa restaurada" } : { error: r.error };
   }
 
   if (intent === "edit") {
-    const strainId = String(formData.get("strainId"));
-    const name = String(formData.get("name") || "").trim();
-    const type = String(formData.get("type") || "hybrid");
-    const description = String(formData.get("description") || "").trim();
-    const aliases = String(formData.get("aliases") || "")
-      .split(/[,\n]/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const aliasSlugs = aliases.map((a) =>
-      a
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[̀-ͯ]/g, "")
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "")
+    const r = await updateStrain(
+      strainId,
+      {
+        name: field("name"),
+        type: field("type") || "hybrid",
+        description: field("description"),
+        aliases: field("aliases") ?? "",
+        effects: field("effects") ?? "",
+        flavors: field("flavors") ?? "",
+        terpenes: field("terpenes") ?? "",
+        lineage: field("lineage"),
+        colorHint: field("colorHint"),
+        dominantTerpene: field("dominantTerpene"),
+        difficulty: field("difficulty"),
+        descriptionEs: field("descriptionEs"),
+        descriptionEn: field("descriptionEn"),
+        descriptionPt: field("descriptionPt"),
+        parent1: field("parent1"),
+        parent2: field("parent2"),
+        breeder: field("breeder"),
+        geneticsChildren: field("geneticsChildren") ?? "",
+        thcMin: field("thcMin") || "0",
+        thcMax: field("thcMax") || "0",
+        cbdMin: field("cbdMin") || "0",
+        cbdMax: field("cbdMax") || "0",
+        cbg: field("cbg"),
+        cbn: field("cbn"),
+        floweringWeeksMin: field("growFlowerMin"),
+        floweringWeeksMax: field("growFlowerMax"),
+        yieldIndoor: field("growYieldIndoor"),
+        yieldOutdoor: field("growYieldOutdoor"),
+        heightCmMin: field("growHeightMin"),
+        heightCmMax: field("growHeightMax"),
+        climate: field("growClimate") || undefined,
+        isAutoflowering: form.getAll("growIsAutoflowering").includes("true"),
+        isFeminized: form.getAll("growIsFeminized").includes("true"),
+      },
+      "admin"
     );
-    const effects = String(formData.get("effects") || "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const flavors = String(formData.get("flavors") || "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const terpenes = String(formData.get("terpenes") || "")
-      .split("\n")
-      .map((line) => {
-        const [tname, pct] = line.split(",").map((s) => s.trim());
-        return tname ? { name: tname, percentage: parseFloat(pct) || 0 } : null;
-      })
-      .filter(Boolean) as { name: string; percentage: number }[];
-
-    const $set: Record<string, unknown> = {
-      name: name || undefined,
-      type,
-      description: description || undefined,
-      aliases,
-      aliasSlugs,
-      effects,
-      flavors,
-      terpenes,
-      lineage: String(formData.get("lineage") || "").trim() || undefined,
-      colorHint: String(formData.get("colorHint") || "").trim() || undefined,
-      dominantTerpene: String(formData.get("dominantTerpene") || "").trim() || undefined,
-      difficulty: String(formData.get("difficulty") || "") || undefined,
-      "descriptions.es": String(formData.get("descriptionEs") || "").trim() || undefined,
-      "descriptions.en": String(formData.get("descriptionEn") || "").trim() || undefined,
-      "descriptions.pt": String(formData.get("descriptionPt") || "").trim() || undefined,
-      "genetics.parent1": String(formData.get("parent1") || "").trim() || undefined,
-      "genetics.parent2": String(formData.get("parent2") || "").trim() || undefined,
-      "genetics.breeder": String(formData.get("breeder") || "").trim() || undefined,
-      "genetics.children": String(formData.get("geneticsChildren") || "")
-        .split(",")
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean),
-      "cannabinoidProfile.thc": {
-        min: parseFloat(String(formData.get("thcMin") || "0")),
-        max: parseFloat(String(formData.get("thcMax") || "0")),
-      },
-      "cannabinoidProfile.cbd": {
-        min: parseFloat(String(formData.get("cbdMin") || "0")),
-        max: parseFloat(String(formData.get("cbdMax") || "0")),
-      },
-    };
-    const cbg = parseFloat(String(formData.get("cbg") || ""));
-    if (!isNaN(cbg)) $set["cannabinoidProfile.cbg"] = cbg;
-    const cbn = parseFloat(String(formData.get("cbn") || ""));
-    if (!isNaN(cbn)) $set["cannabinoidProfile.cbn"] = cbn;
-
-    // Grow info
-    const growFlowerMin = parseFloat(String(formData.get("growFlowerMin") || ""));
-    const growFlowerMax = parseFloat(String(formData.get("growFlowerMax") || ""));
-    const growYieldIndoor = String(formData.get("growYieldIndoor") || "").trim();
-    const growYieldOutdoor = String(formData.get("growYieldOutdoor") || "").trim();
-    const growHeightMin = parseFloat(String(formData.get("growHeightMin") || ""));
-    const growHeightMax = parseFloat(String(formData.get("growHeightMax") || ""));
-    const growClimate = String(formData.get("growClimate") || "").trim();
-    const growIsAutoflowering = formData.getAll("growIsAutoflowering").includes("true");
-    const growIsFeminized = formData.getAll("growIsFeminized").includes("true");
-    if (!isNaN(growFlowerMin) && !isNaN(growFlowerMax))
-      $set["grow.floweringWeeks"] = { min: growFlowerMin, max: growFlowerMax };
-    if (growYieldIndoor) $set["grow.yieldIndoor"] = growYieldIndoor;
-    if (growYieldOutdoor) $set["grow.yieldOutdoor"] = growYieldOutdoor;
-    if (!isNaN(growHeightMin) && !isNaN(growHeightMax))
-      $set["grow.heightCm"] = { min: growHeightMin, max: growHeightMax };
-    if (growClimate) $set["grow.climate"] = growClimate;
-    $set["grow.isAutoflowering"] = growIsAutoflowering;
-    $set["grow.isFeminized"] = growIsFeminized;
-
-    // Remove undefined values
-    Object.keys($set).forEach((k) => $set[k] === undefined && delete $set[k]);
-
-    await StrainModel.findByIdAndUpdate(strainId, { $set });
-    return { success: true, message: "Cepa actualizada" };
+    return r.ok ? { success: true, message: "Cepa actualizada" } : { error: r.error };
   }
 
   return { error: "Acción no válida" };

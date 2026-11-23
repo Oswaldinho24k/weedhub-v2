@@ -1,3 +1,7 @@
+import { requireFeature } from "~/lib/features";
+import { resolveLocale } from "~/lib/locale.server";
+import { StrainSign } from "~/components/composite/strain-sign";
+import { effectLabels } from "~/lib/effect-labels";
 import { Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/top-100";
 import { buttonVariants } from "~/components/ui/button";
@@ -9,32 +13,86 @@ import { StrainThumb } from "~/components/composite/strain-thumb";
 import { RatingStars } from "~/components/composite/rating-stars";
 import { Icon } from "~/components/ui/icon";
 
-export function meta(_: Route.MetaArgs) {
-  return buildMeta({
-    title: "Las 100 Mejores Cepas de Cannabis — WeedHub",
-    description:
-      "El ranking definitivo en español: las 100 cepas de cannabis mejor calificadas por la comunidad WeedHub. Actualizado con reseñas reales.",
-    url: `${SITE_URL}/top-100`,
-    // top-100 is Spanish-only; no localized variants, so no canonicalPath/hreflang needed
-  });
+const UI = {
+  es: {
+    title: "Top 100 cepas de cannabis según la comunidad | WeedHub",
+    description: "Las 100 cepas mejor calificadas por la comunidad de WeedHub, ponderadas por número de reseñas, con THC y tipo.",
+    h1: "Top 100",
+    lede: "Las cepas mejor calificadas, ponderando cuántas reseñas tiene cada una: un 5.0 con dos reseñas no le gana a un 4.4 con veinte.",
+    reviews: (n: number) => (n === 1 ? "1 reseña" : `${n} reseñas`),
+    empty: "Todavía no hay suficientes reseñas para armar el ranking.",
+    explore: "Explorar cepas",
+    types: { sativa: "Sativa", indica: "Indica", hybrid: "Híbrida" } as Record<string, string>,
+  },
+  pt: {
+    title: "Top 100 variedades de cannabis segundo a comunidade | WeedHub",
+    description: "As 100 variedades mais bem avaliadas pela comunidade do WeedHub, ponderadas pelo número de avaliações, com THC e tipo.",
+    h1: "Top 100",
+    lede: "As variedades mais bem avaliadas, ponderando quantas avaliações cada uma tem: um 5.0 com duas avaliações não ganha de um 4.4 com vinte.",
+    reviews: (n: number) => (n === 1 ? "1 avaliação" : `${n} avaliações`),
+    empty: "Ainda não há avaliações suficientes para montar o ranking.",
+    explore: "Explorar variedades",
+    types: { sativa: "Sativa", indica: "Indica", hybrid: "Híbrida" } as Record<string, string>,
+  },
+} as const;
+
+export function meta({ data }: Route.MetaArgs) {
+  const loc = data?.locale ?? "es";
+  const U = UI[loc];
+  const prefix = loc === "pt" ? "/pt" : "";
+  return [
+    ...buildMeta({ title: U.title, description: U.description, url: `${SITE_URL}${prefix}/top-100`, canonicalPath: "/top-100", locale: loc }),
+    data?.strains
+      ? {
+          "script:ld+json": {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: U.title.replace(/ \| WeedHub$/, ""),
+            url: `${SITE_URL}${prefix}/top-100`,
+            numberOfItems: data.strains.length,
+            itemListElement: data.strains.slice(0, 20).map((s: any) => ({ "@type": "ListItem", position: s.rank, name: s.name, url: `${SITE_URL}${prefix}/strains/${s.slug}` })),
+          },
+        }
+      : {},
+  ];
 }
 
-export async function loader() {
+export async function loader({ request }: Route.LoaderArgs) {
+  requireFeature("top100");
+  const locale = (await resolveLocale(request)) === "pt" ? "pt" : "es";
   await connectDB();
 
-  const strains = await StrainModel.find({
-    isArchived: false,
-    reviewCount: { $gte: 1 },
-  })
-    .sort({ "averageRatings.overall": -1, reviewCount: -1 })
-    .limit(100)
-    .select(
-      "name slug type typeBlend averageRatings reviewCount effects imageUrl colorHint dominantTerpene cannabinoidProfile.thc.max"
-    )
-    .lean();
+  // Bayesian average: a 5.0 from 3 reviews shouldn't beat a 4.3 from 12.
+  // score = (n / (n + m)) * avg + (m / (n + m)) * C, where C = site mean, m = prior weight.
+  const [{ C = 4 } = {}] = await StrainModel.aggregate([
+    { $match: { isArchived: false, reviewCount: { $gte: 1 } } },
+    { $group: { _id: null, C: { $avg: "$averageRatings.overall" } } },
+  ]);
+  const m = 5;
+  const strains = await StrainModel.aggregate([
+    { $match: { isArchived: false, reviewCount: { $gte: 1 } } },
+    {
+      $addFields: {
+        score: {
+          $add: [
+            { $multiply: [{ $divide: ["$reviewCount", { $add: ["$reviewCount", m] }] }, "$averageRatings.overall"] },
+            { $multiply: [{ $divide: [m, { $add: ["$reviewCount", m] }] }, C] },
+          ],
+        },
+      },
+    },
+    { $sort: { score: -1, reviewCount: -1 } },
+    { $limit: 100 },
+    {
+      $project: {
+        name: 1, slug: 1, type: 1, typeBlend: 1, averageRatings: 1, reviewCount: 1, effects: 1,
+        imageUrl: 1, colorHint: 1, dominantTerpene: 1, "cannabinoidProfile.thc.max": 1,
+      },
+    },
+  ]);
 
   return {
-    strains: strains.map((s, i) => ({
+    strains: strains.map((s: any, i: number) => ({
       rank: i + 1,
       _id: String(s._id),
       name: s.name,
@@ -43,176 +101,86 @@ export async function loader() {
       typeBlend: s.typeBlend,
       overall: s.averageRatings?.overall ?? 0,
       reviewCount: s.reviewCount ?? 0,
-      effects: (s.effects ?? []).slice(0, 3),
+      effects: effectLabels(s.effects ?? [], locale).slice(0, 3),
+      rawEffects: s.effects ?? [],
+      cannabinoidProfile: s.cannabinoidProfile,
+      averageRatings: s.averageRatings,
       imageUrl: s.imageUrl,
       colorHint: s.colorHint,
       dominantTerpene: s.dominantTerpene,
       thcMax: (s.cannabinoidProfile as any)?.thc?.max ?? 0,
     })),
     updatedAt: new Date().toISOString(),
-  };
+    locale,
+  } as const;
 }
 
 const TYPE_PILL: Record<string, string> = { sativa: "accent", indica: "warm", hybrid: "lilac" };
 const TYPE_LABEL: Record<string, string> = { sativa: "Sativa", indica: "Indica", hybrid: "Híbrida" };
 
 export default function Top100Page() {
-  const { strains, updatedAt } = useLoaderData<typeof loader>();
-  const year = new Date(updatedAt).getFullYear();
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    name: "Las 100 Mejores Cepas de Cannabis",
-    description: "Ranking de cepas de cannabis basado en reseñas de la comunidad WeedHub",
-    url: `${SITE_URL}/top-100`,
-    numberOfItems: strains.length,
-    itemListElement: strains.slice(0, 10).map((s) => ({
-      "@type": "ListItem",
-      position: s.rank,
-      name: s.name,
-      url: `${SITE_URL}/strains/${s.slug}`,
-    })),
-  };
+  const { strains, locale } = useLoaderData<typeof loader>();
+  const U = UI[locale];
+  const prefix = locale === "pt" ? "/pt" : "";
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-16">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+    <div>
+      <section className="wall border-b-[3px] border-ink">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12">
+          <h1 className="rotulo rotulo-shade text-yellow" style={{ fontSize: "clamp(64px, 12vw, 168px)" }}>{U.h1}</h1>
+          <p className="mt-5 max-w-[58ch] text-xl font-semibold leading-snug">{U.lede}</p>
+        </div>
+      </section>
 
-      {/* Hero */}
-      <div className="mb-14 max-w-2xl">
-        <div className="kicker mb-3">Ranking {year} · Comunidad WeedHub</div>
-        <h1 className="display" style={{ fontSize: "clamp(42px, 6vw, 96px)", lineHeight: 0.96 }}>
-          Las 100 Mejores Cepas
-        </h1>
-        <p className="text-lg text-fg-muted leading-relaxed mt-5">
-          Ranking basado en miles de reseñas reales. Solo cepas con al menos una reseña verificada.
-          Actualizado continuamente conforme la comunidad crece.
-        </p>
-      </div>
-
-      {/* Top 3 podium */}
-      {strains.length >= 3 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-14">
-          {strains.slice(0, 3).map((s) => (
-            <Link
-              key={s.slug}
-              to={`/strains/${s.slug}`}
-              className="card p-5 flex flex-col gap-3 hover:border-accent transition-colors group"
-            >
-              <div className="flex items-center justify-between">
-                <span
-                  className="display text-5xl"
-                  style={{ color: s.rank === 1 ? "var(--gold)" : s.rank === 2 ? "var(--fg-muted)" : "var(--warm)" }}
-                >
-                  #{s.rank}
-                </span>
-                <span className={`pill ${TYPE_PILL[s.type] || ""}`}>
-                  {s.typeBlend || TYPE_LABEL[s.type]}
-                </span>
-              </div>
-              <div className="h-24 w-full overflow-hidden rounded-md">
-                <StrainThumb
-                  name={s.name}
-                  type={s.type as any}
-                  colorHint={s.colorHint}
-                  imageUrl={s.imageUrl}
-                  ratio="wide"
-                  className="w-full h-full"
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12">
+        {strains.length >= 3 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-12 mb-14 pt-4">
+            {strains.slice(0, 3).map((s: any) => (
+              <div key={s.slug} className="relative">
+                <span className="rotulo absolute -top-7 -left-2 z-10 bg-ink text-yellow px-3 py-1 text-3xl -rotate-3">#{s.rank}</span>
+                <StrainSign
+                  strain={{ name: s.name, slug: s.slug, type: s.type, cannabinoidProfile: s.cannabinoidProfile, effects: s.rawEffects, reviewCount: s.reviewCount, averageRatings: s.averageRatings }}
+                  to={`${prefix}/strains/${s.slug}`}
+                  locale={locale}
+                  size="lg"
                 />
               </div>
-              <div>
-                <h2 className="display text-xl group-hover:text-accent transition-colors">
-                  {s.name}
-                </h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <RatingStars rating={s.overall} size="sm" />
-                  <span className="mono text-sm tnum">{s.overall.toFixed(1)}</span>
-                  <span className="text-xs text-fg-dim">{s.reviewCount} reseñas</span>
-                </div>
-              </div>
-              {s.effects.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {s.effects.map((e) => (
-                    <span key={e} className="pill text-xs">{e}</span>
-                  ))}
-                </div>
-              )}
-            </Link>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
 
-      {/* Full list */}
-      <div className="card overflow-hidden">
-        {strains.slice(3).map((s, i) => (
-          <Link
-            key={s.slug}
-            to={`/strains/${s.slug}`}
-            className={`flex items-center gap-4 px-5 py-4 hover:bg-elev transition-colors ${
-              i < strains.length - 4 ? "border-b border-line" : ""
-            }`}
-          >
-            {/* Rank */}
-            <div className="shrink-0 w-8 text-right mono text-sm text-fg-dim tnum">
-              {s.rank}
-            </div>
-
-            {/* Thumb */}
-            <div className="shrink-0 h-12 w-12 rounded-md overflow-hidden">
-              <StrainThumb
-                name={s.name}
-                type={s.type as any}
-                colorHint={s.colorHint}
-                imageUrl={s.imageUrl}
-                ratio="square"
-                className="w-full h-full"
-              />
-            </div>
-
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <div className="font-medium truncate">{s.name}</div>
-              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                <span className={`pill ${TYPE_PILL[s.type] || ""} text-xs`}>
-                  {s.typeBlend || TYPE_LABEL[s.type]}
+        <ol className="border-t-[3px] border-ink">
+          {strains.slice(3).map((s: any) => (
+            <li key={s.slug}>
+              <Link
+                to={`${prefix}/strains/${s.slug}`}
+                className="grid grid-cols-[3rem_1fr_auto] sm:grid-cols-[4rem_1fr_10rem_8rem] items-center gap-3 py-3 border-b-2 border-ink hover:bg-yellow hover:text-ink transition-colors px-1"
+              >
+                <span className="rotulo text-2xl text-cobalt tnum">{s.rank}</span>
+                <span className="min-w-0">
+                  <span className="block text-lg font-extrabold [font-stretch:85%] truncate">{s.name}</span>
+                  <span className="block text-sm font-semibold text-fg-muted truncate">
+                    {U.types[s.type] ?? s.type}
+                    {s.effects.length ? ` · ${s.effects.slice(0, 2).join(" · ")}` : ""}
+                  </span>
                 </span>
-                {s.effects.slice(0, 2).map((e) => (
-                  <span key={e} className="pill text-xs hidden sm:inline-flex">{e}</span>
-                ))}
-              </div>
-            </div>
+                <span className="hidden sm:block text-sm font-bold tnum">{s.thcMax ? `THC ${s.thcMax}%` : ""}</span>
+                <span className="text-right">
+                  <span className="inline-flex items-center gap-1 text-lg font-black tnum"><Icon name="star" size={14} className="fill-current" />{s.overall.toFixed(1)}</span>
+                  <span className="block text-xs font-bold text-fg-muted">{U.reviews(s.reviewCount)}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ol>
 
-            {/* Rating */}
-            <div className="shrink-0 text-right">
-              <div className="mono text-sm tnum" style={{ color: "var(--accent)" }}>
-                {s.overall.toFixed(1)}
-              </div>
-              <div className="text-xs text-fg-dim">{s.reviewCount} reseñas</div>
-            </div>
-
-            <Icon name="arrowRight" size={14} className="shrink-0 text-fg-dim" />
-          </Link>
-        ))}
+        {strains.length === 0 && (
+          <div className="card p-12 text-center">
+            <p className="text-lg font-semibold">{U.empty}</p>
+            <Link to={`${prefix}/strains`} className={cn(buttonVariants({ variant: "primary" }), "mt-4")}>{U.explore}</Link>
+          </div>
+        )}
       </div>
-
-      {strains.length === 0 && (
-        <div className="card p-12 text-center">
-          <p className="text-fg-muted">Aún no hay suficientes reseñas para generar el ranking.</p>
-          <Link to="/strains" className={cn(buttonVariants({ variant: "primary" }), "mt-4")}>
-            Explorar cepas
-          </Link>
-        </div>
-      )}
-
-      {/* SEO footer note */}
-      <p className="text-xs text-fg-dim mt-10 text-center">
-        Ranking generado automáticamente a partir de reseñas de la comunidad WeedHub ·{" "}
-        {new Date(updatedAt).toLocaleDateString("es-MX", { month: "long", year: "numeric" })}
-      </p>
     </div>
   );
 }

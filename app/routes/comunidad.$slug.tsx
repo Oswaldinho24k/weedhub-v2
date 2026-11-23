@@ -1,3 +1,5 @@
+import { requireFeature } from "~/lib/features";
+import { Icon } from "~/components/ui/icon";
 import { Form, Link, useLoaderData, useActionData, useFetcher, useNavigation } from "react-router";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -5,10 +7,13 @@ import type { Route } from "./+types/comunidad.$slug";
 import { connectDB } from "~/lib/db.server";
 import { PostModel } from "~/models/post.server";
 import { CommentModel } from "~/models/comment.server";
+import { UserModel } from "~/models/user.server";
 import { getUserFromSession } from "~/lib/auth.server";
 import { buildMeta, SITE_URL } from "~/lib/seo";
+import { sendNewCommentEmail } from "~/lib/email.server";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
+  requireFeature("foro");
   await connectDB();
   const user = await getUserFromSession(request);
 
@@ -68,6 +73,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
+  requireFeature("foro");
   await connectDB();
   const form = await request.formData();
   const intent = String(form.get("intent"));
@@ -81,7 +87,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     if (!body) return { error: "El comentario no puede estar vacío" };
     if (body.length > 2000) return { error: "El comentario no puede superar 2000 caracteres" };
 
-    const post = await PostModel.findOne({ slug: params.slug }).lean().select("_id");
+    const post = await PostModel.findOne({ slug: params.slug }).lean().select("_id userId title slug");
     if (!post) throw new Response("Not Found", { status: 404 });
 
     await CommentModel.create({
@@ -92,6 +98,23 @@ export async function action({ request, params }: Route.ActionArgs) {
     });
 
     await PostModel.findByIdAndUpdate(post._id, { $inc: { commentCount: 1 } });
+
+    // Notify post author (fire-and-forget)
+    const authorId = String((post as any).userId);
+    if (authorId && authorId !== String(user._id)) {
+      UserModel.findById(authorId).select("email username displayName").lean().then((author) => {
+        if (author?.email) {
+          sendNewCommentEmail({
+            toEmail: author.email,
+            toName: author.displayName || author.username,
+            commenterUsername: user.username,
+            postTitle: (post as any).title || "tu post",
+            postSlug: params.slug,
+            commentPreview: body,
+          }).catch(() => {});
+        }
+      }).catch(() => {});
+    }
 
     return { success: "Comentario publicado" };
   }
@@ -105,7 +128,6 @@ export function meta({ data }: Route.MetaArgs): ReturnType<Route.MetaFunction> {
     title: `${data.post.title} | WeedHub Comunidad`,
     description: data.post.body.slice(0, 160),
     url: `${SITE_URL}/comunidad/${data.post.slug}`,
-    canonicalPath: `/comunidad/${data.post.slug}`,
     locale: "es",
   });
 }
@@ -170,7 +192,7 @@ export default function ComunidadSlugPage() {
         <h1 className="display text-2xl md:text-3xl mb-4 leading-tight">{post.title}</h1>
 
         <div className="text-sm text-fg-dim mb-6">
-          {post.publishedAs === "anonymous" ? "👤" : "@"}{post.handle}
+          {post.publishedAs === "anonymous" ? <Icon name="user" size={12} className="inline -mt-0.5 mr-0.5" /> : "@"}{post.handle}
         </div>
 
         <div className="text-fg-muted leading-relaxed whitespace-pre-wrap border-t border-line pt-6">
@@ -193,7 +215,7 @@ export default function ComunidadSlugPage() {
             </button>
           </voteFetcher.Form>
           <span className="text-sm text-fg-dim">
-            💬 {post.commentCount} {post.commentCount === 1 ? "comentario" : "comentarios"}
+            <Icon name="message" size={13} className="inline -mt-0.5 mr-1" />{post.commentCount} {post.commentCount === 1 ? "comentario" : "comentarios"}
           </span>
           <Link to="/comunidad" className="text-xs text-fg-dim hover:text-fg ml-auto transition-colors">
             ← Volver
@@ -310,7 +332,7 @@ function CommentCard({
   return (
     <div className="card p-4">
       <div className="flex items-center gap-2 mb-2 text-xs text-fg-dim">
-        <span>{comment.publishedAs === "anonymous" ? "👤" : "@"}{comment.handle}</span>
+        <span>{comment.publishedAs === "anonymous" ? <Icon name="user" size={12} className="inline -mt-0.5 mr-0.5" /> : "@"}{comment.handle}</span>
         <span>·</span>
         <span>{date}</span>
       </div>

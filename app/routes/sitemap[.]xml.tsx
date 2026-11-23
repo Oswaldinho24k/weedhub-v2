@@ -1,3 +1,4 @@
+import { featureOn } from "~/lib/features";
 import { connectDB } from "~/lib/db.server";
 import { StrainModel } from "~/models/strain.server";
 import { GlossaryTermModel } from "~/models/glossary-term.server";
@@ -7,15 +8,13 @@ import { ArticleModel } from "~/models/article.server";
 import { PostModel } from "~/models/post.server";
 import { GUIDES_ES } from "~/content/guides.es";
 import { SITE_URL } from "~/lib/seo";
+import { LegalStatusModel } from "~/models/legal-status.server";
+import { CONDITIONS } from "~/constants/conditions";
 
 function hreflangBlock(canonicalPath: string): string {
   const es = `${SITE_URL}${canonicalPath}`;
-  const pt = `${SITE_URL}/pt${canonicalPath}`;
-  const en = `${SITE_URL}/en${canonicalPath}`;
   return [
     `    <xhtml:link rel="alternate" hreflang="es" href="${es}"/>`,
-    `    <xhtml:link rel="alternate" hreflang="pt-BR" href="${pt}"/>`,
-    `    <xhtml:link rel="alternate" hreflang="en" href="${en}"/>`,
     `    <xhtml:link rel="alternate" hreflang="x-default" href="${es}"/>`,
   ].join("\n");
 }
@@ -23,7 +22,6 @@ function hreflangBlock(canonicalPath: string): string {
 function urlBlock(loc: string, canonicalPath: string, opts: { changefreq: string; priority: string; lastmod?: string }): string {
   return `  <url>
     <loc>${loc}</loc>
-${hreflangBlock(canonicalPath)}
     <changefreq>${opts.changefreq}</changefreq>
     <priority>${opts.priority}</priority>${opts.lastmod ? `\n    <lastmod>${opts.lastmod}</lastmod>` : ""}
   </url>`;
@@ -31,12 +29,8 @@ ${hreflangBlock(canonicalPath)}
 
 function urlGroup(canonicalPath: string, opts: { changefreq: string; priority: string; lastmod?: string }): string {
   const es = `${SITE_URL}${canonicalPath}`;
-  const pt = `${SITE_URL}/pt${canonicalPath}`;
-  const en = `${SITE_URL}/en${canonicalPath}`;
   return [
     urlBlock(es, canonicalPath, opts),
-    urlBlock(pt, canonicalPath, opts),
-    urlBlock(en, canonicalPath, opts),
   ].join("\n");
 }
 
@@ -51,35 +45,57 @@ function urlSingle(canonicalPath: string, opts: { changefreq: string; priority: 
 export async function loader() {
   await connectDB();
 
-  const [strains, glossaryTerms, brands, dispensaries, articles, posts] = await Promise.all([
+  const [strains, glossaryTerms, brands, dispensaries, articles, posts, countries] = await Promise.all([
     StrainModel.find({ isArchived: false }).select("slug updatedAt").lean(),
     GlossaryTermModel.find({ isActive: true }).select("slug updatedAt").lean(),
     BrandModel.find({ status: "active" }).select("slug updatedAt").lean(),
     DispensaryModel.find({ status: "active" }).select("slug updatedAt").lean(),
     ArticleModel.find({ status: "published" }).select("slug updatedAt publishedAt").lean(),
     PostModel.find({ status: "published" }).select("slug updatedAt").lean(),
+    LegalStatusModel.find({ isActive: true }).select("countryCode lastReviewedAt updatedAt").lean(),
   ]);
 
-  // Localized static paths (appear in all 3 locales with hreflang)
+  const countriesXml = countries
+    .map((c: any) =>
+      urlGroup(`/mapa-verde/${String(c.countryCode).toLowerCase()}`, {
+        changefreq: "monthly",
+        priority: "0.7",
+        lastmod: ((c.lastReviewedAt || c.updatedAt) as Date)?.toISOString().split("T")[0] || "",
+      })
+    )
+    .join("\n");
+
+  const conditionsXml = (CONDITIONS as any[])
+    .map((c) => urlGroup(`/para/${c.slug}`, { changefreq: "weekly", priority: "0.6" }))
+    .join("\n");
+
+  // Public static paths (Spanish only)
   const localizedPaths = [
     { path: "/", changefreq: "daily", priority: "1.0" },
     { path: "/strains", changefreq: "daily", priority: "0.9" },
-    { path: "/magazine", changefreq: "weekly", priority: "0.8" },
-    { path: "/comunidad", changefreq: "daily", priority: "0.7" },
     { path: "/guias", changefreq: "monthly", priority: "0.8" },
+    { path: "/sobre", changefreq: "monthly", priority: "0.5" },
     { path: "/glosario", changefreq: "weekly", priority: "0.8" },
+    { path: "/mapa-verde", changefreq: "weekly", priority: "0.8" },
+    ...(featureOn("top100") ? [{ path: "/top-100", changefreq: "daily", priority: "0.9" }] : []),
+    ...(featureOn("porCondicion") ? [{ path: "/para", changefreq: "weekly", priority: "0.6" }] : []),
     { path: "/terminos", changefreq: "yearly", priority: "0.3" },
     { path: "/privacidad", changefreq: "yearly", priority: "0.3" },
   ];
 
   // Spanish-only paths (no localized variants)
   const singlePaths = [
-    { path: "/top-100", changefreq: "daily", priority: "0.9" },
-    { path: "/mapa-verde", changefreq: "weekly", priority: "0.8" },
-    { path: "/para", changefreq: "weekly", priority: "0.7" },
-    { path: "/marcas", changefreq: "weekly", priority: "0.7" },
-    { path: "/dispensarios", changefreq: "weekly", priority: "0.7" },
-    { path: "/planes", changefreq: "monthly", priority: "0.5" },
+    ...(featureOn("magazine") ? [{ path: "/magazine", changefreq: "weekly", priority: "0.8" }] : []),
+    ...(featureOn("foro") ? [{ path: "/comunidad", changefreq: "daily", priority: "0.6" }] : []),
+    ...(featureOn("recomendador") ? [{ path: "/recomendar", changefreq: "monthly", priority: "0.6" }] : []),
+    ...(featureOn("negocios")
+      ? [
+          { path: "/productos", changefreq: "weekly", priority: "0.5" },
+          { path: "/marcas", changefreq: "weekly", priority: "0.7" },
+          { path: "/dispensarios", changefreq: "weekly", priority: "0.7" },
+        ]
+      : []),
+    ...(featureOn("pagos") ? [{ path: "/planes", changefreq: "monthly", priority: "0.5" }] : []),
   ];
 
   const staticXml = localizedPaths
@@ -166,10 +182,12 @@ ${singleXml}
 ${strainsXml}
 ${glossaryXml}
 ${guidesXml}
-${articlesXml}
-${brandsXml}
-${dispensariesXml}
-${postsXml}
+${featureOn("magazine") ? articlesXml : ""}
+${featureOn("negocios") ? brandsXml : ""}
+${featureOn("negocios") ? dispensariesXml : ""}
+${countriesXml}
+${featureOn("porCondicion") ? conditionsXml : ""}
+${featureOn("foro") ? postsXml : ""}
 </urlset>`;
 
   return new Response(xml, {

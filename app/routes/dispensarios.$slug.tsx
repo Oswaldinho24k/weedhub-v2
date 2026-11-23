@@ -1,3 +1,5 @@
+import { requireFeature } from "~/lib/features";
+import { Icon } from "~/components/ui/icon";
 import { Form, Link, useLoaderData, useSearchParams } from "react-router";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -7,9 +9,10 @@ import { DispensaryModel } from "~/models/dispensary.server";
 import { ReviewModel } from "~/models/review.server";
 import { getUserFromSession } from "~/lib/auth.server";
 import { buildMeta, SITE_URL } from "~/lib/seo";
-import { PLAN_PRICES } from "~/lib/stripe.server";
+import { PLAN_PRICES } from "~/lib/plans";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
+  requireFeature("negocios");
   await connectDB();
 
   const [dispensary, sessionUser] = await Promise.all([
@@ -26,7 +29,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     .sort({ createdAt: -1 })
     .limit(5)
     .lean()
-    .select("ratings text createdAt publishedAs");
+    .select("ratings comment createdAt publishedAs");
 
   const isOwner = sessionUser && dispensary.ownerId
     ? dispensary.ownerId.equals(sessionUser._id)
@@ -57,7 +60,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     },
     reviews: reviews.map((r) => ({
       overall: (r.ratings as any)?.overall || 0,
-      text: (r as any).text || null,
+      comment: (r as any).comment || null,
       publishedAs: (r as any).publishedAs || "anonymous",
       createdAt: (r.createdAt as Date)?.toISOString(),
     })),
@@ -77,7 +80,6 @@ export function meta({ data }: Route.MetaArgs): ReturnType<Route.MetaFunction> {
       `${dispensary.name} — ${dispensary.city}, ${dispensary.country}. Calificado por la comunidad WeedHub.`,
     url: `${SITE_URL}/dispensarios/${dispensary.slug}`,
     image: dispensary.logo || dispensary.coverImage || undefined,
-    canonicalPath: `/dispensarios/${dispensary.slug}`,
     locale: "es",
   });
 }
@@ -165,7 +167,7 @@ export default function DispensarioSlugPage() {
             className="rounded-xl px-5 py-4 mb-6 flex items-center gap-3"
             style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
           >
-            <span className="text-lg">✓</span>
+            <Icon name="check" size={18} strokeWidth={3} />
             <div>
               <div className="font-semibold text-sm">¡Presencia Verificada activada!</div>
               <div className="text-xs opacity-80 mt-0.5">
@@ -205,14 +207,14 @@ export default function DispensarioSlugPage() {
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <h1 className="display text-3xl">{dispensary.name}</h1>
                   {dispensary.isVerified && (
-                    <span className="pill accent">✓ Verificado</span>
+                    <span className="pill accent"><Icon name="check" size={12} strokeWidth={3} /> Verificado</span>
                   )}
                   {dispensary.tier === "enterprise" && (
                     <span
                       className="pill text-xs"
                       style={{ background: "var(--gold)", color: "oklch(22% 0.05 85)", borderColor: "transparent" }}
                     >
-                      ✦ Destacado
+                      <Icon name="sparkle" size={12} /> Destacado
                     </span>
                   )}
                 </div>
@@ -293,9 +295,26 @@ export default function DispensarioSlugPage() {
               </div>
             </div>
 
-            {reviews.length > 0 && (
-              <div>
-                <div className="kicker mb-4">Reseñas recientes</div>
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="kicker">Reseñas{dispensary.reviewCount > 0 ? ` (${dispensary.reviewCount})` : ""}</div>
+                {isLoggedIn ? (
+                  <Link
+                    to={`/dispensarios/${dispensary.slug}/review`}
+                    className={cn(buttonVariants({ variant: "primary" }), "!py-1.5 !px-3 text-xs")}
+                  >
+                    Escribir reseña
+                  </Link>
+                ) : (
+                  <Link
+                    to="/auth?mode=login"
+                    className={cn(buttonVariants({ variant: "ghost" }), "!py-1.5 !px-3 text-xs")}
+                  >
+                    Inicia sesión para reseñar
+                  </Link>
+                )}
+              </div>
+              {reviews.length > 0 ? (
                 <div className="space-y-3">
                   {reviews.map((r, i) => (
                     <div key={i} className="card p-4">
@@ -308,14 +327,18 @@ export default function DispensarioSlugPage() {
                           {new Date(r.createdAt).toLocaleDateString("es-MX")}
                         </span>
                       </div>
-                      {r.text && (
-                        <p className="text-sm text-fg-muted leading-relaxed">{r.text}</p>
+                      {r.comment && (
+                        <p className="text-sm text-fg-muted leading-relaxed">{r.comment}</p>
                       )}
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="card p-6 text-center">
+                  <p className="text-sm text-fg-muted">Aún no hay reseñas. ¡Sé el primero!</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Sidebar */}

@@ -1,3 +1,5 @@
+import { requireFeature } from "~/lib/features";
+import { Icon } from "~/components/ui/icon";
 import { Link, useLoaderData, useSearchParams } from "react-router";
 import { buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -25,6 +27,7 @@ const SORT_MAP: Record<SortKey, Record<string, unknown>> = {
 };
 
 export async function loader({ request }: Route.LoaderArgs) {
+  requireFeature("negocios");
   await connectDB();
   const url = new URL(request.url);
   const cat = url.searchParams.get("cat") || "";
@@ -81,7 +84,6 @@ export function meta(): ReturnType<Route.MetaFunction> {
     description:
       "Flores, concentrados, comestibles, semillas y equipo de cultivo. Productos de cannabis verificados.",
     url: `${SITE_URL}/productos`,
-    canonicalPath: "/productos",
     locale: "es",
   });
 }
@@ -102,12 +104,11 @@ export default function ProductosPage() {
   const allCategories = [...consumo, ...cultivo];
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-12">
-      <div className="mb-10">
-        <div className="kicker mb-2">Catálogo</div>
-        <h1 className="display text-4xl mb-3">Productos Cannabis</h1>
-        <p className="text-fg-muted max-w-xl">
-          Flores, concentrados, comestibles y equipo de cultivo — verificados por marca, calificados por la comunidad.
+    <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-10">
+      <div className="mb-10 bg-orange text-ink border-[3px] border-ink p-6 md:p-8">
+        <h1 className="rotulo" style={{ fontSize: "clamp(48px, 8vw, 104px)" }}>Productos</h1>
+        <p className="mt-3 text-lg font-semibold max-w-xl">
+          Tópicos, accesorios y equipo de cultivo de las marcas del directorio, con reseñas de la comunidad.
         </p>
       </div>
 
@@ -128,7 +129,7 @@ export default function ProductosPage() {
                   borderColor: activeFilters.promoted ? "var(--warm)" : "var(--line-strong)",
                 }}
               >
-                {activeFilters.promoted && <span className="text-[10px] text-white font-bold">✓</span>}
+                {activeFilters.promoted && <Icon name="check" size={10} strokeWidth={3} className="text-white" />}
               </span>
               Solo destacados
             </button>

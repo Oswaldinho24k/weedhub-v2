@@ -1,3 +1,4 @@
+import { featureOn } from "~/lib/features";
 import { Link, useNavigate } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import { Logo } from "./logo";
@@ -40,24 +41,22 @@ export function Navbar({ user, theme }: NavbarProps) {
       to: href("/strains"),
       items: [
         { to: href("/strains"), label: t.nav.directory },
-        { to: "/top-100", label: t.nav.top100 },
-        { to: "/para", label: t.nav.conditions },
-        { to: "/recomendar", label: t.nav.findMyStrain },
+        ...(featureOn("top100") ? [{ to: href("/top-100"), label: t.nav.top100 }] : []),
+        ...(featureOn("porCondicion") ? [{ to: href("/para"), label: t.nav.conditions }] : []),
+        ...(featureOn("recomendador") ? [{ to: "/recomendar", label: t.nav.findMyStrain }] : []),
       ],
     },
     {
       label: t.nav.learn,
       items: [
-        { to: "/magazine", label: t.nav.magazine },
+        ...(featureOn("magazine") ? [{ to: "/magazine", label: t.nav.magazine }] : []),
         { to: href("/guias"), label: t.nav.guides },
         { to: href("/glosario"), label: t.nav.glossary },
-        { to: "/mapa-verde", label: t.nav.greenMap },
+        { to: href("/mapa-verde"), label: t.nav.greenMap },
       ],
     },
-    {
-      label: t.nav.community,
-      to: "/comunidad",
-    },
+    ...(featureOn("foro") ? [{ label: t.nav.community, to: "/comunidad" }] : []),
+    { label: "Mapa Verde", to: href("/mapa-verde") },
   ];
 
   useEffect(() => {
@@ -85,9 +84,9 @@ export function Navbar({ user, theme }: NavbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-[color-mix(in_oklch,var(--bg)_85%,transparent)] backdrop-blur">
-      <div className="mx-auto max-w-[1200px] px-6">
-        <div className="flex h-16 items-center justify-between gap-6">
+    <header className="sticky top-0 z-40 wall--ink">
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6">
+        <div className="flex h-14 items-center justify-between gap-6">
           <Logo size={20} />
 
           <nav ref={navRef} className="hidden md:flex items-center gap-0.5">
@@ -99,7 +98,7 @@ export function Navbar({ user, theme }: NavbarProps) {
                   <Link
                     key={group.label}
                     to={group.to!}
-                    className="text-sm text-fg-muted hover:text-fg transition-colors px-3 py-2 rounded-md hover:bg-elev/60"
+                    className="nav-link px-3 py-2"
                   >
                     {group.label}
                   </Link>
@@ -111,7 +110,7 @@ export function Navbar({ user, theme }: NavbarProps) {
                   {group.to ? (
                     <Link
                       to={group.to}
-                      className="text-sm text-fg-muted hover:text-fg transition-colors pl-3 pr-1 py-2"
+                      className="nav-link pl-3 pr-1 py-2"
                     >
                       {group.label}
                     </Link>
@@ -120,8 +119,8 @@ export function Navbar({ user, theme }: NavbarProps) {
                       type="button"
                       onClick={() => toggleGroup(group.label)}
                       className={cn(
-                        "text-sm transition-colors pl-3 pr-1 py-2 rounded-l-md",
-                        isOpen ? "text-fg" : "text-fg-muted hover:text-fg"
+                        "nav-link pl-3 pr-1 py-2",
+                        isOpen && "!text-yellow"
                       )}
                     >
                       {group.label}
@@ -132,7 +131,7 @@ export function Navbar({ user, theme }: NavbarProps) {
                     onClick={() => toggleGroup(group.label)}
                     className={cn(
                       "p-2 transition-colors rounded-r-md",
-                      isOpen ? "text-fg" : "text-fg-dim hover:text-fg"
+                      isOpen ? "text-yellow" : "text-enamel/70 hover:text-yellow"
                     )}
                     aria-haspopup="menu"
                     aria-expanded={isOpen}
@@ -149,10 +148,10 @@ export function Navbar({ user, theme }: NavbarProps) {
                       role="menu"
                       className="fade-up absolute left-0 top-full mt-1 w-48 p-1 z-50"
                       style={{
-                        background: "var(--bg-elev)",
-                        border: "1px solid var(--line)",
-                        borderRadius: "12px",
-                        boxShadow: "0 8px 24px oklch(0% 0 0 / 0.12)",
+                        background: "var(--fluor-yellow)",
+                        border: "2px solid var(--ink)",
+                        borderRadius: "2px",
+                        color: "var(--ink)",
                       }}
                     >
                       {group.items.map((item) => (
@@ -161,7 +160,7 @@ export function Navbar({ user, theme }: NavbarProps) {
                           to={item.to}
                           role="menuitem"
                           onClick={() => setOpenGroup(null)}
-                          className="flex items-center rounded-lg px-3 py-2 text-sm text-fg-muted hover:text-fg hover:bg-elev transition-colors"
+                          className="flex items-center px-3 py-2 text-[15px] font-bold [font-stretch:85%] hover:bg-ink hover:text-yellow transition-colors"
                         >
                           {item.label}
                         </Link>
@@ -173,11 +172,11 @@ export function Navbar({ user, theme }: NavbarProps) {
             })}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={() => navigate(href("/strains?focus=search"))}
-              className="hidden sm:inline-flex items-center gap-2 h-9 px-3 rounded-full border border-line text-fg-dim text-xs hover:border-line-strong transition-colors"
+              className="hidden sm:inline-flex items-center gap-2 h-9 px-3 rounded-[3px] border-2 border-enamel/60 text-enamel text-[13px] font-bold uppercase [font-stretch:80%] hover:bg-yellow hover:text-ink hover:border-yellow transition-colors"
               aria-label={t.nav.search}
             >
               <Icon name="search" size={14} />
@@ -185,19 +184,19 @@ export function Navbar({ user, theme }: NavbarProps) {
             </button>
 
             <LanguageSwitcher />
-            <ThemeToggle theme={theme} />
+            <div className="hidden sm:block"><ThemeToggle theme={theme} /></div>
 
             {user ? (
               <div className="relative" ref={menuRef}>
                 <button
                   type="button"
                   onClick={() => setMenuOpen((v) => !v)}
-                  className="flex items-center gap-2 h-9 px-1.5 pr-2 rounded-full border border-line hover:border-line-strong transition-colors"
+                  className="flex items-center gap-2 h-9 px-1 pr-2 rounded-[3px] border-2 border-enamel/60 text-enamel hover:border-yellow transition-colors"
                   aria-haspopup="menu"
                   aria-expanded={menuOpen}
                 >
                   <span
-                    className="h-7 w-7 rounded-full bg-elev overflow-hidden flex items-center justify-center text-xs"
+                    className="h-6 w-6 rounded-[2px] bg-elev overflow-hidden flex items-center justify-center text-xs"
                     style={{ color: "var(--accent)" }}
                   >
                     <img
@@ -206,12 +205,12 @@ export function Navbar({ user, theme }: NavbarProps) {
                       className="h-full w-full object-cover"
                     />
                   </span>
-                  <Icon name="chevronDown" size={14} className="text-fg-dim" />
+                  <Icon name="chevronDown" size={14} />
                 </button>
                 {menuOpen && (
                   <div
                     role="menu"
-                    className="fade-up absolute right-0 top-full mt-2 w-56 card-strong p-1 shadow-[var(--shadow-soft)] z-50"
+                    className="fade-up absolute right-0 top-full mt-2 w-56 card-strong p-1 text-fg z-50"
                   >
                     {user.username && (
                       <div className="px-3 py-2 border-b border-line">
@@ -256,14 +255,14 @@ export function Navbar({ user, theme }: NavbarProps) {
                 )}
               </div>
             ) : (
-              <Link to="/auth" className={cn(buttonVariants({ variant: "primary" }), "hidden sm:inline-flex !py-2 !px-4 text-xs")}>
+              <Link to="/auth" className={cn(buttonVariants({ variant: "primary" }), "hidden sm:inline-flex !py-1.5 !px-3 !text-[13px] !bg-yellow !text-ink !border-yellow !shadow-none")}>
                 {t.nav.start}
               </Link>
             )}
 
             <button
               type="button"
-              className="md:hidden h-9 w-9 grid place-items-center rounded-full border border-line text-fg-muted"
+              className="md:hidden h-9 w-9 grid place-items-center rounded-[3px] border-2 border-enamel/60 text-enamel"
               aria-label={mobileOpen ? t.nav.closeMenu : t.nav.openMenu}
               onClick={() => setMobileOpen((v) => !v)}
             >
@@ -274,7 +273,7 @@ export function Navbar({ user, theme }: NavbarProps) {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden border-t border-line bg-bg fade-in">
+        <div className="md:hidden border-t-2 border-yellow bg-ink">
           <div className="px-6 py-4 space-y-0.5">
             {NAV_GROUPS.map((group) => {
               const isOpen = openMobileGroup === group.label;
@@ -285,7 +284,7 @@ export function Navbar({ user, theme }: NavbarProps) {
                     key={group.label}
                     to={group.to!}
                     onClick={() => setMobileOpen(false)}
-                    className="block rounded-md px-3 py-2 text-sm text-fg-muted hover:text-fg hover:bg-elev"
+                    className="block px-3 py-3 text-lg font-extrabold uppercase [font-stretch:78%] text-enamel hover:text-yellow"
                   >
                     {group.label}
                   </Link>
@@ -297,7 +296,7 @@ export function Navbar({ user, theme }: NavbarProps) {
                   <button
                     type="button"
                     onClick={() => setOpenMobileGroup(isOpen ? null : group.label)}
-                    className="w-full flex items-center justify-between rounded-md px-3 py-2 text-sm text-fg-muted hover:text-fg hover:bg-elev"
+                    className="w-full flex items-center justify-between px-3 py-3 text-lg font-extrabold uppercase [font-stretch:78%] text-enamel hover:text-yellow"
                   >
                     {group.label}
                     <Icon
@@ -307,7 +306,7 @@ export function Navbar({ user, theme }: NavbarProps) {
                     />
                   </button>
                   {isOpen && (
-                    <div className="ml-3 mt-0.5 mb-1 border-l border-line pl-3 space-y-0.5">
+                    <div className="ml-3 mb-2 border-l-2 border-yellow pl-3 space-y-0.5">
                       {group.items.map((item) => (
                         <Link
                           key={item.to}
@@ -316,7 +315,7 @@ export function Navbar({ user, theme }: NavbarProps) {
                             setMobileOpen(false);
                             setOpenMobileGroup(null);
                           }}
-                          className="block rounded-md px-2 py-2 text-sm text-fg-muted hover:text-fg hover:bg-elev"
+                          className="block px-2 py-2 text-base font-semibold text-enamel/85 hover:text-yellow"
                         >
                           {item.label}
                         </Link>
@@ -326,13 +325,13 @@ export function Navbar({ user, theme }: NavbarProps) {
                 </div>
               );
             })}
+            <div className="px-3 py-3 flex items-center gap-3 text-enamel font-bold"><ThemeToggle theme={theme} /></div>
             {!user && (
               <>
-                <hr className="hrule my-2" />
+                <hr className="my-2 border-enamel/20" />
                 <Link
                   to="/auth"
-                  className="block rounded-md px-3 py-2 text-sm"
-                  style={{ color: "var(--accent)" }}
+                  className="block px-3 py-3 text-lg font-extrabold uppercase [font-stretch:78%] text-yellow"
                 >
                   {t.nav.start}
                 </Link>

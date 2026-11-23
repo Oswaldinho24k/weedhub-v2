@@ -1,87 +1,41 @@
 import { Form, Link, useActionData, useSearchParams } from "react-router";
 import type { Route } from "./+types/admin.reviews";
-import { connectDB } from "~/lib/db.server";
-import { ReviewModel } from "~/models/review.server";
-import { recalculateStrainRatings, updateUserStats } from "~/services/review.service.server";
+import { requireAdmin } from "~/lib/auth.server";
+import { listReviews, setReviewStatus, deleteReview } from "~/services/moderation.server";
 import { Icon } from "~/components/ui/icon";
 import { RatingStars } from "~/components/composite/rating-stars";
 import { Button } from "~/components/ui/button";
 import { formatDate } from "~/lib/utils";
 
 export async function loader({ request }: Route.LoaderArgs) {
-  await connectDB();
+  await requireAdmin(request);
   const url = new URL(request.url);
   const entityType = url.searchParams.get("entityType") || "";
   const status = url.searchParams.get("status") || "";
-
-  const filter: Record<string, unknown> = {};
-  if (entityType && ["strain", "product", "brand", "dispensary"].includes(entityType))
-    filter.entityType = entityType;
-  if (status && ["published", "flagged", "removed"].includes(status))
-    filter.status = status;
-
-  const reviews = await ReviewModel.find(filter)
-    .sort({ createdAt: -1 })
-    .limit(100)
-    .populate("userId", "username anonymousHandle email")
-    .populate("strainId", "name slug")
-    .lean();
-
-  return {
-    filters: { entityType, status },
-    reviews: reviews.map((r) => ({
-      _id: String(r._id),
-      entityType: r.entityType,
-      ratings: r.ratings,
-      comment: r.comment,
-      status: r.status,
-      publishedAs: r.publishedAs,
-      createdAt: r.createdAt.toISOString(),
-      user: r.userId
-        ? {
-            username: (r.userId as any).username,
-            anonymousHandle: (r.userId as any).anonymousHandle,
-            email: (r.userId as any).email,
-          }
-        : null,
-      strain: r.strainId
-        ? { name: (r.strainId as any).name, slug: (r.strainId as any).slug }
-        : null,
-      strainId: String(r.strainId?._id || r.strainId),
-      userId: String(r.userId?._id || r.userId),
-    })),
-  };
+  const includeSeed = url.searchParams.get("includeSeed") === "1";
+  // Email is shown only here, in the admin UI; AI actions never receive it.
+  const reviews = await listReviews({ entityType, status, includeSeed, withEmail: true, limit: 100 });
+  return { filters: { entityType, status }, reviews };
 }
 
+// HTTP adapter only: all logic lives in services/moderation.server.ts (same functions the AI agent uses).
 export async function action({ request }: Route.ActionArgs) {
-  await connectDB();
+  await requireAdmin(request);
   const formData = await request.formData();
   const intent = String(formData.get("intent") || "status");
   const reviewId = String(formData.get("reviewId"));
 
   if (intent === "delete") {
-    const review = await ReviewModel.findByIdAndDelete(reviewId);
-    if (!review) return { error: "Reseña no encontrada" };
-    await recalculateStrainRatings(String(review.strainId));
-    await updateUserStats(String(review.userId));
-    return { success: true, message: "Reseña eliminada permanentemente" };
+    const r = await deleteReview(reviewId);
+    return r.ok ? { success: true, message: "Reseña eliminada permanentemente" } : { success: false, error: r.error, message: r.error };
   }
 
   const newStatus = String(formData.get("status"));
-  const review = await ReviewModel.findById(reviewId);
-  if (!review) return { error: "Reseña no encontrada" };
-
-  review.status = newStatus as any;
-  await review.save();
-
-  await recalculateStrainRatings(String(review.strainId));
-  await updateUserStats(String(review.userId));
-
+  const r = await setReviewStatus(reviewId, newStatus);
+  if (!r.ok) return { success: false, error: r.error, message: r.error };
   return {
     success: true,
-    message: `Reseña ${
-      newStatus === "published" ? "publicada" : newStatus === "removed" ? "eliminada" : "marcada"
-    }`,
+    message: `Reseña ${newStatus === "published" ? "publicada" : newStatus === "removed" ? "eliminada" : "marcada"}`,
   };
 }
 

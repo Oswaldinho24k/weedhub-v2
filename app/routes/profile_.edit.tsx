@@ -138,7 +138,6 @@ export default function EditProfilePage({ loaderData }: Route.ComponentProps) {
           <Icon name="arrowLeft" size={14} />
           {t.profileEdit.backToProfile}
         </Link>
-        <div className="kicker mt-4 mb-1">{t.profileEdit.editKicker}</div>
         <h1 className="display text-4xl">{t.profileEdit.editTitle}</h1>
       </div>
 

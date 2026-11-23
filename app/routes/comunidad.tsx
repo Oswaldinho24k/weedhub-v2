@@ -1,3 +1,5 @@
+import { requireFeature } from "~/lib/features";
+import { Icon } from "~/components/ui/icon";
 import { Link, useLoaderData, useSearchParams } from "react-router";
 import { buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -17,6 +19,7 @@ const CATEGORIES: { key: PostCategory | "todos"; label: string }[] = [
 ];
 
 export async function loader({ request }: Route.LoaderArgs) {
+  requireFeature("foro");
   await connectDB();
   const user = await getUserFromSession(request);
   const url = new URL(request.url);
@@ -70,7 +73,6 @@ export function meta(): ReturnType<Route.MetaFunction> {
     description:
       "Discusiones sobre cannabis: experiencias, cepas, cultivo, legislación y comunidad. La conversación más honesta en español.",
     url: `${SITE_URL}/comunidad`,
-    canonicalPath: "/comunidad",
     locale: "es",
   });
 }
@@ -86,12 +88,11 @@ export default function ComunidadPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-12">
-      <div className="flex items-start justify-between mb-10 gap-4">
+    <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-10">
+      <div className="flex items-end justify-between mb-10 gap-4 flex-wrap wall border-[3px] border-ink p-6 md:p-8">
         <div>
-          <div className="kicker mb-2">Comunidad</div>
-          <h1 className="display text-4xl mb-2">Foros WeedHub</h1>
-          <p className="text-fg-muted max-w-lg">
+          <h1 className="rotulo rotulo-shade text-yellow" style={{ fontSize: "clamp(48px, 8vw, 104px)" }}>Foro</h1>
+          <p className="mt-3 text-lg font-semibold max-w-xl">
             Discusiones sobre cannabis en español — sin censura moralista, con respeto.
           </p>
         </div>
@@ -231,10 +232,10 @@ function PostRow({
         </div>
         <div className="flex items-center gap-3 mt-1.5 text-xs text-fg-dim flex-wrap">
           <span>
-            {post.publishedAs === "anonymous" ? "👤" : "@"}{post.handle}
+            {post.publishedAs === "anonymous" ? <Icon name="user" size={12} className="inline -mt-0.5 mr-0.5" /> : "@"}{post.handle}
           </span>
           <span>{date}</span>
-          <span>💬 {post.commentCount}</span>
+          <span className="inline-flex items-center gap-1"><Icon name="message" size={13} />{post.commentCount}</span>
         </div>
       </div>
     </Link>

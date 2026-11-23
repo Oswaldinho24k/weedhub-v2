@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation } from "react-router";
+import { Link, Outlet, useLocation, useRevalidator } from "react-router";
 import { useState, useRef } from "react";
 import type { Route } from "./+types/admin";
 import { requireAdmin } from "~/lib/auth.server";
@@ -17,6 +17,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 const NAV_ITEMS: { to: string; label: string; icon: IconName; end?: boolean }[] = [
   { to: "/admin", label: "Dashboard", icon: "settings", end: true },
+  { to: "/admin/revision", label: "Revisión", icon: "checkCircle" },
   { to: "/admin/strains", label: "Cepas", icon: "leaf" },
   { to: "/admin/generate-images", label: "Imágenes IA", icon: "camera" },
   { to: "/admin/reviews", label: "Reseñas", icon: "edit" },
@@ -94,9 +95,11 @@ export default function AdminLayout() {
   );
 }
 
-type ChatMsg = { role: "user" | "assistant"; text: string; tools?: string[] };
+type Pending = { action: string; input: Record<string, unknown>; label: string };
+type ChatMsg = { role: "user" | "assistant"; text: string; tools?: string[]; pending?: Pending[] };
 
 function AdminChat({ onClose }: { onClose: () => void }) {
+  const revalidator = useRevalidator();
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -113,7 +116,10 @@ function AdminChat({ onClose }: { onClose: () => void }) {
       const res = await fetch("/api/admin/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next.map((m) => ({ role: m.role, content: m.text })) }),
+        body: JSON.stringify({
+          messages: next.map((m) => ({ role: m.role, content: m.text })),
+          context: { path: window.location.pathname + window.location.search },
+        }),
       });
       const data = await res.json();
       setMessages((prev) => [
@@ -122,14 +128,41 @@ function AdminChat({ onClose }: { onClose: () => void }) {
           role: "assistant",
           text: data.text || data.error || "Sin respuesta",
           tools: data.executedTools?.map((t: { name: string }) => t.name),
+          pending: data.pending?.length ? data.pending : undefined,
         },
       ]);
+      // the agent may have changed data shown on this page
+      if (data.executedTools?.some((t: { success: boolean }) => t.success)) revalidator.revalidate();
     } catch {
       setMessages((prev) => [...prev, { role: "assistant", text: "Error de conexión." }]);
     } finally {
       setLoading(false);
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
     }
+  }
+
+  async function confirm(p: Pending, msgIndex: number) {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: p }),
+      });
+      const data = await res.json();
+      setMessages((prev) => [
+        ...prev.map((m, i) => (i === msgIndex ? { ...m, pending: m.pending?.filter((x) => x !== p) } : m)),
+        { role: "assistant", text: data.text || data.error || "Sin respuesta", tools: data.executedTools?.map((t: { name: string }) => t.name) },
+      ]);
+      // let the page reflect the change
+      if (data.executedTools?.[0]?.success) revalidator.revalidate();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function dismiss(p: Pending, msgIndex: number) {
+    setMessages((prev) => prev.map((m, i) => (i === msgIndex ? { ...m, pending: m.pending?.filter((x) => x !== p) } : m)));
   }
 
   return (
@@ -154,10 +187,10 @@ function AdminChat({ onClose }: { onClose: () => void }) {
           <div className="text-xs text-fg-dim space-y-2">
             <p>Ejemplos de lo que puedes preguntar:</p>
             {[
-              "¿Cuántas cepas hay en total?",
-              "Busca la cepa Blue Dream",
-              "Lista los efectos positivos",
-              "¿Cuántos usuarios hay de México?",
+              "¿Cómo va la revisión?",
+              "¿Qué cepas populares tienen datos incompletos?",
+              "Genera la nota de la redacción de Sour Diesel",
+              "Revisa el país México del Mapa Verde y dime qué falta",
             ].map((ex) => (
               <button
                 key={ex}
@@ -176,21 +209,31 @@ function AdminChat({ onClose }: { onClose: () => void }) {
               className={cn(
                 "inline-block px-3 py-2 rounded-lg max-w-[95%] text-left whitespace-pre-wrap",
                 msg.role === "user"
-                  ? "bg-accent text-white"
-                  : "bg-bg-elev text-fg"
+                  ? "bg-ink text-white"
+                  : "bg-sunken text-fg"
               )}
             >
               {msg.text}
             </div>
             {msg.tools && msg.tools.length > 0 && (
               <div className="flex gap-1 flex-wrap mt-1">
-                {msg.tools.map((t) => (
-                  <span key={t} className="mono text-xs text-fg-dim px-1.5 py-0.5 bg-bg-elev rounded">
-                    ✓ {t}
+                {msg.tools.map((t, k) => (
+                  <span key={`${t}-${k}`} className="inline-flex items-center gap-1 text-xs font-bold text-fg-muted px-1.5 py-0.5 border border-line">
+                    <Icon name="check" size={10} strokeWidth={3} /> {t}
                   </span>
                 ))}
               </div>
             )}
+            {msg.pending?.map((p, k) => (
+              <div key={k} className="mt-2 border-2 border-ink bg-yellow text-ink p-2 text-left">
+                <div className="text-xs font-extrabold uppercase [font-stretch:80%] mb-1">Requiere tu confirmación</div>
+                <div className="text-sm font-semibold mb-2">{p.label}</div>
+                <div className="flex gap-2">
+                  <button onClick={() => confirm(p, i)} disabled={loading} className="btn btn-primary !py-1 !px-2 !text-xs">Confirmar</button>
+                  <button onClick={() => dismiss(p, i)} disabled={loading} className="btn btn-ghost !py-1 !px-2 !text-xs">Cancelar</button>
+                </div>
+              </div>
+            ))}
           </div>
         ))}
         {loading && (

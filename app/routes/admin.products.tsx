@@ -2,106 +2,61 @@ import { useState } from "react";
 import { Form, useLoaderData, useActionData, useSearchParams } from "react-router";
 import type { Route } from "./+types/admin.products";
 import { requireAdmin } from "~/lib/auth.server";
-import { connectDB } from "~/lib/db.server";
-import { ProductModel } from "~/models/product.server";
-import { BrandModel } from "~/models/brand.server";
-import { ProductCategoryModel } from "~/models/product-category.server";
+import { listProducts, listBrandOptions, listCategories, createProduct, setProductStatus, setProductPromoted, deleteProduct } from "~/services/businesses.server";
+
+const PAGE_SIZE = 25; // keep in sync with services/businesses.server.ts (client-safe copy)
 import { Icon } from "~/components/ui/icon";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
-const PAGE_SIZE = 25;
-
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAdmin(request);
-  await connectDB();
   const url = new URL(request.url);
   const q = url.searchParams.get("q") || "";
   const status = url.searchParams.get("status") || "";
   const brandId = url.searchParams.get("brandId") || "";
   const categoryKey = url.searchParams.get("categoryKey") || "";
+  const includeSeed = url.searchParams.get("includeSeed") === "1";
   const page = Math.max(1, Number(url.searchParams.get("page") || 1));
 
-  const filter: Record<string, unknown> = {};
-  if (q) filter.name = { $regex: q, $options: "i" };
-  if (status) filter.status = status;
-  if (brandId) filter.brandId = brandId;
-  if (categoryKey) filter.categoryKey = categoryKey;
-
-  const [products, total, brands, categories] = await Promise.all([
-    ProductModel.find(filter)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * PAGE_SIZE)
-      .limit(PAGE_SIZE)
-      .populate("brandId", "name slug")
-      .lean(),
-    ProductModel.countDocuments(filter),
-    BrandModel.find({ status: "active" }).select("name slug").sort({ name: 1 }).lean(),
-    ProductCategoryModel.find({ isActive: true }).sort({ sortOrder: 1 }).lean(),
+  const [{ products, total }, brands, categories] = await Promise.all([
+    listProducts({ q, status, brandId, categoryKey, page, includeSeed }),
+    listBrandOptions({ status: "active", includeSeed }),
+    listCategories({ active: true }),
   ]);
 
-  return { products, total, page, q, status, brandId, categoryKey, brands, categories };
+  return { products, total, page, q, status, brandId, categoryKey, includeSeed, brands, categories };
 }
 
+// HTTP adapter only: all logic lives in services/businesses.server.ts (same functions the AI agent uses).
 export async function action({ request }: Route.ActionArgs) {
   await requireAdmin(request);
-  await connectDB();
   const form = await request.formData();
-  const intent = form.get("intent") as string;
+  const intent = String(form.get("intent"));
+  const id = String(form.get("id") || "");
+  const field = (k: string) => (form.has(k) ? String(form.get(k)) : undefined);
 
   if (intent === "create") {
-    const name = String(form.get("name") || "").trim();
-    const brandIdVal = String(form.get("brandId") || "").trim();
-    const categoryKey = String(form.get("categoryKey") || "").trim();
-    if (!name || !brandIdVal || !categoryKey) return { error: "Nombre, marca y categoría son obligatorios" };
-
-    const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    const existing = await ProductModel.findOne({ slug });
-    if (existing) return { error: `El slug "${slug}" ya existe` };
-
-    const priceVal = form.get("price") ? Number(form.get("price")) : undefined;
-
-    await ProductModel.create({
-      name,
-      slug,
-      brandId: brandIdVal,
-      categoryKey,
-      description: form.get("description") ? String(form.get("description")) : undefined,
-      price: priceVal,
-      priceCurrency: String(form.get("priceCurrency") || "MXN") as "MXN" | "USD",
-      status: "draft",
-    });
-    return { success: `Producto "${name}" creado como borrador` };
+    const r = await createProduct({ name: field("name"), brandId: field("brandId"), categoryKey: field("categoryKey"), description: field("description"), price: field("price"), priceCurrency: field("priceCurrency") });
+    return r.ok ? { success: `Producto "${r.name}" creado como borrador` } : { error: r.error };
   }
-
   if (intent === "set-status") {
-    const id = String(form.get("id"));
-    const status = String(form.get("status")) as "active" | "draft" | "archived";
-    await ProductModel.findByIdAndUpdate(id, { status });
-    return { success: "Estado actualizado" };
+    const r = await setProductStatus(id, String(form.get("status")));
+    return r.ok ? { success: "Estado actualizado" } : { error: r.error };
   }
-
   if (intent === "toggle-promoted") {
-    const id = String(form.get("id"));
-    const product = await ProductModel.findById(id);
-    if (product) {
-      product.isPromoted = !product.isPromoted;
-      product.promotedAt = product.isPromoted ? new Date() : undefined;
-      await product.save();
-    }
-    return { success: "Promoción actualizada" };
+    const r = await setProductPromoted(id);
+    return r.ok ? { success: "Promoción actualizada" } : { error: r.error };
   }
-
   if (intent === "delete") {
-    await ProductModel.findByIdAndDelete(String(form.get("id")));
-    return { success: "Producto eliminado" };
+    const r = await deleteProduct(id);
+    return r.ok ? { success: "Producto eliminado" } : { error: r.error };
   }
-
   return { error: "Intent desconocido" };
 }
 
 export default function AdminProducts() {
-  const { products, total, page, q, status, brandId, categoryKey, brands, categories } =
+  const { products, total, page, q, status, brandId, categoryKey, includeSeed, brands, categories } =
     useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -176,6 +131,14 @@ export default function AdminProducts() {
             <option key={String(b._id)} value={String(b._id)}>{b.name}</option>
           ))}
         </select>
+        <label className="flex items-center gap-1.5 text-sm text-fg-muted">
+          <input
+            type="checkbox"
+            defaultChecked={includeSeed}
+            onChange={(e) => setSearchParams((p) => { if (e.target.checked) p.set("includeSeed", "1"); else p.delete("includeSeed"); p.set("page", "1"); return p; })}
+          />
+          Incluir seed
+        </label>
       </div>
 
       {/* Create form */}
@@ -259,7 +222,7 @@ export default function AdminProducts() {
                         <span className="pill warm text-xs">Promovido</span>
                       )}
                     </div>
-                    <div className="text-xs text-fg-dim mono">{product.slug}</div>
+                    <div className="text-xs text-fg-dim mono">{product.slug}{(product as { source?: string }).source === "seed" && <span className="pill text-xs ml-1">seed</span>}</div>
                   </td>
                   <td className="px-4 py-3 text-fg-muted">
                     {product.brandId ? (product.brandId as { name?: string }).name : "—"}

@@ -8,7 +8,7 @@ import { type RouteConfig, index, route } from "@react-router/dev/routes";
  * stay unlocalized; they read the active locale from cookie at runtime.
  * This keeps route IDs simple and matches real-world i18n patterns.
  */
-function publicRoutes(prefix: "" | "pt" | "en") {
+function publicRoutes(prefix: "" | "pt") {
   const p = (path: string) => (prefix ? `${prefix}/${path}` : path);
   const id = (base: string) => (prefix ? `${base}-${prefix}` : base);
 
@@ -20,6 +20,12 @@ function publicRoutes(prefix: "" | "pt" | "en") {
     route(p("strains/:slug"), "routes/strains.$slug.tsx", { id: id("strain-slug") }),
     route(p("community"), "routes/community.tsx", { id: id("community") }),
     route(p("editorial"), "routes/editorial.tsx", { id: id("editorial") }),
+    route(p("sobre"), "routes/sobre.tsx", { id: id("sobre") }),
+    route(p("mapa-verde"), "routes/mapa-verde.tsx", { id: id("mapa-verde") }),
+    route(p("mapa-verde/:country"), "routes/mapa-verde.$country.tsx", { id: id("mapa-verde-country") }),
+    route(p("top-100"), "routes/top-100.tsx", { id: id("top-100") }),
+    route(p("para"), "routes/para.tsx", { id: id("para") }),
+    route(p("para/:condition"), "routes/para.$condition.tsx", { id: id("para-condition") }),
     route(p("terminos"), "routes/terminos.tsx", { id: id("terminos") }),
     route(p("privacidad"), "routes/privacidad.tsx", { id: id("privacidad") }),
     route(p("ds"), "routes/ds.tsx", { id: id("ds") }),
@@ -33,8 +39,11 @@ function publicRoutes(prefix: "" | "pt" | "en") {
 export default [
   // Public content — three locales
   ...publicRoutes(""),
-  ...publicRoutes("pt"),
-  ...publicRoutes("en"),
+  // Only Spanish is served: /en, /pt and their subpaths 301 to the Spanish URL
+  route("en", "routes/en-redirect.tsx", { id: "en-root" }),
+  route("pt", "routes/en-redirect.tsx", { id: "pt-root" }),
+  route("pt/*", "routes/en-redirect.tsx", { id: "pt-splat" }),
+  route("en/*", "routes/en-redirect.tsx", { id: "en-splat" }),
 
   // Account / review / admin flows — unlocalized, read locale from cookie
   route("auth", "routes/auth.tsx"),
@@ -53,6 +62,8 @@ export default [
   route("profile/delete", "routes/profile_.delete.tsx"),
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.tsx"),
+    route("revision", "routes/admin.revision.tsx"),
+    route("generate-images", "routes/admin.generate-images.tsx"),
     route("strains", "routes/admin.strains.tsx"),
     route("reviews", "routes/admin.reviews.tsx"),
     route("submissions", "routes/admin.submissions.tsx"),
@@ -78,26 +89,24 @@ export default [
   route("api/ai/find-strain", "routes/api/ai.find-strain.tsx"),
 
   // Mapa Verde — legal status by country
-  route("mapa-verde", "routes/mapa-verde.tsx"),
-  route("mapa-verde/:country", "routes/mapa-verde.$country.tsx"),
 
   // Magazine
   route("magazine", "routes/magazine.tsx"),
   route("magazine/:slug", "routes/magazine.$slug.tsx"),
   route("magazine.rss", "routes/magazine[.]rss.tsx"),
+  route("llms.txt", "routes/llms[.]txt.tsx"),
+  route("mcp", "routes/mcp.tsx"),
 
   // Rankings y editoriales
-  route("top-100", "routes/top-100.tsx"),
 
   // Condiciones médicas
-  route("para", "routes/para.tsx"),
-  route("para/:condition", "routes/para.$condition.tsx"),
 
   // Marcas
   route("marcas", "routes/marcas.tsx"),
   route("marcas/registrar", "routes/marcas_.registrar.tsx"),
   route("marcas/:slug/reclamar", "routes/marcas.$slug_.reclamar.tsx"),
   route("marcas/:slug/editar", "routes/marcas.$slug_.editar.tsx"),
+  route("marcas/:slug/review", "routes/marcas.$slug_.review.tsx"),
   route("marcas/:slug", "routes/marcas.$slug.tsx"),
   route("planes", "routes/planes.tsx"),
   route("productos", "routes/productos.tsx"),
@@ -105,6 +114,7 @@ export default [
   // Dispensarios
   route("dispensarios", "routes/dispensarios.tsx"),
   route("dispensarios/agregar", "routes/dispensarios_.agregar.tsx"),
+  route("dispensarios/:slug/review", "routes/dispensarios.$slug_.review.tsx"),
   route("dispensarios/:slug", "routes/dispensarios.$slug.tsx"),
 
   // API + sitemap — locale-agnostic
@@ -122,5 +132,6 @@ export default [
   route("api/locale", "routes/api/locale.tsx"),
   route("api/strain-search", "routes/api/strain-search.tsx"),
   route("api/admin/ai", "routes/api/admin.ai.tsx"),
+  route("api/admin/generate-strain-image", "routes/api.admin.generate-strain-image.ts"),
   route("sitemap.xml", "routes/sitemap[.]xml.tsx"),
 ] satisfies RouteConfig;

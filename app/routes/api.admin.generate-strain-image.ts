@@ -1,10 +1,7 @@
 import { requireUser } from "~/lib/auth.server";
-import { connectDB } from "~/lib/db.server";
-import { StrainModel } from "~/models/strain.server";
-import { buildStrainImagePrompt } from "~/lib/strain-image-prompt.server";
-import { generateStrainImage } from "~/lib/image-gen.server";
-import { uploadImageFromUrl } from "~/lib/cloudinary.server";
+import { generateStrainImageFor } from "~/services/strains.server";
 
+// HTTP adapter only: logic in services/strains.server.ts (same function as the strain_generate_image action).
 export async function action({ request }: { request: Request }) {
   const user = await requireUser(request);
   if (user.role !== "admin") {
@@ -17,27 +14,7 @@ export async function action({ request }: { request: Request }) {
     return Response.json({ error: "strainId requerido" }, { status: 400 });
   }
 
-  await connectDB();
-  const strain = await StrainModel.findById(strainId)
-    .select("name type dominantTerpene terpenes effects flavors")
-    .lean();
-
-  if (!strain) {
-    return Response.json({ error: "Cepa no encontrada" }, { status: 404 });
-  }
-
-  try {
-    const prompt = buildStrainImagePrompt(strain as any);
-    const rawUrl = await generateStrainImage(prompt);
-    const imageUrl = await uploadImageFromUrl(rawUrl, {
-      folder: "weedhub/strains",
-      transformation: "c_fill,w_1200,h_900,q_auto",
-    });
-
-    await StrainModel.findByIdAndUpdate(strainId, { imageUrl });
-    return Response.json({ imageUrl });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Error generando imagen";
-    return Response.json({ error: message }, { status: 500 });
-  }
+  const r = await generateStrainImageFor(strainId);
+  if (r.ok) return Response.json({ imageUrl: r.imageUrl });
+  return Response.json({ error: r.error }, { status: r.error === "Cepa no encontrada" ? 404 : 500 });
 }

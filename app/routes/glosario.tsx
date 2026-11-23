@@ -1,125 +1,80 @@
 import { useLoaderData, Link } from "react-router";
 import type { Route } from "./+types/glosario";
 import { connectDB } from "~/lib/db.server";
-import { GlossaryTermModel, type GlossaryCategory } from "~/models/glossary-term.server";
+import { GlossaryTermModel } from "~/models/glossary-term.server";
 import { buildMeta, SITE_URL } from "~/lib/seo";
+import { resolveLocale } from "~/lib/locale.server";
+import { GLOSSARY_CATEGORY, GLOSSARY_ORDER, localizedTerm } from "~/lib/glossary-ui";
 
-export async function loader(_: Route.LoaderArgs) {
+const UI = {
+  es: {
+    title: "Glosario de cannabis: términos explicados en español | WeedHub",
+    description: "Qué significan THC, CBD, terpenos, tricomas, decarboxilación, rosin y más. Definiciones claras, con ejemplos, en español.",
+    h1: "Glosario",
+    lede: "Las palabras del cannabis explicadas sin rodeos: de THC y CBD a tricomas, rosin y decarboxilación.",
+    set: "Glosario de cannabis de WeedHub",
+  },
+  pt: {
+    title: "Glossário de cannabis: termos explicados em português | WeedHub",
+    description: "O que significam THC, CBD, terpenos, tricomas, descarboxilação, rosin e mais. Definições claras, com exemplos, em português.",
+    h1: "Glossário",
+    lede: "As palavras da cannabis explicadas sem enrolação: de THC e CBD a tricomas, rosin e descarboxilação.",
+    set: "Glossário de cannabis do WeedHub",
+  },
+} as const;
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const locale = (await resolveLocale(request)) === "pt" ? "pt" : "es";
   await connectDB();
-  const terms = await GlossaryTermModel.find({ isActive: true })
-    .sort({ term: 1 })
-    .select("slug term category")
-    .lean();
-  return { terms };
+  const terms = await GlossaryTermModel.find({ isActive: true }).select("slug term termPt category").lean();
+  const list = terms
+    .map((t: any) => ({ slug: t.slug, category: t.category, label: localizedTerm(t, locale).term }))
+    .sort((a, b) => a.label.localeCompare(b.label, locale));
+  return { terms: list, locale } as const;
 }
 
-export function meta() {
+export function meta({ data }: Route.MetaArgs) {
+  const loc = data?.locale ?? "es";
+  const U = UI[loc];
+  const url = `${SITE_URL}${loc === "pt" ? "/pt" : ""}/glosario`;
   return [
-    ...buildMeta({
-      title: "Glosario de Cannabis — WeedHub",
-      description:
-        "Diccionario de cannabis en español: THC, CBD, terpenos, extracciones, cultivo y más. Entiende el lenguaje del cannabis con definiciones claras y sin rodeos.",
-      url: `${SITE_URL}/glosario`,
-      canonicalPath: "/glosario",
-    }),
-    {
-      name: "script:ld+json",
-      content: JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "DefinedTermSet",
-        name: "Glosario de Cannabis — WeedHub",
-        description: "Diccionario de términos cannábicos en español",
-        url: `${SITE_URL}/glosario`,
-        inDefinedTermSet: `${SITE_URL}/glosario`,
-      }),
-    },
+    ...buildMeta({ title: U.title, description: U.description, url, canonicalPath: "/glosario", locale: loc }),
+    { "script:ld+json": { "@context": "https://schema.org", "@type": "DefinedTermSet", name: U.set, inLanguage: loc === "pt" ? "pt-BR" : "es", url } },
   ];
 }
 
-const CATEGORY_LABELS: Record<GlossaryCategory, string> = {
-  cannabinoides: "Cannabinoides",
-  terpenos: "Terpenos",
-  extracciones: "Extracciones",
-  cultivo: "Cultivo",
-  consumo: "Consumo",
-  legal: "Legal",
-  ciencia: "Ciencia",
-  cultura: "Cultura",
-};
-
-const CATEGORY_ORDER: GlossaryCategory[] = [
-  "cannabinoides", "terpenos", "ciencia", "extracciones",
-  "cultivo", "consumo", "legal", "cultura",
-];
-
 export default function GlosarioPage() {
-  const { terms } = useLoaderData<typeof loader>();
-
+  const { terms, locale } = useLoaderData<typeof loader>();
+  const U = UI[locale];
+  const prefix = locale === "pt" ? "/pt" : "";
+  const cats = GLOSSARY_CATEGORY[locale];
   const byCategory: Record<string, typeof terms> = {};
-  for (const t of terms) {
-    if (!byCategory[t.category]) byCategory[t.category] = [];
-    byCategory[t.category].push(t);
-  }
-
-  const alphabet = Array.from(
-    new Set(terms.map((t) => t.term[0].toUpperCase()))
-  ).sort();
+  for (const t of terms) (byCategory[t.category] ??= []).push(t);
 
   return (
-    <div className="mx-auto max-w-[1100px] px-6 py-16">
-      {/* Hero */}
-      <div className="mb-14 max-w-2xl">
-        <div className="kicker mb-3">WeedHub · Glosario</div>
-        <h1 className="display text-5xl mb-5">Glosario de Cannabis</h1>
-        <p className="text-lg text-fg-muted leading-relaxed">
-          El diccionario cannábico en español que faltaba. Desde THC y CBD hasta live resin,
-          terpenos y decarboxilación — explicado sin rodeos.
-        </p>
-      </div>
-
-      {/* Quick alphabet jump */}
-      <div className="flex flex-wrap gap-1.5 mb-12">
-        {alphabet.map((letter) => (
-          <a
-            key={letter}
-            href={`#letra-${letter}`}
-            className="pill text-xs hover:pill-accent transition-colors"
-          >
-            {letter}
-          </a>
-        ))}
-      </div>
-
-      {/* By category */}
-      <div className="space-y-14">
-        {CATEGORY_ORDER.filter((cat) => byCategory[cat]?.length).map((cat) => (
+    <div>
+      <section className="wall--yellow border-b-[3px] border-ink">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12">
+          <h1 className="rotulo" style={{ fontSize: "clamp(56px, 10vw, 140px)" }}>{U.h1}</h1>
+          <p className="mt-5 max-w-[56ch] text-xl font-semibold leading-snug">{U.lede}</p>
+        </div>
+      </section>
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-12 space-y-12">
+        {GLOSSARY_ORDER.filter((c) => byCategory[c]?.length).map((cat) => (
           <section key={cat}>
-            <h2 className="display text-2xl mb-6 pb-3 border-b border-line">
-              {CATEGORY_LABELS[cat]}
-            </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <h2 className="display text-[clamp(30px,3.6vw,44px)] mb-5">{cats[cat]}</h2>
+            <ul className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-6 border-t-[3px] border-ink">
               {byCategory[cat].map((t) => (
-                <Link
-                  key={t.slug}
-                  to={`/glosario/${t.slug}`}
-                  id={`letra-${t.term[0].toUpperCase()}`}
-                  className="card p-4 hover:bg-elev transition-colors group"
-                >
-                  <div className="font-medium group-hover:text-accent transition-colors">
-                    {t.term}
-                  </div>
-                </Link>
+                <li key={t.slug}>
+                  <Link to={`${prefix}/glosario/${t.slug}`} className="block py-3 border-b-2 border-ink text-lg font-extrabold [font-stretch:85%] hover:bg-yellow hover:text-ink px-1 transition-colors">
+                    {t.label}
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
         ))}
       </div>
-
-      {terms.length === 0 && (
-        <div className="text-center py-20 text-fg-dim">
-          El glosario está en construcción. Vuelve pronto.
-        </div>
-      )}
     </div>
   );
 }

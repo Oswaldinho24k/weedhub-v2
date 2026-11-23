@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Form, useLoaderData, useActionData } from "react-router";
 import type { Route } from "./+types/admin.glossary";
 import { requireAdmin } from "~/lib/auth.server";
-import { connectDB } from "~/lib/db.server";
-import { GlossaryTermModel, type GlossaryCategory } from "~/models/glossary-term.server";
+import { listTerms, createTerm, updateTerm, setTermActive, deleteTerm, draftTerm } from "~/services/glossary.server";
+import type { GlossaryCategory } from "~/models/glossary-term.server";
 import { Icon } from "~/components/ui/icon";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -21,59 +21,38 @@ const CATEGORIES: Record<GlossaryCategory, string> = {
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAdmin(request);
-  await connectDB();
-  const terms = await GlossaryTermModel.find({}).sort({ category: 1, term: 1 }).lean();
-  return { terms };
+  const terms = await listTerms();
+  return { terms: terms.map((t: any) => ({ ...t, _id: String(t._id) })) };
 }
 
+// HTTP adapter only: all logic lives in services/glossary.server.ts (same functions the AI agent uses).
 export async function action({ request }: Route.ActionArgs) {
   await requireAdmin(request);
-  await connectDB();
   const form = await request.formData();
-  const intent = form.get("intent") as string;
+  const intent = String(form.get("intent"));
+  const id = String(form.get("id") || "");
+  const field = (k: string) => (form.has(k) ? String(form.get(k)) : undefined);
 
   if (intent === "create") {
-    const slug = String(form.get("slug") || "").toLowerCase().trim();
-    const term = String(form.get("term") || "").trim();
-    if (!slug || !term) return { error: "Slug y término son obligatorios" };
-    const existing = await GlossaryTermModel.findOne({ slug });
-    if (existing) return { error: `El slug "${slug}" ya existe` };
-    await GlossaryTermModel.create({
-      slug,
-      term,
-      termEn: form.get("termEn") ? String(form.get("termEn")) : undefined,
-      category: String(form.get("category") || "cultura") as GlossaryCategory,
-      definition: String(form.get("definition") || ""),
-      definitionEn: form.get("definitionEn") ? String(form.get("definitionEn")) : undefined,
-      relatedSlugs: String(form.get("relatedSlugs") || "").split(",").map((s) => s.trim()).filter(Boolean),
-      examples: String(form.get("examples") || "").split("\n").map((s) => s.trim()).filter(Boolean),
-    });
-    return { success: `Término "${term}" creado` };
+    const r = await createTerm({ slug: field("slug"), term: field("term"), category: field("category"), definition: field("definition"), relatedSlugs: field("relatedSlugs"), examples: field("examples") });
+    return r.ok ? { success: `Término creado` } : { error: r.error };
   }
-
+  if (intent === "ai-draft") {
+    const r = await draftTerm({ term: String(form.get("term") || ""), category: field("category"), notes: field("notes") });
+    return r.ok ? { success: `Borrador creado (oculto y pendiente). Revísalo en /admin/revision?c=glosario` } : { error: r.error };
+  }
   if (intent === "update") {
-    const id = String(form.get("id"));
-    await GlossaryTermModel.findByIdAndUpdate(id, {
-      definition: String(form.get("definition") || ""),
-      definitionEn: form.get("definitionEn") ? String(form.get("definitionEn")) : undefined,
-      relatedSlugs: String(form.get("relatedSlugs") || "").split(",").map((s) => s.trim()).filter(Boolean),
-      examples: String(form.get("examples") || "").split("\n").map((s) => s.trim()).filter(Boolean),
-    });
-    return { success: "Término actualizado" };
+    const r = await updateTerm(id, { definition: field("definition"), relatedSlugs: field("relatedSlugs"), examples: field("examples") }, "admin");
+    return r.ok ? { success: "Término actualizado" } : { error: r.error };
   }
-
   if (intent === "toggle") {
-    const id = String(form.get("id"));
-    const t = await GlossaryTermModel.findById(id);
-    if (t) { t.isActive = !t.isActive; await t.save(); }
-    return { success: "Visibilidad actualizada" };
+    const r = await setTermActive(id);
+    return r.ok ? { success: "Visibilidad actualizada" } : { error: r.error };
   }
-
   if (intent === "delete") {
-    await GlossaryTermModel.findByIdAndDelete(String(form.get("id")));
-    return { success: "Término eliminado" };
+    const r = await deleteTerm(id);
+    return r.ok ? { success: "Término eliminado" } : { error: r.error };
   }
-
   return { error: "Intent desconocido" };
 }
 
@@ -107,6 +86,23 @@ export default function AdminGlossary() {
       {actionData && "success" in actionData && (
         <div className="mb-4 px-3 py-2 rounded text-sm" style={{ background: "var(--accent-soft)", color: "var(--accent)" }}>{actionData.success}</div>
       )}
+
+      {/* AI draft: same service the agent uses (draftTerm) */}
+      <Form method="post" className="card p-4 mb-6 flex flex-wrap items-end gap-3 bg-yellow/30">
+        <input type="hidden" name="intent" value="ai-draft" />
+        <label className="flex-1 min-w-[180px]">
+          <span className="label">Redactar término con IA</span>
+          <input name="term" required placeholder="Ej. Rosin" className="input" />
+        </label>
+        <label className="flex-[2] min-w-[220px]">
+          <span className="label">Indicaciones (opcional)</span>
+          <input name="notes" placeholder="Ej. explicar que se hace con calor y presión, sin solventes" className="input" />
+        </label>
+        <button className="btn btn-primary">
+          <Icon name="sparkle" size={14} /> Crear borrador
+        </button>
+        <p className="basis-full text-xs font-semibold text-fg-muted">Se guarda oculto y pendiente. Lo revisas y publicas en Revisión.</p>
+      </Form>
 
       {/* Filter */}
       <div className="flex gap-2 mb-6 flex-wrap">

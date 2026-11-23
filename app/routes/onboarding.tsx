@@ -321,9 +321,6 @@ export default function OnboardingPage({ loaderData }: Route.ComponentProps) {
             >
               <Icon name="check" size={32} strokeWidth={2.4} />
             </div>
-            <div className="kicker mb-3" style={{ color: "var(--accent)" }}>
-              {t.onboarding.doneKicker}
-            </div>
             <h1
               className="display mb-6"
               style={{ fontSize: "clamp(44px, 7vw, 84px)", lineHeight: 0.95 }}
@@ -468,7 +465,7 @@ function StepTitle({ accent, children }: { accent: string; children: string }) {
       style={{ fontSize: "clamp(40px, 6vw, 72px)", lineHeight: 1 }}
     >
       {parts[0]}
-      <em style={{ color: "var(--accent)", fontStyle: "italic" }} className="display-wonk">
+      <em className="display-wonk not-italic">
         {accent}
       </em>
       {parts[1]}

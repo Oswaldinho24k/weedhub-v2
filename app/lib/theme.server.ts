@@ -11,7 +11,7 @@ export const themeCookie = createCookie("wh:theme", {
 export async function getTheme(request: Request): Promise<Theme> {
   const header = request.headers.get("Cookie");
   const value = (await themeCookie.parse(header)) as Theme | null;
-  return value === "light" ? "light" : "dark";
+  return value === "dark" ? "dark" : "light";
 }
 
 export async function serializeTheme(theme: Theme): Promise<string> {

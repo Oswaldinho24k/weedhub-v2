@@ -1,3 +1,4 @@
+import { redirect } from "react-router";
 import { Link } from "react-router";
 import type { Route } from "./+types/community";
 import { buttonVariants } from "~/components/ui/button";
@@ -19,12 +20,14 @@ export function meta({ data }: Route.MetaArgs) {
     title: dict.meta.communityTitle,
     description: dict.meta.communityDescription,
     url: `${SITE_URL}${prefix}/community`,
-    canonicalPath: "/community",
     locale,
   });
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
+  // Legacy landing duplicated /comunidad and made unverifiable claims ("miles de voces").
+  throw redirect("/comunidad", 301);
+
   const locale = await resolveLocale(request);
   await connectDB();
   const reviews = await ReviewModel.find({ status: "published" })
@@ -85,13 +88,12 @@ export default function CommunityPage({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <section className="mx-auto max-w-[1200px] px-6 pt-16 pb-14">
-        <div className="kicker mb-4">{t.community.kicker}</div>
         <h1
           className="display max-w-[18ch]"
           style={{ fontSize: "clamp(44px, 7vw, 96px)", lineHeight: 0.98 }}
         >
           {t.community.headlinePrefix}
-          <span className="display-wonk" style={{ color: "var(--accent)" }}>
+          <span className="display-wonk">
             {t.community.headlineAccent}
           </span>
           {t.community.headlineSuffix}
@@ -115,7 +117,6 @@ export default function CommunityPage({ loaderData }: Route.ComponentProps) {
                 </div>
                 <blockquote
                   className="display-wonk text-2xl leading-snug"
-                  style={{ color: "var(--fg)" }}
                 >
                   <span style={{ color: "var(--accent)" }}>“</span>
                   {v.quote}
@@ -133,7 +134,6 @@ export default function CommunityPage({ loaderData }: Route.ComponentProps) {
       <section className="mx-auto max-w-[1200px] px-6 py-20">
         <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
           <div>
-            <div className="kicker mb-2">{t.community.feedKicker}</div>
             <h2 className="display text-3xl md:text-4xl">{t.community.feedTitle}</h2>
           </div>
           <Link to={href("/strains")} className={buttonVariants({ variant: "ghost" })}>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
-import { connectDB } from "~/lib/db.server";
-import { StrainModel } from "~/models/strain.server";
+import { requireAdmin } from "~/lib/auth.server";
+import { listImageCandidates } from "~/services/strains.server";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
@@ -9,48 +9,13 @@ export function meta() {
   return [{ title: "Imágenes IA — Admin WeedHub" }];
 }
 
-type ImageStatus = "cloudinary" | "pexels" | "none";
+type StrainRow = Awaited<ReturnType<typeof listImageCandidates>>[number];
 
-type StrainRow = {
-  _id: string;
-  name: string;
-  slug: string;
-  type: string;
-  imageUrl: string | null;
-  colorHint: string | null;
-  dominantTerpene: string | null;
-  rank: number;
-  imageStatus: ImageStatus;
-};
-
-export async function loader() {
-  await connectDB();
-  const strains = await StrainModel.find({ isArchived: false, reviewCount: { $gte: 1 } })
-    .sort({ "averageRatings.overall": -1, reviewCount: -1 })
-    .limit(100)
-    .select("name slug type imageUrl colorHint dominantTerpene")
-    .lean();
-
-  const rows: StrainRow[] = strains.map((s, i) => {
-    const url = s.imageUrl ?? null;
-    let imageStatus: ImageStatus = "none";
-    if (url?.includes("res.cloudinary.com")) imageStatus = "cloudinary";
-    else if (url?.includes("pexels")) imageStatus = "pexels";
-
-    return {
-      _id: String(s._id),
-      name: s.name,
-      slug: s.slug,
-      type: s.type,
-      imageUrl: url,
-      colorHint: s.colorHint ?? null,
-      dominantTerpene: s.dominantTerpene ?? null,
-      rank: i + 1,
-      imageStatus,
-    };
-  });
-
-  return { strains: rows };
+// HTTP adapter only: data comes from services/strains.server.ts.
+export async function loader({ request }: { request: Request }) {
+  await requireAdmin(request);
+  const strains: StrainRow[] = await listImageCandidates(100);
+  return { strains };
 }
 
 type FetcherData = { imageUrl?: string; error?: string };

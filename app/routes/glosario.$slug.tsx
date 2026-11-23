@@ -1,8 +1,11 @@
 import { data, useLoaderData, Link } from "react-router";
+import { buildMeta, SITE_URL } from "~/lib/seo";
 import type { Route } from "./+types/glosario.$slug";
 import { connectDB } from "~/lib/db.server";
 import { GlossaryTermModel, type GlossaryCategory } from "~/models/glossary-term.server";
-import { NewsletterSignup } from "~/components/layout/newsletter-signup";
+import { Icon } from "~/components/ui/icon";
+import { resolveLocale } from "~/lib/locale.server";
+import { GLOSSARY_CATEGORY, localizedTerm } from "~/lib/glossary-ui";
 
 const CATEGORY_LABELS: Record<GlossaryCategory, string> = {
   cannabinoides: "Cannabinoides",
@@ -15,129 +18,114 @@ const CATEGORY_LABELS: Record<GlossaryCategory, string> = {
   cultura: "Cultura",
 };
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, request }: Route.LoaderArgs) {
+  const locale = (await resolveLocale(request)) === "pt" ? "pt" : "es";
   await connectDB();
   const term = await GlossaryTermModel.findOne({ slug: params.slug, isActive: true }).lean();
   if (!term) throw data("Término no encontrado", { status: 404 });
 
   const related = term.relatedSlugs?.length
     ? await GlossaryTermModel.find({ slug: { $in: term.relatedSlugs }, isActive: true })
-        .select("slug term category")
+        .select("slug term termPt category")
         .lean()
     : [];
 
-  return { term, related };
+  return { term, related, locale } as const;
 }
 
+const UI = {
+  es: { home: "Inicio", glossary: "Glosario", title: (t: string) => `¿Qué es ${t}? Significado y ejemplos | WeedHub`, examples: "Ejemplos", related: "Ver también", back: "Ver todo el glosario", set: "Glosario de cannabis de WeedHub" },
+  pt: { home: "Início", glossary: "Glossário", title: (t: string) => `O que é ${t}? Significado e exemplos | WeedHub`, examples: "Exemplos", related: "Veja também", back: "Ver todo o glossário", set: "Glossário de cannabis do WeedHub" },
+} as const;
+
 export function meta({ data }: Route.MetaArgs) {
-  if (!data?.term) return [{ title: "Glosario — WeedHub" }];
-  const t = data.term;
+  if (!data?.term) return [{ title: "WeedHub" }];
+  const loc = data.locale;
+  const U = UI[loc];
+  const L = localizedTerm(data.term as any, loc);
+  const prefix = loc === "pt" ? "/pt" : "";
+  const path = `/glosario/${data.term.slug}`;
+  const url = `${SITE_URL}${prefix}${path}`;
+  const desc = L.definition.length > 155 ? L.definition.slice(0, 152).replace(/\s+\S*$/, "") + "…" : L.definition;
   return [
-    { title: `¿Qué es ${t.term}? — Glosario de Cannabis | WeedHub` },
+    ...buildMeta({ title: U.title(L.term), description: desc, url, type: "article", locale: loc, canonicalPath: path }),
     {
-      name: "description",
-      content: t.definition.slice(0, 160),
-    },
-    {
-      name: "script:ld+json",
-      content: JSON.stringify({
+      "script:ld+json": {
         "@context": "https://schema.org",
         "@type": "DefinedTerm",
-        name: t.term,
-        description: t.definition,
-        inDefinedTermSet: {
-          "@type": "DefinedTermSet",
-          name: "Glosario de Cannabis — WeedHub",
-          url: "https://weedhub.info/glosario",
-        },
-      }),
+        name: L.term,
+        description: L.definition,
+        url,
+        inLanguage: loc === "pt" ? "pt-BR" : "es",
+        inDefinedTermSet: { "@type": "DefinedTermSet", name: U.set, url: `${SITE_URL}${prefix}/glosario` },
+      },
     },
     {
-      name: "script:ld+json",
-      content: JSON.stringify({
+      "script:ld+json": {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Inicio", item: "https://weedhub.info" },
-          { "@type": "ListItem", position: 2, name: "Glosario", item: "https://weedhub.info/glosario" },
-          { "@type": "ListItem", position: 3, name: t.term },
+          { "@type": "ListItem", position: 1, name: U.home, item: `${SITE_URL}${prefix}/` },
+          { "@type": "ListItem", position: 2, name: U.glossary, item: `${SITE_URL}${prefix}/glosario` },
+          { "@type": "ListItem", position: 3, name: L.term, item: url },
         ],
-      }),
+      },
     },
   ];
 }
 
 export default function GlossaryTermPage() {
-  const { term, related } = useLoaderData<typeof loader>();
+  const { term, related, locale } = useLoaderData<typeof loader>();
+  const U = UI[locale];
+  const L = localizedTerm(term as any, locale);
+  const prefix = locale === "pt" ? "/pt" : "";
 
   return (
-    <div className="mx-auto max-w-[800px] px-6 py-16">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-fg-dim mb-10">
-        <Link to="/" className="hover:text-fg transition-colors">Inicio</Link>
-        <span>/</span>
-        <Link to="/glosario" className="hover:text-fg transition-colors">Glosario</Link>
-        <span>/</span>
-        <span>{term.term}</span>
-      </nav>
-
-      {/* Header */}
-      <div className="mb-10">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="pill text-xs">{CATEGORY_LABELS[term.category as GlossaryCategory]}</span>
-          {term.termEn && term.termEn !== term.term && (
-            <span className="text-xs text-fg-dim mono">{term.termEn}</span>
-          )}
+    <div>
+      <section className="wall--yellow border-b-[3px] border-ink">
+        <div className="mx-auto max-w-[1000px] px-4 sm:px-6 pt-5 pb-12">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm font-bold flex-wrap">
+            <Link to={`${prefix}/`} className="hover:underline underline-offset-4 decoration-2">{U.home}</Link>
+            <Icon name="chevronRight" size={12} />
+            <Link to={`${prefix}/glosario`} className="hover:underline underline-offset-4 decoration-2">{U.glossary}</Link>
+            <Icon name="chevronRight" size={12} />
+            <span aria-current="page">{L.term}</span>
+          </nav>
+          <h1 className="rotulo mt-8 break-words" style={{ fontSize: "clamp(48px, 9vw, 120px)" }}>{L.term}</h1>
+          <p className="mt-3"><span className="pill active">{GLOSSARY_CATEGORY[locale][term.category as GlossaryCategory]}</span></p>
+          {/* Direct definition: the answer block */}
+          <p className="mt-6 max-w-[62ch] text-[20px] leading-relaxed font-medium">{L.definition}</p>
         </div>
-        <h1 className="display text-5xl mb-2">{term.term}</h1>
-      </div>
+      </section>
 
-      {/* Definition */}
-      <div className="card p-7 mb-8">
-        <p className="text-fg-muted leading-relaxed text-[15px]">{term.definition}</p>
-      </div>
-
-      {/* Examples */}
-      {term.examples && term.examples.length > 0 && (
-        <div className="mb-10">
-          <div className="kicker mb-3">Ejemplos</div>
-          <ul className="space-y-2">
-            {term.examples.map((ex: string, i: number) => (
-              <li key={i} className="flex gap-2.5 text-sm text-fg-muted">
-                <span className="text-accent mt-0.5 shrink-0">·</span>
-                {ex}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Related terms */}
-      {related.length > 0 && (
-        <div className="mb-14">
-          <div className="kicker mb-4">Ver también</div>
-          <div className="flex flex-wrap gap-2">
-            {related.map((r) => (
-              <Link
-                key={r.slug}
-                to={`/glosario/${r.slug}`}
-                className="pill hover:pill-accent transition-colors"
-              >
-                {r.term}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Back */}
-      <div className="mb-14">
-        <Link to="/glosario" className="text-sm text-accent hover:underline inline-flex items-center gap-1.5">
-          ← Ver todo el glosario
+      <div className="mx-auto max-w-[1000px] px-4 sm:px-6 py-12">
+        {L.examples.length > 0 && (
+          <section className="mb-10">
+            <h2 className="display text-[30px] mb-4">{U.examples}</h2>
+            <ul className="space-y-3">
+              {L.examples.map((ex: string, i: number) => (
+                <li key={i} className="flex gap-3 text-[17px] leading-snug"><span className="mt-2 w-2 h-2 bg-ink shrink-0" />{ex}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {related.length > 0 && (
+          <section className="mb-12">
+            <h2 className="display text-[30px] mb-4">{U.related}</h2>
+            <div className="flex flex-wrap gap-2">
+              {related.map((r: any) => (
+                <Link key={r.slug} to={`${prefix}/glosario/${r.slug}`} className="chip">
+                  {localizedTerm(r, locale).term}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+        <Link to={`${prefix}/glosario`} className="btn btn-ghost">
+          <Icon name="arrowLeft" size={15} />
+          {U.back}
         </Link>
       </div>
-
-      <NewsletterSignup />
     </div>
   );
 }

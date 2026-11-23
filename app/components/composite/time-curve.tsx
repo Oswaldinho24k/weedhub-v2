@@ -26,8 +26,7 @@ export function TimeCurve({ data, width = 480, height = 180 }: TimeCurveProps) {
   const path = (key: "energy" | "calm" | "cerebral") =>
     data.map((p, i) => `${i === 0 ? "M" : "L"} ${xAt(i)} ${yAt(p[key])}`).join(" ");
 
-  const areaPath = `${path("cerebral")} L ${xAt(n - 1)} ${yAt(0)} L ${xAt(0)} ${yAt(0)} Z`;
-
+  
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
@@ -44,35 +43,34 @@ export function TimeCurve({ data, width = 480, height = 180 }: TimeCurveProps) {
           x2={width - pad}
           y1={yAt(v)}
           y2={yAt(v)}
-          stroke="var(--line)"
-          strokeWidth={1}
-          strokeDasharray={v === 0 ? undefined : "2 4"}
-          opacity={0.6}
+          stroke="var(--fg)"
+          strokeWidth={v === 0 ? 2 : 1}
+          strokeDasharray={v === 0 ? undefined : "1 5"}
+          opacity={v === 0 ? 1 : 0.35}
         />
       ))}
 
-      <path d={areaPath} fill="var(--accent)" opacity={0.1} />
       <path
         d={path("cerebral")}
         fill="none"
-        stroke="var(--accent)"
-        strokeWidth={2}
+        stroke="var(--fg)"
+        strokeWidth={3}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d={path("calm")}
         fill="none"
-        stroke="var(--warm)"
-        strokeWidth={2}
+        stroke="var(--fluor-pink)"
+        strokeWidth={3}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d={path("energy")}
         fill="none"
-        stroke="var(--lilac)"
-        strokeWidth={2}
+        stroke="var(--cobalt)"
+        strokeWidth={3}
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeDasharray="4 4"
@@ -84,7 +82,7 @@ export function TimeCurve({ data, width = 480, height = 180 }: TimeCurveProps) {
           x={xAt(i)}
           y={height - 4}
           fontSize="10"
-          fontFamily="var(--font-mono)"
+          fontFamily="var(--font-body)" fontWeight={700}
           textAnchor="middle"
           fill="var(--fg-dim)"
         >
@@ -93,9 +91,9 @@ export function TimeCurve({ data, width = 480, height = 180 }: TimeCurveProps) {
       ))}
 
       <g transform={`translate(${width - pad - 140}, ${pad})`}>
-        <Legend dot="var(--accent)" label="Cerebral" y={0} />
-        <Legend dot="var(--warm)" label="Relajación" y={14} />
-        <Legend dot="var(--lilac)" label="Energía" y={28} dashed />
+        <Legend dot="var(--fg)" label="Cerebral" y={0} />
+        <Legend dot="var(--fluor-pink)" label="Relajación" y={14} />
+        <Legend dot="var(--cobalt)" label="Energía" y={28} dashed />
       </g>
     </svg>
   );
@@ -117,13 +115,13 @@ function Legend({
       {dashed ? (
         <line x1={0} x2={14} y1={4} y2={4} stroke={dot} strokeWidth={2} strokeDasharray="3 2" />
       ) : (
-        <circle cx={7} cy={4} r={3.5} fill={dot} />
+        <rect x={0} y={1} width={14} height={6} fill={dot} stroke="var(--ink)" strokeWidth={1} />
       )}
       <text
         x={20}
         y={8}
         fontSize="10"
-        fontFamily="var(--font-mono)"
+        fontFamily="var(--font-body)" fontWeight={700}
         fill="var(--fg-muted)"
       >
         {label}

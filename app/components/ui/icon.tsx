@@ -61,10 +61,14 @@ import {
   Scale,
   CheckCircle2,
   type LucideIcon,
+  MessageCircle,
+  MapPin,
 } from "lucide-react";
 
 const registry = {
   search: Search,
+  message: MessageCircle,
+  pin: MapPin,
   menu: Menu,
   close: X,
   x: X,

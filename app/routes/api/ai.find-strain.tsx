@@ -1,3 +1,5 @@
+import { requireFeature } from "~/lib/features";
+import { storedValuesFor } from "~/lib/effect-labels";
 import type { Route } from "./+types/ai.find-strain";
 import { connectDB } from "~/lib/db.server";
 import { StrainModel } from "~/models/strain.server";
@@ -13,18 +15,26 @@ function getClient(): Anthropic | null {
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  requireFeature("recomendador");
   const body = await request.json();
   const { effects = [], experienceLevel = "regular", method = "any", condition } = body;
 
   await connectDB();
 
   // Pre-filter: find strains matching selected effects or condition
+  // The wizard sends Spanish adjectives; strains store normalized effect names.
+  const WIZARD_TO_KEY: Record<string, string[]> = {
+    Relajado: ["relaxed"], Creativo: ["creative"], "Energético": ["energetic"], Somnoliento: ["sleepy"],
+    "Alivio dolor": ["pain-relief"], "Ansiolítico": ["calm", "relaxed"], "Eufórico": ["euphoric"], Concentrado: ["focused"],
+  };
+  const stored = [...new Set((effects as string[]).flatMap((e) => (WIZARD_TO_KEY[e] ?? [e]).flatMap(storedValuesFor)))];
   const filter: any = { isArchived: false };
-  if (effects.length > 0) filter.effects = { $in: effects };
+  if (stored.length > 0) filter.effects = { $in: stored };
   if (condition) filter.helpsWithConditions = condition;
+  // Beginners: keep THC moderate when we know it.
+  if (experienceLevel === "beginner") filter["cannabinoidProfile.thc.max"] = { $gt: 0, $lte: 18 };
 
-  // For beginners, prefer lower THC strains
-  const sort: any = { "averageRatings.overall": -1, reviewCount: -1 };
+  const sort: any = { reviewCount: -1, "averageRatings.overall": -1 };
 
   const candidates = await StrainModel.find(filter)
     .sort(sort)

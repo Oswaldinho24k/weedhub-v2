@@ -69,7 +69,7 @@ function Star({
         "inline-flex",
         interactive && "cursor-pointer transition-transform hover:scale-110"
       )}
-      style={{ color: "var(--gold)" }}
+      style={{ color: "var(--fg)" }}
     >
       <svg viewBox="0 0 24 24" width={size} height={size} fill="none">
         <defs>

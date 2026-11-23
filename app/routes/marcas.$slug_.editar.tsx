@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Form, Link, redirect, useActionData, useNavigation } from "react-router";
 import type { Route } from "./+types/marcas.$slug_.editar";
 import { requireUser } from "~/lib/auth.server";
@@ -12,6 +13,7 @@ export function meta({ data }: Route.MetaArgs) {
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {
+  requireFeature("negocios");
   const user = await requireUser(request);
   await connectDB();
 
@@ -41,6 +43,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 export async function action({ params, request }: Route.ActionArgs) {
+  requireFeature("negocios");
   const user = await requireUser(request);
   await connectDB();
 
@@ -97,7 +100,6 @@ export default function EditarMarcaPage({ loaderData }: Route.ComponentProps) {
           <Icon name="arrowLeft" size={14} />
           Volver al perfil
         </Link>
-        <div className="kicker mt-5 mb-1">Gestión de marca</div>
         <h1 className="display text-4xl">Editar {brand.name}</h1>
       </div>
 

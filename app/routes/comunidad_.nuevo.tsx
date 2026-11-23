@@ -1,3 +1,4 @@
+import { requireFeature } from "~/lib/features";
 import { Form, Link, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
 import { Button, buttonVariants } from "~/components/ui/button";
 import type { Route } from "./+types/comunidad_.nuevo";
@@ -30,6 +31,7 @@ function toSlug(title: string, suffix: string): string {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
+  requireFeature("foro");
   const user = await requireUser(request);
   await connectDB();
   const strains = await StrainModel.find({})
@@ -44,6 +46,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  requireFeature("foro");
   const user = await requireUser(request);
   await connectDB();
 
@@ -99,7 +102,6 @@ export default function NuevoPostPage() {
         <span className="text-fg">Nuevo post</span>
       </div>
 
-      <div className="kicker mb-2">Comunidad</div>
       <h1 className="display text-3xl mb-8">Crear post</h1>
 
       {actionData && "error" in actionData && (

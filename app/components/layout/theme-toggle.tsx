@@ -12,10 +12,10 @@ export function ThemeToggle({ theme }: { theme: Theme }) {
       <button
         type="submit"
         aria-label={theme === "dark" ? "Activar tema claro" : "Activar tema oscuro"}
-        className="h-9 w-9 grid place-items-center rounded-full border border-line text-fg-muted hover:text-fg hover:bg-elev transition-colors"
+        className="h-9 w-9 grid place-items-center rounded-[3px] border-2 border-current hover:bg-yellow hover:text-ink transition-colors"
         onClick={() => {
           if (typeof document !== "undefined") {
-            document.documentElement.classList.toggle("light", next === "light");
+            document.documentElement.classList.toggle("dark", next === "dark");
           }
         }}
       >

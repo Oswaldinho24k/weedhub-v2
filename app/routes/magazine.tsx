@@ -1,9 +1,20 @@
+import { requireFeature } from "~/lib/features";
 import { Link, useLoaderData, useSearchParams } from "react-router";
 import type { Route } from "./+types/magazine";
 import { connectDB } from "~/lib/db.server";
 import { ArticleModel, type ArticleCategory } from "~/models/article.server";
 import { buildMeta, SITE_URL } from "~/lib/seo";
 import { resolveLocale } from "~/lib/locale.server";
+
+const CATEGORY_TONE: Record<string, string> = {
+  cepa: "var(--fluor-green)",
+  producto: "var(--fluor-orange)",
+  metodos: "var(--fluor-pink)",
+  legal: "#ffffff",
+  cultura: "var(--fluor-yellow)",
+  ciencia: "var(--fluor-green)",
+  entrevista: "var(--fluor-pink)",
+};
 
 const CATEGORY_LABELS: Record<ArticleCategory, string> = {
   cepa: "Cepas",
@@ -16,6 +27,7 @@ const CATEGORY_LABELS: Record<ArticleCategory, string> = {
 };
 
 export async function loader({ request }: Route.LoaderArgs) {
+  requireFeature("magazine");
   const locale = await resolveLocale(request);
   await connectDB();
   const url = new URL(request.url);
@@ -53,7 +65,6 @@ export function meta({ data }: Route.MetaArgs) {
     description:
       "Artículos sobre cepas, cultivo, métodos de consumo, legislación y cultura cannabis. En español.",
     url: "https://www.weedhub.info/magazine",
-    canonicalPath: "/magazine",
     locale: data.locale,
   });
 }
@@ -84,11 +95,10 @@ export default function MagazinePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
       />
-    <div className="mx-auto max-w-[1200px] px-6 py-12">
-      <div className="mb-10">
-        <div className="kicker mb-2">Magazine</div>
-        <h1 className="display text-4xl mb-3">WeedHub Magazine</h1>
-        <p className="text-fg-muted max-w-xl">
+    <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-10">
+      <div className="mb-10 wall--pink border-[3px] border-ink p-6 md:p-8">
+        <h1 className="rotulo" style={{ fontSize: "clamp(48px, 8vw, 104px)" }}>Magazine</h1>
+        <p className="mt-3 text-lg font-semibold max-w-xl">
           Artículos sobre cannabis: cepas, cultivo, métodos, ciencia y cultura en español.
         </p>
       </div>
@@ -187,10 +197,11 @@ function ArticleCard({
         </div>
       ) : (
         <div
-          className="aspect-[16/9] flex items-center justify-center"
-          style={{ background: "var(--bg-elev)" }}
+          className="aspect-[16/9] flex items-end p-4 border-b-2 border-ink"
+          style={{ background: CATEGORY_TONE[article.category] ?? "var(--fluor-yellow)" }}
+          aria-hidden
         >
-          <span className="text-4xl opacity-40">📝</span>
+          <span className="rotulo text-[34px] leading-none text-ink">{CATEGORY_LABELS[article.category]}</span>
         </div>
       )}
       <div className="p-5 flex flex-col gap-2 flex-1">

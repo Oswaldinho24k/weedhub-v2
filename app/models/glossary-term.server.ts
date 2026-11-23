@@ -1,3 +1,4 @@
+import { revisionSchemaDef, editorialNoteSchema, type IRevision } from "~/models/revision.server";
 import mongoose, { Schema, type Document } from "mongoose";
 
 export type GlossaryCategory =
@@ -11,6 +12,7 @@ export type GlossaryCategory =
   | "cultura";
 
 export interface IGlossaryTerm extends Document {
+  revision?: IRevision;
   slug: string;
   term: string;
   termEn?: string;
@@ -22,6 +24,7 @@ export interface IGlossaryTerm extends Document {
   relatedSlugs: string[];
   relatedStrainSlugs: string[];
   examples?: string[];
+  examplesPt?: string[];
   isActive: boolean;
   sortOrder: number;
   createdAt: Date;
@@ -30,6 +33,7 @@ export interface IGlossaryTerm extends Document {
 
 const glossaryTermSchema = new Schema<IGlossaryTerm>(
   {
+    revision: revisionSchemaDef,
     slug: { type: String, required: true, unique: true, trim: true, lowercase: true },
     term: { type: String, required: true, trim: true },
     termEn: { type: String, trim: true },
@@ -45,6 +49,7 @@ const glossaryTermSchema = new Schema<IGlossaryTerm>(
     relatedSlugs: [{ type: String }],
     relatedStrainSlugs: [{ type: String }],
     examples: [{ type: String }],
+    examplesPt: [{ type: String }],
     isActive: { type: Boolean, default: true },
     sortOrder: { type: Number, default: 0 },
   },

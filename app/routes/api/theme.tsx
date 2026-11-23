@@ -4,7 +4,7 @@ import { serializeTheme, type Theme } from "~/lib/theme.server";
 export async function action({ request }: Route.ActionArgs) {
   const form = await request.formData();
   const raw = form.get("theme");
-  const theme: Theme = raw === "light" ? "light" : "dark";
+  const theme: Theme = raw === "dark" ? "dark" : "light";
   return new Response(null, {
     status: 204,
     headers: { "Set-Cookie": await serializeTheme(theme) },

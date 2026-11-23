@@ -144,19 +144,14 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-[calc(100vh-56px)] grid grid-cols-1 md:grid-cols-2">
-      <aside className="bg-sunken border-b md:border-b-0 md:border-r border-line px-8 py-12 md:px-14 md:py-16 flex flex-col">
-        <div className="kicker mb-6">Manifiesto #003</div>
+      <aside className="wall border-b-[3px] md:border-b-0 md:border-r-[3px] border-ink px-6 py-10 md:px-14 md:py-16 flex flex-col">
         <h1
-          className="display max-w-[16ch]"
-          style={{ fontSize: "clamp(40px, 6vw, 80px)", lineHeight: 0.95 }}
+          className="rotulo rotulo-shade text-yellow max-w-[12ch]"
+          style={{ fontSize: "clamp(44px, 6vw, 84px)" }}
         >
-          La planta / merece mejor /{" "}
-          <span className="display-wonk" style={{ color: "var(--accent)" }}>
-            contexto
-          </span>
-          .
+          La planta merece contexto
         </h1>
-        <p className="mt-8 text-fg-muted leading-relaxed max-w-[42ch]">
+        <p className="mt-8 text-white/90 text-lg leading-relaxed max-w-[42ch]">
           {t.auth.createAccountBody}
         </p>
 
@@ -166,20 +161,7 @@ export default function AuthPage() {
           <Promise>Voces en español, desde CDMX hasta Madrid.</Promise>
         </ul>
 
-        <div className="mt-auto pt-16 grid grid-cols-3 gap-6 max-w-[420px]">
-          <div>
-            <div className="display text-3xl tnum">847</div>
-            <div className="kicker mt-1">{t.nav.directory}</div>
-          </div>
-          <div>
-            <div className="display text-3xl tnum">12K</div>
-            <div className="kicker mt-1">{t.common.reviewsWord}</div>
-          </div>
-          <div>
-            <div className="display text-3xl tnum">23</div>
-            <div className="kicker mt-1">{t.auth.countryLabel}</div>
-          </div>
-        </div>
+        <p className="mt-auto pt-16 text-sm font-bold [font-stretch:85%] text-white/85">Solo +18 · Uso responsable</p>
       </aside>
 
       <div className="px-8 py-12 md:px-14 md:py-16 flex flex-col justify-center">
@@ -453,11 +435,8 @@ function AuthInputField({
 
 function Promise({ children }: { children: React.ReactNode }) {
   return (
-    <li className="flex items-start gap-3 text-fg-muted">
-      <span
-        className="h-6 w-6 shrink-0 rounded-full flex items-center justify-center"
-        style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
-      >
+    <li className="flex items-start gap-3 text-white font-semibold text-base">
+      <span className="h-6 w-6 shrink-0 flex items-center justify-center bg-yellow text-ink border-2 border-ink">
         <Icon name="check" size={14} />
       </span>
       <span>{children}</span>
